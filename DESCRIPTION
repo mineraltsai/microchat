@@ -1,0 +1,55 @@
+Package: microchat
+Type: Package
+Title: one-stop platform for microbiome analysis and visualization
+Version: 0.1.0
+Author: Minglang Cai
+Maintainer: Minglang Cai <cml950518@outlook.com>
+Description: To meet the needs of researchers for personalized analysis and advanced visualization of microbiome data, a suite of R-based tools (microchat) was developed for the downstream analysis and visualization of microbiome data.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    Rcpp (>= 0.11.0), 
+    ggtreeExtra, 
+    phyloseq, 
+    edgeR,
+    limma,
+    ggcor,
+    WGCNA,
+    Tax4Fun,
+    ggpubr,   
+    picante,	
+    vegan, 
+    multcomp,
+    multcompView,
+    pgirmess,
+    CellChat,
+    rstatix,
+    rdacca.hp,
+    patchwork,
+    ggVennDiagram,
+    pairwiseAdonis, 
+    MicrobiotaProcess, 
+    ape,
+    ggrepel,
+    circlize,
+    tidyverse, 
+    ggtree, 
+    treeio, 
+    cowplot, 
+    dplyr, 
+    ggrepel, 
+    doParallel, 
+    reshape2, 
+    UpSetR,
+    doBy, 
+    multcomp, 
+    edgeR, 
+    Hmisc, 
+    ggtext,
+    plotrix,
+    stringr
+LinkingTo: Rcpp (>= 0.11.0), RcppArmadillo
+RoxygenNote: 7.2.1
+Depends: 
+    R (>= 2.10)
