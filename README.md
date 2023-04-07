@@ -18,8 +18,8 @@ To be available soon。
 
 ## Citation
 
-As the package is still being refined, relevant technical articles remain unpublished. If you use [microchat](https://github.com/mineraltsai/microchat) in
-published research, you can cite previous papers by Minglang Cai using the package from this list:
+As the package is still being refined, relevant technical papers remain unpublished. If you use [microchat](https://github.com/mineraltsai/microchat) in
+published research, you can cite Ming-Lang Tsai's previous published papers using this package from this list:
 
 1.  **Cai, M.L.**, et al. Intervention of taurine on fatty acid profiles, oxidative injury and autophagy status in the muscle of rice field eel (Monopterus albus) fed oxidized fish oil.
     ***Aquaculture***, 2022, 551(4):737904. doi: [10.1016/j.aquaculture.2022.737904](https://doi.org/10.1016/j.aquaculture.2022.737904).
