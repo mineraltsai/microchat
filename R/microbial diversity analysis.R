@@ -430,7 +430,7 @@
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
         input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp(input.data,'variable','group','value')
+        input.data1<-kruskalmuticomp.t(input.data)
         for (i in 2:length(colnames(variance.data))) {
           if (i==2) {
             input.data=subset(variance.data,select = c(group,i))
@@ -730,7 +730,7 @@
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
         input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp(input.data,'variable','group','value')
+        input.data1<-kruskalmuticomp.t(input.data)
         for (i in 2:length(colnames(variance.data))) {
           if (i==2) {
             input.data=subset(variance.data,select = c(group,i))
@@ -1513,6 +1513,7 @@
                                 distance = 'bray',
                                 export_path="cs2/microbial diversity analysis") {
   dir.create(paste(export_path,"/beta diversity",sep = ""), recursive = TRUE)
+  suppressMessages(library(vegan))
   p.adjust.method()
   otu<-submchat$otu_table
 

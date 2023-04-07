@@ -9,7 +9,6 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    Rcpp (>= 0.11.0), 
     ggtreeExtra, 
     phyloseq, 
     edgeR,
@@ -45,7 +44,6 @@ Imports:
     ggtext,
     plotrix,
     stringr
-LinkingTo: Rcpp (>= 0.11.0), RcppArmadillo
 RoxygenNote: 7.2.1
 Depends: 
     R (>= 2.10)

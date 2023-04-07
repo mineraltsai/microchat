@@ -931,7 +931,8 @@ if (length(colors)<num) {
 }
 
 
-"kruskalmuticomp" <- function(data,group,compare,value){
+"kruskalmuticomp" <- function(data,group,compare,value,
+                              reversed = FALSE){
   library(multcompView)
   library(pgirmess)
   library(multcomp)
@@ -949,7 +950,7 @@ if (length(colors)<num) {
     k <- kruskalmc(value ~ g1, data=sub_dat, probs=0.05)
     dif <- k$dif.com[['difference']]
     names(dif) <- rownames(k$dif.com)
-    difL <- multcompLetters(dif,reversed = TRUE)
+    difL <- multcompLetters(dif,reversed = reversed)
     label <- data.frame(difL['Letters'], stringsAsFactors = FALSE)
     label$compare = rownames(label)
     label$type <- i
@@ -1167,9 +1168,9 @@ if (length(colors)<num) {
   }
 
   # n > k (i.e. more entities than factor levels)
-  if (n <= k) {
-    message("Number of entities must exceed number of factor levels")
-  }
+  # if (n <= k) {
+  #  message("Number of entities must exceed number of factor levels")
+  # }
 
   # k >= 2 (i.e. at least two or more factor levels)
   if (k < 2) {
@@ -1499,3 +1500,61 @@ if (length(colors)<num) {
 }
 
 "info.centrality.network" <- function(graph, net=network.efficiency(graph), verbose=F) sum(info.centrality.vertex(graph))
+
+
+
+"unique.char" <- function(sas) {
+  all.let<-strsplit(sas, NULL)
+  chac<-c()
+  for (tt in 1:length(all.let)) {
+    cha<-all.let[[tt]]
+    {
+      chac<-c(chac,cha)
+    }
+  }
+  chac<-unique(chac)
+  return(chac)
+
+}
+
+"kruskalmuticomp.t" <- function(input.data) {
+  input.data1<-data.frame()
+  for (index.n in unique(input.data$variable)) {
+    input.data.new<-input.data[which(input.data$variable==index.n),]
+    input.datax.new<-kruskalmuticomp(input.data.new,'variable','group','value',
+                                     reversed = FALSE)
+
+    input.data1.new<-input.datax.new
+    match.n<-c(letters[1:5],"ab","bc","cd","de",
+               "abc","bcd","cde",
+               "abcd","bcde",
+               "abced")
+    names(match.n)<-c(10000,20000,30000,40000,50000,
+                      12000,23000,34000,45000,
+                      12300,23400,34500,
+                      12340,23450,
+                      12345)
+    match.n<-match.n%>%data.frame()
+    match.n$value<-rownames(match.n)
+    match.n$value<-match.n$value%>%as.numeric()
+    colnames(match.n)[1]<-"letter"
+    input.data1.new$Letter<-match.n$value[match(input.data1.new$Letters,match.n$letter)]
+    max.mean<-which(input.data1.new$mean==max(input.data1.new$mean))[1]
+    max.let<-which(input.data1.new$Letter==max(input.data1.new$Letter))[1]
+    if (max.mean==max.let) input.datax.new<-input.datax.new
+    if (max.mean!=max.let) input.datax.new<-kruskalmuticomp(input.data.new,'variable','group','value',
+                                                            reversed = TRUE)
+
+    {
+      input.data1<-rbind(input.data1,input.datax.new)
+    }
+  }
+  return(input.data1)
+}
+
+"keep.decmi" <- function(x,decmi=3) {
+  tt<-sprintf(paste("%0.",decmi,"f",sep = ""), round(x,decmi))
+  return(tt)
+}
+
+

@@ -1,4 +1,8 @@
 "setMicrochat" <- function(otu_table,taxon_table,tree=NULL,params = NULL) {
+
+  suppressMessages(library(ape))
+  suppressMessages(library(tidyverse))
+  suppressMessages(library(tidytree))
   samplenum<-length(unique(substr(colnames(otu_table),start=1,stop=2)))
 
   taxon_table<-taxonadj(taxon_table)

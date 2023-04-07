@@ -8,8 +8,12 @@ library("mgcv")
 library("reshape2")
 library("ggplot2")
 library("cowplot")
+library("Rcpp")
+library("RcppArmadillo")
 
-
+"schur" <- function(a,b) {
+  return(a*b)
+}
 
 "sourcetrack_test" <- function(abun,sink_group = "ml",
                                source_group="ct",

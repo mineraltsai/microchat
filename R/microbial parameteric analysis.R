@@ -425,7 +425,7 @@
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
         input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp(input.data,'variable','group','value')
+        input.data1<-kruskalmuticomp.t(input.data)
         for (i in 2:length(colnames(variance.data))) {
           if (i==2) {
             input.data=subset(variance.data,select = c(group,i))
@@ -725,7 +725,7 @@
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
         input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp(input.data,'variable','group','value')
+        input.data1<-kruskalmuticomp.t(input.data)
         for (i in 2:length(colnames(variance.data))) {
           if (i==2) {
             input.data=subset(variance.data,select = c(group,i))
@@ -772,10 +772,11 @@
 
   }
 
+  opc.data<-get.opc(microchatParamobj)
   #write.table(data.alpha,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  message("\n","The parameteric diversity has been statistically analyzed. You could check it.","\n")
+  message("The parameteric properities has been statistically analyzed. You could check it.")
 
-  microchatParamStatobj<-list(data.alpha,data_poi,data_err,index,method,y.ratio,sig_label_new)
+  microchatParamStatobj<-list(data.alpha,data_poi,data_err,index,method,y.ratio,sig_label_new,opc.data)
 
   names(microchatParamStatobj)[1]<-"param.stats"
   names(microchatParamStatobj)[2]<-"data_poi"
@@ -784,6 +785,7 @@
   names(microchatParamStatobj)[5]<-"method"
   names(microchatParamStatobj)[6]<-"y.ratio"
   names(microchatParamStatobj)[7]<-"sig"
+  names(microchatParamStatobj)[8]<-"opc.data"
 
   class(microchatParamStatobj) <- c("microchat","list")
 
@@ -822,7 +824,12 @@
   }
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
-
+  opc.data<-microchatParamStatobj$opc.data
+  o.data<-opc.data[which(opc.data$index==index),]
+  gnum<-ncol(opc.data.new)
+  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
+  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  subtitile<-paste(liner,quad,sep = " ")
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
@@ -850,7 +857,7 @@
     p<-ggplot(data=data_poi,
               aes(x = group,y = value,fill = group)) +
       geom_errorbar(data = data_err,
-                    aes(x = group, y = mean, group = index, ymin = mean-sd, ymax = mean+sd),
+                    aes(x = group, y = mean, group = index, ymin = mean-se, ymax = mean+se),
                     colour = "grey50",width=.25)+
       geom_boxplot(outlier.shape = NA,
                    width = 0.5,
@@ -943,7 +950,7 @@
     p<-ggplot() +
       geom_errorbar(data = data_err,
                     aes(x = group, y = mean, group = index,
-                        ymin = mean-sd, ymax = mean+sd),
+                        ymin = mean-se, ymax = mean+se),
                     colour = "grey50",width=.25)+
       geom_boxplot(data=data_poi,
                    aes(x = group,y = value,fill = group),
@@ -954,8 +961,8 @@
                   aes(x=group, y=value, group=index,color=group))+
       geom_point(data=data_poi,
                  aes(x=group, y=value, group=index,color=group)) +
-      geom_text(data = sig_label_new,
-                aes(x = group,y = valuey,label = alpha),
+      geom_text(data = sig_label_new,vjust=-0.5,
+                aes(x = group,y = mean+se,label = alpha),
                 size = 5,color = "black",family = "serif")
 
     p<-p+scale_discrete_manual(values=colors,
@@ -964,13 +971,19 @@
                             aesthetics = "fill")
 
 
-    if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+    if (yaxis.italic) p<-p+labs(y=index,
+                                subtitle=subtitile,
+                                title = paste(method,": p = ",
+                                              keep.decmi(data.alpha$p.value),sep=""))+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-            title = element_text(face = "italic",family = "serif", size=12))
+            title = element_text(face = "bold.italic",family = "serif", size=12))
 
-    if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+    if (!yaxis.italic) p<-p+labs(y=index,
+                                 subtitle=subtitile,
+                                 title = paste(method,": p = ",
+                                               keep.decmi(data.alpha$p.value),sep=""))+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-            title = element_text(face = "italic",family = "serif", size=12))
+            title = element_text(face = "bold.italic",family = "serif", size=12))
 
     p<-p+
       theme(#panel.border = element_blank(),
@@ -999,7 +1012,7 @@
       p<-ggplot(data=data_poi) +
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
-                          ymin = mean-sd, ymax = mean+sd),
+                          ymin = mean-se, ymax = mean+se),
                       colour = "grey50",width=.25)+
         geom_boxplot(data=data_poi,
                      aes(x = group,y = value,fill = group),
@@ -1010,8 +1023,8 @@
                     aes(x=group, y=value, group=index,color=group))+
         geom_point(data=data_poi,
                    aes(x=group, y=value, group=index,color=group)) +
-        geom_text(data = sig_label_new,
-                  aes(x = group,y = valuey,label = alpha),
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
                   size = 5,color = "black",family = "serif")
 
       p<-p+scale_discrete_manual(values=colors,
@@ -1019,13 +1032,19 @@
         scale_discrete_manual(values=colors,
                               aesthetics = "fill")
 
-      if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
-      if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
         theme(#panel.border = element_blank(),
@@ -1057,8 +1076,9 @@
     p<-p+ scale_x_discrete(labels = xlabname)
   }
 
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
   ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("\n","Parametric properities barplot has been exported. Please check it.","\n")
+  cat("Parametric properities barplot has been exported. Please check it.","\n")
 
   return(p)
 
@@ -1100,7 +1120,7 @@
   library(patchwork)
   pm<-wrap_plots(pp)
   ggsave(paste(export_path,"/Muti-parameter",".pdf",sep = ""),pm)
-  cat("\n","Muti-parametric properities barplot has been exported. Please check it.","\n")
+  message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
 }
@@ -1345,7 +1365,12 @@
   }
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
-
+  opc.data<-microchatParamStatobj$opc.data
+  o.data<-opc.data[which(opc.data$index==index),]
+  gnum<-ncol(opc.data.new)
+  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
+  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  subtitile<-paste(liner,quad,sep = " ")
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
@@ -1374,7 +1399,7 @@
     p<-ggplot(data=data_poi,
               aes(x = group,y = value,fill = group)) +
       geom_errorbar(data = data_err,
-                    aes(x = group, y = mean, group = index, ymin = mean-sd, ymax = mean+sd),
+                    aes(x = group, y = mean, group = index, ymin = mean-se, ymax = mean+se),
                     colour = "grey50",width=.25)+
       geom_bar(data = data_err,aes(x = group,y = mean,fill = group),
                stat = "identity",position = "dodge",
@@ -1433,11 +1458,11 @@
 
     if (yaxis.italic) p<-p+labs(y=index,title = method)+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-            title = element_text(family = "serif",face="italic", size=12))
+            title = element_text(family = "serif",face="bold.italic", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,title = method)+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-            title = element_text(family = "serif",face="italic", size=12))
+            title = element_text(family = "serif",face="bold.italic", size=12))
 
     p<-p+
       theme(#panel.border = element_blank(),
@@ -1465,14 +1490,15 @@
       p<-ggplot() +
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
-                          ymin = mean-sd, ymax = mean+sd),
+                          ymin = mean-se, ymax = mean+se),
                       colour = "grey50",width=.25)+
         geom_bar(data = data_err,aes(x = group,y = mean,fill = group),
                  stat = "identity",position = "dodge",
                  width = 0.7,colour = "white") +
-        geom_text(data = sig_label_new,
-                  aes(x = group,y = valuey,label = alpha),
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
                   size = 5,color = "black",family = "serif")
+
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -1480,13 +1506,19 @@
                               aesthetics = "fill")
 
 
-      if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
-      if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
         theme(#panel.border = element_blank(),
@@ -1515,14 +1547,14 @@
 
       p<-ggplot() +geom_errorbar(data = data_err,
                                  aes(x = group, y = mean, group = index,
-                                     ymin = mean-sd, ymax = mean+sd),
+                                     ymin = mean-se, ymax = mean+se),
                                  colour = "grey50",width=.25)+
         geom_bar(data = data_err,aes(x = group,y = mean,fill = group),
                  stat = "identity",position = "dodge",
                  width = 0.7,colour = "white") +
 
-        geom_text(data = sig_label_new,
-                  aes(x = group,y = valuey,label = alpha),
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
                   size = 5,color = "black",family = "serif")
 
       p<-p+scale_discrete_manual(values=colors,
@@ -1530,13 +1562,19 @@
         scale_discrete_manual(values=colors,
                               aesthetics = "fill")
 
-      if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
-      if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
         theme(#panel.border = element_blank(),
@@ -1567,9 +1605,9 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
   ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("\n","Parametric properities barplot has been exported. Please check it.","\n")
+  cat("Parametric properities barplot has been exported. Please check it.")
 
   return(p)
 
@@ -1607,7 +1645,12 @@
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
 
-
+  opc.data<-microchatParamStatobj$opc.data
+  o.data<-opc.data[which(opc.data$index==index),]
+  gnum<-ncol(opc.data.new)
+  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
+  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  subtitile<-paste(liner,quad,sep = " ")
   colors<-color_group
   names(colors)<-unique(data_poi$group)
 
@@ -1636,7 +1679,7 @@
               aes(x = group,y = value,fill = group))+
       geom_line(data= data_err,size=0.5,colour = "grey50",aes(x=group, y=mean, group=index)) +
       geom_errorbar(data = data_err,
-                    aes(x = group, y = mean, group = index, ymin = mean-sd, ymax = mean+sd),
+                    aes(x = group, y = mean, group = index, ymin = mean-se, ymax = mean+se),
                     colour = "grey50",width=.25)
 
 
@@ -1692,11 +1735,11 @@
 
     if (yaxis.italic) p<-p+labs(y=index,title = method)+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-            title = element_text(family = "serif",face="italic", size=12))
+            title = element_text(family = "serif",face="bold.italic", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,title = method)+
       theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-            title = element_text(family = "serif",face="italic", size=12))
+            title = element_text(family = "serif",face="bold.italic", size=12))
 
     p<-p+
       theme(#panel.border = element_blank(),
@@ -1726,10 +1769,10 @@
         geom_line(data= data_err,size=0.5,colour = "grey50",aes(x=group, y=mean, group=index)) +
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
-                          ymin = mean-sd, ymax = mean+sd),
+                          ymin = mean-se, ymax = mean+se),
                       colour = "grey50",width=.25)+
-        geom_text(data = sig_label_new,
-                  aes(x = group,y = valuey,label = alpha),
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
                   size = 5,color = "black",family = "serif")
 
       p<-p+scale_discrete_manual(values=colors,
@@ -1738,13 +1781,20 @@
                               aesthetics = "fill")
 
 
-      if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
-      if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
 
       p<-p+
         theme(#panel.border = element_blank(),
@@ -1776,24 +1826,30 @@
                              aes(x=group, y=mean, group=index))+
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
-                          ymin = mean-sd, ymax = mean+sd),
+                          ymin = mean-se, ymax = mean+se),
                       colour = "grey50",width=.25)+
-        geom_text(data = sig_label_new,
-                  aes(x = group,y = valuey,label = alpha),
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
                   size = 5,color = "black",family = "serif")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
         scale_discrete_manual(values=colors,
                               aesthetics = "fill")
-
-      if (yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
 
-      if (!yaxis.italic) p<-p+labs(y=index,title = paste(method,sprintf('p = %.3f', round(data.alpha$p.value,3)),sep=": "))+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
         theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
-              title = element_text(face = "italic",family = "serif", size=12))
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
 
       p<-p+
         theme(#panel.border = element_blank(),
@@ -1824,9 +1880,9 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
   ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("\n","Parametric properities barplot has been exported. Please check it.","\n")
+  cat("Parametric properities barplot has been exported. Please check it.")
 
   return(p)
 
@@ -1870,7 +1926,7 @@
   library(patchwork)
   pm<-wrap_plots(pp)
   ggsave(paste(export_path,"/Muti-parameter",".pdf",sep = ""),pm)
-  cat("\n","Muti-parametric properities barplot has been exported. Please check it.","\n")
+  message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
 }
@@ -1912,3 +1968,67 @@
   }
 }
 
+"get.opc" <- function(microchatParamobj) {
+
+  data_err<-microchatParamobj$statistics
+  data_err$summa<-paste(sprintf("%0.2f", data_err$mean),sprintf("%0.2f", data_err$se),sep = "±")
+  param_tab<-subset(data_err,select=c(index,group,summa))%>%spread(key =group, value = summa )
+
+  ###add opc prediction
+  params_table<-microchatParamobj$param_table
+  params_table<-params_table[,-1]
+  params_table<-column_to_rownames(params_table,var = "sample")%>%data.frame()
+
+  colname<-colnames(params_table)
+  trt_id <-unique(colname)
+  ttk<-sapply(trt_id,function(x){
+    grep(x,colnames(params_table))
+  })
+
+  split_otu <-
+    lapply(ttk,FUN = function(x){
+      parax<-params_table[,x]%>%data.frame()
+      rownames(parax)<-rownames(params_table)
+      parax<-rownames_to_column(parax,var = "id")
+      parax$group<-substr(parax$id,start = 1,stop = 2)
+      parax$group<-factor(parax$group,levels = unique(parax$group))
+      parax$id<-substr(parax$id,start = 3,stop=5)%>%as.numeric()
+      colnames(parax)[2]<-"value"
+      parax<-pivot_wider(parax,names_from = group,values_from = value)
+      return(parax)
+    })
+
+  model.all<-c("Linear","Quadratic","Cubic","Quartic","Quintic","Hexic")
+  fff<-lapply(lapply(split_otu, rma_opc),
+              function(x){
+                opc_pre<-x$contrast_table
+                opc_pre<-subset(opc_pre,select=c(1,3,8))
+                colnames(opc_pre)<-c('Effect model',"Dose effect contribution","pvalue")
+                opc_pre$'Effect model'<-model.all[1:nrow(opc_pre)]
+                opc_pre$pvalue<-ifelse(opc_pre$pvalue<0.001,"<0.001",
+                                       ifelse(opc_pre$pvalue<0.01,sprintf("%0.3f", round(opc_pre$pvalue,3)),
+                                              ifelse(opc_pre$pvalue<0.05,sprintf("%0.3f", round(opc_pre$pvalue,3)),
+                                                     sprintf("%0.3f", round(opc_pre$pvalue,3)))))
+                opc_pre$"Dose effect contribution"<-ifelse(opc_pre$"Dose effect contribution"<0.001,sprintf("%0.3f", round(opc_pre$"Dose effect contribution",4)),
+                                                           ifelse(opc_pre$"Dose effect contribution"<0.01,sprintf("%0.3f", round(opc_pre$"Dose effect contribution",4)),
+                                                                  ifelse(opc_pre$"Dose effect contribution"<0.05,sprintf("%0.3f", round(opc_pre$"Dose effect contribution",4)),
+                                                                         sprintf("%0.3f", round(opc_pre$"Dose effect contribution",4)))))
+
+                opc_pre$comb<-paste(opc_pre$pvalue," (",opc_pre$"Dose effect contribution",") ",sep = "")
+                opc_pre<-subset(opc_pre,select=c(1,4))
+                return(opc_pre)
+              })
+
+
+  param_tab$index<-factor(param_tab$index,levels = names(fff))
+  param_tab<-param_tab[order(param_tab$index),]
+  param_tab[,(ncol(param_tab)+1):(ncol(param_tab)+nrow(fff[[1]]))]<-0
+  addlen<-length(fff[[1]]$`Effect model`)
+  colnames(param_tab)[(ncol(param_tab)-addlen+1):ncol(param_tab)]<-fff[[1]]$`Effect model`
+
+  for (index in names(fff)) {
+    param_tab[which(param_tab$index==index),(ncol(param_tab)-addlen+1):ncol(param_tab)]<-fff[[which(names(fff)==index)]]$comb
+  }
+  param_tab
+  return(param_tab)
+}

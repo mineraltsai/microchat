@@ -1,4 +1,1 @@
 exportPattern("^[[:alpha:]]+")
-
-import(Rcpp)
-useDynLib(microchat)
