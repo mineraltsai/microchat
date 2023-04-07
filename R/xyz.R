@@ -1557,4 +1557,22 @@ if (length(colors)<num) {
   return(tt)
 }
 
+"remove.letter" <- function(x)
+{
+  sapply(
+    lapply(strsplit(x, NULL), function(y){
+      if (length(which(y %in% letters)) !=0) y<-y[-which(y %in% letters)] else y<-y
+      if (length(which(y %in% " ")) !=0) y<-y[-which(y %in% " ")] else y<-y
+    }),
+    paste, collapse = "")
+}
+
+"keep.letter" <- function(x)
+{
+  sapply(
+    lapply(strsplit(x, NULL), function(y){
+      if (length(which(y %in% letters)) !=0) y<-y[which(y %in% letters)] else y<-""
+    }),
+    paste, collapse = "")
+}
 

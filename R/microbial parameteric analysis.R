@@ -795,6 +795,9 @@
 
 
 "plotMicrochatParamBoxplot" <- function(microchatParamStatobj,
+                                        geom.line=TRUE,
+                                        geom.line.size=0.5,
+                                        ylim.fold=1.1,
                                         xlabname=NULL,
                                         yaxis.italic=TRUE,
                                         errorbar.pos.adj=FALSE,
@@ -824,12 +827,15 @@
   }
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
+
+  if (method %in% c("anova","kruskal.test")) {
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(opc.data.new)
+  gnum<-ncol(o.data)
   liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
   quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
   subtitile<-paste(liner,quad,sep = " ")
+  }
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
@@ -854,11 +860,13 @@
         }
       }
 
-    p<-ggplot(data=data_poi,
-              aes(x = group,y = value,fill = group)) +
-      geom_errorbar(data = data_err,
-                    aes(x = group, y = mean, group = index, ymin = mean-se, ymax = mean+se),
-                    colour = "grey50",width=.25)+
+    p<-ggplot(data=data_poi)
+    if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
+                                  aes(x=group, y=mean, group=index))
+    p<-p+geom_errorbar(data = data_err,
+                       aes(x = group, y = mean, group = index,
+                           ymin = mean-se, ymax = mean+se),
+                       colour = "grey50",width=.25)+
       geom_boxplot(outlier.shape = NA,
                    width = 0.5,
                    color = "white")+
@@ -947,11 +955,17 @@
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
-    p<-ggplot() +
-      geom_errorbar(data = data_err,
-                    aes(x = group, y = mean, group = index,
-                        ymin = mean-se, ymax = mean+se),
-                    colour = "grey50",width=.25)+
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+
+
+      p<-ggplot(data=data_poi)
+      if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
+                                    aes(x=group, y=mean, group=index))
+      p<-p+geom_errorbar(data = data_err,
+                         aes(x = group, y = mean, group = index,
+                             ymin = mean-se, ymax = mean+se),
+                         colour = "grey50",width=.25)+
       geom_boxplot(data=data_poi,
                    aes(x = group,y = value,fill = group),
                    outlier.shape = NA,
@@ -1009,8 +1023,12 @@
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
-      p<-ggplot(data=data_poi) +
-        geom_errorbar(data = data_err,
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      p<-ggplot(data=data_poi)
+      if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
+                  aes(x=group, y=mean, group=index))
+      p<-p+geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
                           ymin = mean-se, ymax = mean+se),
                       colour = "grey50",width=.25)+
@@ -1076,25 +1094,31 @@
     p<-p+ scale_x_discrete(labels = xlabname)
   }
 
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("Parametric properities barplot has been exported. Please check it.","\n")
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
+    ylim(NA,max(data_poi$value)*ylim.fold)
+  ggsave(paste(export_path,"/Parameter (",index,")_boxplot.pdf",sep = ""),p)
+  cat("Parametric properities boxplot has been exported. Please check it.","\n")
 
   return(p)
 
 }
 
 "plotMicrochatParamMutiBoxplot" <- function(microchatParamobj,
+                                            geom.line=TRUE,
+                                            geom.line.size=0.5,
+                                            ylim.fold=1.1,
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
                                             method="anova",
+                                            seg=TRUE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
 
   select.index<-microchatParamobj$all.index
   pp<-list()
+  #t=select.index[2]
   for (t in select.index) {
     microchatParamStatobj<-calcMicrochatParamStat(microchatParamobj,
                                                   select.index=t,
@@ -1104,12 +1128,15 @@
                                                   export_path=export_path)
 
     p<-plotMicrochatParamBoxplot(microchatParamStatobj,
+                                 geom.line=geom.line,
+                                 geom.line.size=geom.line.size,
+                                 ylim.fold=ylim.fold,
                                  xlabname=xlabname,
                                  yaxis.italic=yaxis.italic,
                                  errorbar.line.add=TRUE,
                                  errorbar.point.size=0.1,
                                  y.point.adj=0.1,
-                                 seg=TRUE,
+                                 seg=seg,
                                  add.spline=FALSE,
                                  color_group=color_group,
                                  color_backgroud="grey90",
@@ -1119,8 +1146,9 @@
 
   library(patchwork)
   pm<-wrap_plots(pp)
-  ggsave(paste(export_path,"/Muti-parameter",".pdf",sep = ""),pm)
-  message("Muti-parametric properities barplot has been exported. Please check it.")
+  print(pm)
+  ggsave(paste(export_path,"/Muti-parameter","_boxplot.pdf",sep = ""),pm)
+  message("Muti-parametric properities boxplot has been exported. Please check it.")
 
   return(pm)
 }
@@ -1299,6 +1327,9 @@
 
 
 "plotMicrochatParamComplexBoxplot" <- function(submchat,
+                                               geom.line=TRUE,
+                                               geom.line.size=0.5,
+                                               ylim.fold=1.1,
                                                strictmod=TRUE,
                                                method="t.test",
                                                comparison=my_comparisons,
@@ -1336,6 +1367,7 @@
 
 
 "plotMicrochatParamBarplot" <- function(microchatParamStatobj,
+                                        ylim.fold=1.1,
                                         xlabname=NULL,
                                         yaxis.italic=TRUE,
                                         errorbar.pos.adj=FALSE,
@@ -1365,12 +1397,15 @@
   }
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
+
+  if (method %in% c("anova","kruskal.test")) {
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(opc.data.new)
+  gnum<-ncol(o.data)
   liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
   quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
   subtitile<-paste(liner,quad,sep = " ")
+}
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
@@ -1486,7 +1521,8 @@
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
-
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       p<-ggplot() +
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
@@ -1544,7 +1580,8 @@
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
-
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       p<-ggplot() +geom_errorbar(data = data_err,
                                  aes(x = group, y = mean, group = index,
                                      ymin = mean-se, ymax = mean+se),
@@ -1605,9 +1642,10 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("Parametric properities barplot has been exported. Please check it.")
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
+    ylim(NA,max(data_poi$value)*ylim.fold)
+  ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),p)
+  cat("Parametric properities barplot has been exported. Please check it.","\n")
 
   return(p)
 
@@ -1615,6 +1653,7 @@
 
 
 "plotMicrochatParamLineplot" <- function(microchatParamStatobj,
+                                         ylim.fold=1.1,
                                          xlabname=NULL,
                                          yaxis.italic=TRUE,
                                          errorbar.pos.adj=FALSE,
@@ -1644,13 +1683,14 @@
   }
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
-
+  if (method %in% c("anova","kruskal.test")) {
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(opc.data.new)
+  gnum<-ncol(o.data)
   liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
   quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
-  subtitile<-paste(liner,quad,sep = " ")
+  subtitile<-paste(liner,quad,sep = " ")}
+
   colors<-color_group
   names(colors)<-unique(data_poi$group)
 
@@ -1764,7 +1804,8 @@
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-factor(sig_label_new$group,levels = gorder)
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
-
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       p<-ggplot()+
         geom_line(data= data_err,size=0.5,colour = "grey50",aes(x=group, y=mean, group=index)) +
         geom_errorbar(data = data_err,
@@ -1821,7 +1862,8 @@
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-factor(sig_label_new$group,levels = gorder)
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
-
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       p<-ggplot() +geom_line(data= data_err,size=0.5,colour = "grey50",
                              aes(x=group, y=mean, group=index))+
         geom_errorbar(data = data_err,
@@ -1880,9 +1922,10 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  ggsave(paste(export_path,"/Parameter (",index,") .pdf",sep = ""),p)
-  cat("Parametric properities barplot has been exported. Please check it.")
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
+    ylim(NA,max(data_poi$value)*ylim.fold)
+  ggsave(paste(export_path,"/Parameter (",index,")_lineplot.pdf",sep = ""),p)
+  cat("Parametric properities lineplot has been exported. Please check it.","\n")
 
   return(p)
 
@@ -1891,10 +1934,12 @@
 
 
 "plotMicrochatParamMutiBarplot" <- function(microchatParamobj,
+                                            ylim.fold=1.1,
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
                                             method="anova",
+                                            seg=TRUE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
@@ -1910,12 +1955,13 @@
                                                   export_path=export_path)
 
     p<-plotMicrochatParamBarplot(microchatParamStatobj,
+                                 ylim.fold=ylim.fold,
                                  xlabname=xlabname,
                                  yaxis.italic=yaxis.italic,
                                  errorbar.line.add=TRUE,
                                  errorbar.point.size=0.1,
                                  y.point.adj=0.1,
-                                 seg=TRUE,
+                                 seg=seg,
                                  add.spline=FALSE,
                                  color_group=color_group,
                                  color_backgroud="grey90",
@@ -1925,7 +1971,8 @@
 
   library(patchwork)
   pm<-wrap_plots(pp)
-  ggsave(paste(export_path,"/Muti-parameter",".pdf",sep = ""),pm)
+  print(pm)
+  ggsave(paste(export_path,"/Muti-parameter","_barplot.pdf",sep = ""),pm)
   message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
@@ -2031,4 +2078,104 @@
   }
   param_tab
   return(param_tab)
+}
+
+
+"calcMicrochat2Param" <- function(params) {
+  params.n<-data.frame()
+  times<-0
+  for (i in 1:ncol(params)) {
+    for (j in 1:nrow(params)) {
+      params.newd<-strsplit(remove.letter(params[j,i]), "±",fixed = TRUE)%>%data.frame()%>%t()%>%data.frame()
+      params.newlet<-keep.letter(params[j,i])
+      params.newd$letter<-params.newlet
+      colnames(params.newd)<-c("mean","se","letter")
+      params.newd$group<-colnames(params)[i]
+      params.newd$variable<-rownames(params)[j]
+      times<-times+1
+      rownames(params.newd)<-times
+      params.newd<-subset(params.newd,select=c(4,5,1,2,3))
+      {
+        params.n<-rbind(params.n,params.newd)
+      }
+    }
+  }
+
+  params.n$group<-factor(params.n$group,levels = unique(colnames(params)))
+  params.n$variable<-factor(params.n$variable,levels = unique(rownames(params)))
+  params.n<-params.n[order(params.n$variable,params.n$group),]
+
+  params.n$mean<-params.n$mean%>%as.numeric()
+  params.n$se<-params.n$se%>%as.numeric()
+  return(params.n)
+}
+"plotMicrochatParamBoxplot1" <- function(params.n,color_bar,label.x.angle=45) {
+  if (length(color_bar)!=length(unique(params.n$group))) stop("Please provide colours number equal to the groups number!!!")
+  names(color_bar)<-unique(params.n$group)
+  p<-ggplot(params.n,
+            aes(variable,mean,fill = group))+
+    geom_errorbar(data = params.n,position = position_dodge(0.9),
+                  aes(x = variable, y = mean,
+                      group = group, ymin = mean-se, ymax = mean+se),
+                  colour = "grey50",width=.25)+
+    geom_bar(aes(fill=group),color="black",
+             stat = "identity",
+             alpha=1,
+             position = "dodge",
+             width = 0.9,color = NA)+
+    geom_text(aes(x=variable,y=params.n$mean+params.n$se,label=letter),
+              stat = "identity",
+              vjust=-0.5,
+              position = position_dodge(0.9),
+              color="black",family="serif")+
+    ylim(NA,max(params.n$mean)*1.31)+
+    scale_fill_manual(values = color_bar,name="Group")+
+    labs(y="Parameters")+
+    theme(legend.position = "right",aspect.ratio = 1,
+          axis.line.y.left  = element_line(),
+          axis.text.y.right = element_blank(),
+          axis.ticks.y.right = element_blank(),
+          plot.margin = element_blank(),
+          plot.background = element_blank(),
+          panel.background = element_blank(),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(angle = label.x.angle,vjust = 1,hjust = 1),
+          text = element_text(family = "serif",face = "bold"))
+  return(p)
+}
+"plotMicrochatParamBoxplot2" <- function(params.n,color_bar,label.x.angle=45) {
+  if (length(color_bar)!=length(unique(params.n$group))) stop("Please provide colours number equal to the groups number!!!")
+  pp<-list()
+  for (index in unique(params.n$variable)) {
+    params.nn<-params.n[which(params.n$variable==index),]
+    names(color_bar)<-unique(params.nn$group)
+    p<-ggplot(params.nn,
+              aes(group,mean,fill = group))+
+      geom_errorbar(data = params.nn,position = position_dodge(0.9),
+                    aes(x = group, y = mean,
+                        group = group, ymin = mean-se, ymax = mean+se),
+                    colour = "grey50",width=.25)+
+      geom_bar(aes(fill=group),color="black",
+               stat = "identity",
+               alpha=1,
+               #position = "dodge",
+               width = 0.9,color = NA)+
+      geom_text(aes(x=group,y=mean+se,label=letter),
+                #stat = "identity",
+                vjust=-0.5,
+                #position = position_dodge(0.9),
+                color="black",family="serif")+
+      scale_fill_manual(values = color_bar,name="Group")+
+      ylim(NA,max(params.nn$mean)*1.2)+
+      labs(y=index)+
+      theme(legend.position = "right",aspect.ratio = 1,
+            #axis.line.y.left  = element_line(),
+            axis.title.x = element_blank(),
+            axis.text.x = element_text(angle = label.x.angle,vjust = 1,hjust = 1),
+            text = element_text(family = "serif",face = "bold"))
+    pp[[index]]<-p
+
+  }
+  pp<-patchwork::wrap_plots(pp,guides = "collect")
+  return(pp)
 }

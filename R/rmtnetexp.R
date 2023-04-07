@@ -2639,7 +2639,7 @@
   cat("\nPlots have been exported to ",newfile,"\n",sep = "")
 }
 
-"plotRMTnetRandrm" <- function(target.data,
+"plotRMTnetTargrm" <- function(target.data,
                                geom=c("boxplot","barplot"),
                                select.rm.modhub.num=7,
                                strictmod=TRUE,
