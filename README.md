@@ -1,7 +1,7 @@
 # microchat
 To meet the needs of researchers for personalized analysis and advanced visualization of microbiome data, a suite of R-based tools (microchat) was developed for the downstream analysis and visualization of microbiome data.
 
-<a href="https://github.com/mineraltsai/microchat"><img src="https://github.com/mineraltsai/microchat/blob/main/icon.png" height="200" align="right" /></a>
+<a href="https://github.com/mineraltsai/microchat"><img src="https://github.com/mineraltsai/microchat/blob/main/logo.tif" height="200" align="right" /></a>
 
 ## Installation
 
