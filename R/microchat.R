@@ -473,6 +473,7 @@
 
 
 "sub2sample" <- function(otudata,taxon_table,sample.size=NULL) {
+  suppressMessages(library(phyloseq))
   options(warn = -1)
   set.seed(8084)
   otu1 = phyloseq::otu_table(otudata, taxa_are_rows = T)
@@ -560,7 +561,7 @@
   ###data output
   data_export_to_file(otu_table,filename="otu_filter_subsample",export_path)
   data_export_to_file(taxon_table,filename="taxon_filter_subsample",export_path)
-  if (!is.null(tree)) write.tree(tree,file = paste(export_path,"/tree.nwk",sep = ""))
+  if (!is.null(tree)) write.tree(tree,file = paste(export_path,"/data/tree.nwk",sep = ""))
   if (!is.null(param_table)) data_export_to_file(param_table,filename="param_filter_subsample",export_path)
 
   ###or use this
@@ -590,14 +591,15 @@
 
 
 
-"data_export_to_file" <- function(otudata,filename="otu_filter_subsample",filepath0) {
+"data_export_to_file" <- function(otudata,filename="otu_filter_subsample",
+                                  filepathX) {
   options(warn = -1)
   if (class(otudata)!="list") {
   otudata$name<-rownames(otudata)
   abun<-otudata
   abun<-cbind(abun$name,abun[,1:(length(colnames(abun))-1)])
   colnames(abun)[1]<-"name"
-
+  filepath0<-paste(filepathX,"/data",sep = "")
   dir.create(filepath0, recursive = TRUE)
   filepath =paste(filepath0,"/",sep = "")
   file1=paste(filepath, filename,".txt",sep = "" )
@@ -610,7 +612,7 @@
       abun<-otudata1
       abun<-cbind(abun$name,abun[,1:(length(colnames(abun))-1)])
       colnames(abun)[1]<-"name"
-
+      filepath0<-paste(filepathX,"/data",sep = "")
       dir.create(filepath0, recursive = TRUE)
       filepath =paste(filepath0,"/",sep = "")
       file1=paste(filepath, j,".txt",sep = "" )

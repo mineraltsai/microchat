@@ -211,7 +211,9 @@ if (as.numeric(matchnum) == as.numeric(allnum)) {
   return(list(x=x,y=y,z=z))
 }
 
-"colorCustom"  <- function(num,pal=c("pkgn","ywbu","gygn","cyto_pie","xiena",
+"colorCustom"  <- function(num,pal=c("pkgn","ywbu","gygn",
+                                     "classic",
+                                     "cyto_pie","xiena",
                                      "set1","set2","set3")) {
 
   pal<-match.arg(pal)
@@ -286,6 +288,7 @@ if (as.numeric(matchnum) == as.numeric(allnum)) {
                                     '#686632', '#B20077', '#649B7B','#1200C4','#660000',
                                     '#ACBF64', '#254944', '#A36EBA','#79C99B', '#BF738E', '#D8C782','#B72200')
 
+  if (pal=="classic") colors<-c("black","white","red","grey","blue")
 
 if (length(colors)<num) {
   colors<-c(colors,colors,colors,colors)
@@ -576,11 +579,12 @@ if (length(colors)<num) {
 
 "variance.test"<- function(input.data,index,alpha=0.05){
   sol<- bartlett.test(as.formula(paste(index, "~ group",sep = "")), data = input.data)
-  if(sol$p.value>alpha){
+  if (!is.na(sol$p.value)) { if(sol$p.value>alpha){
     cat(paste("success: Showing homogeneity of variance, p.value=",sol$p.value,">",alpha),"\n")
   }else{
     cat(paste("error  : Not showing homogeneity of variance, p.value=",sol$p.value,"<=",alpha),"\n")
   }
+    }
   sol
 }
 
@@ -948,7 +952,7 @@ if (length(colors)<num) {
     options(warn = -1)
 
     k <- kruskalmc(value ~ g1, data=sub_dat, probs=0.05)
-    dif <- k$dif.com[['difference']]
+    dif <- k$dif.com$stat.signif
     names(dif) <- rownames(k$dif.com)
     difL <- multcompLetters(dif,reversed = reversed)
     label <- data.frame(difL['Letters'], stringsAsFactors = FALSE)
@@ -1401,7 +1405,7 @@ if (length(colors)<num) {
   sig_mod_pairs = matrix(NA, nrow=0, ncol=4)
   sig_detailed_table = c("module1", "module2", "both", "P1A2", "P2A1", "A1A2", "p_raw", "p_adj")
   pairs_sum<-0
-  i = 1
+  i = 5
   for (i in 1:nrow(network_pair)){
     # 全部的需要比对的模块
     module_pair = as.matrix(expand.grid(map_kp$group[which(map_kp$Group==network_pair[i,1])],
@@ -1448,28 +1452,25 @@ if (length(colors)<num) {
       row.names(sig_pairs_count_table) = sig_pairs_linked
     }else{
       sig_pairs = "None"
-
     }
 
     add_one_row = c(network1, network2, sig_count, sig_pairs)
     sig_mod_pairs = rbind(sig_mod_pairs, add_one_row)
 
-    sig_detailed_table = rbind(sig_detailed_table, sig_pairs_count_table)
-
+    if(sig_count>0) sig_detailed_table = rbind(sig_detailed_table, sig_pairs_count_table)
+    if(sig_count==0) sig_detailed_table = sig_detailed_table
     cat(i,": Module pairs from ",network_pair[i,]," have been calculated!!!\n")
   }
   sig_detailed_table<-sig_detailed_table[-1,]
   sig_detailed_table<-sig_detailed_table[!duplicated(sig_detailed_table),]
   pairs_num_pre<-nrow(sig_detailed_table)
   cat("\n","Totally ",pairs_sum," module pairs were tested.",sep = "")
-  cat("\n","Totally ",pairs_num_pre," module pairs were preserved and accounted for ",
-      paste(round(pairs_num_pre/pairs_sum*100,2),"%",sep = ""),sep = "")
+  cat("\n","Totally ",pairs_num_pre," module pairs were preserved thanks to significant difference, accounted for ",
+      paste(round(pairs_num_pre/pairs_sum*100,2),"%.",sep = ""),sep = "")
 
   file2=paste(export_path, "/Preserved module pairs (remove module(s) who owned less than ",n," node(s))",".txt",sep = "" )
   write.table(sig_detailed_table,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","All preserved module pairs have been exported to"," '",export_path,"'",sep = "","\n")
-
-  return(sig_detailed_table)
+  return(list(data=sig_detailed_table,pairs_sum=pairs_sum,pairs_num_pre=pairs_num_pre))
 }
 
 "network.efficiency" <- function(graph){
@@ -1576,3 +1577,114 @@ if (length(colors)<num) {
     paste, collapse = "")
 }
 
+"install.allpackage" <- function() {
+  x<-c("vegan", "dplyr", "BiocManager","ggrepel", "doParallel", "picante","vegan","ggpubr",
+       "devtools","multcomp","multcompView","pgirmess","rstatix","rdacca.hp",
+       "patchwork","ggVennDiagram","ape","ggrepel","circlize","tidyverse",
+       "cowplot","dplyr","doParallel","reshape2","UpSetR","doBy","Hmisc",
+       "ggtext","plotrix","stringr","foreach" ,"mgcv", "reshape2", "ggplot2")
+
+  x <- x[!x %in% installed.packages()]
+  lapply(x, install.packages, character.only = TRUE)
+
+  ### devtools
+  y<-c("xiangpin/ggtreeExtra",
+       "YuLab-SMU/ggtree",
+       "YuLab-SMU/MicrobiotaProcess",
+       "YuLab-SMU/treeio",
+       "GuillemSalazar/EcolUtils",
+       "pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+  z<-c("phyloseq",
+       "edgeR",
+       "limma")
+
+  aa<-strsplit(y,"/")
+  y.n<-c()
+  for (tt in 1:length(aa)) {
+    sa<-aa[[tt]][length(aa[[tt]])]
+    {y.n<-c(y.n,sa)}
+  }
+  y.nn <- y.n[!y.n %in% installed.packages()]
+  y<-y[y.nn==y.n]
+  z <- z[!z %in% installed.packages()]
+  require(devtools)
+  require(BiocManager)
+  lapply(y, devtools::install_github, force = TRUE)
+  BiocManager::install(z,force = TRUE)
+}
+
+
+"calc_indivGroup_mean" <- function(otutab) {
+  colname<-colnames(otutab)
+  colname<-substr(colname,start = 1,stop = 2)
+  trt_id <-unique(colname)
+  group_num<-length(trt_id)
+  groupname<-substr(colnames(otutab),start = 1,stop = 2)%>%unique()
+  collen<-lapply(lapply(groupname,function(x){
+    grep(x,colnames(otutab))
+  }),function(y){
+    y %>%length()
+  })
+  collen1<-collen%>%data.frame()%>%max()
+  matchnum<-which(collen==collen1)%>%length()
+  allnum<-groupname%>%length()
+
+  if (as.numeric(matchnum) == as.numeric(allnum)) {
+    split_otu <- lapply(
+      apply(
+        sapply(trt_id,function(x){
+          grep(x,colnames(otutab))
+        }),2,FUN = function(x){
+          otutab[,x]
+        }),
+      function(x){
+        rowMeans(x)
+      })
+  } else {
+    split_otu <- lapply(
+      lapply(
+        sapply(trt_id,function(x){
+          grep(x,colnames(otutab))
+        }),FUN = function(x){
+          otutab[,x]
+        }),
+      function(x){
+        rowMeans(x)
+      })
+  }
+  return(split_otu)
+
+}
+
+"calc_indivGroup_abun" <- function(otutab) {
+  colname<-colnames(otutab)
+  colname<-substr(colname,start = 1,stop = 2)
+  trt_id <-unique(colname)
+  group_num<-length(trt_id)
+  groupname<-substr(colnames(otutab),start = 1,stop = 2)%>%unique()
+  collen<-lapply(lapply(groupname,function(x){
+    grep(x,colnames(otutab))
+  }),function(y){
+    y %>%length()
+  })
+  collen1<-collen%>%data.frame()%>%max()
+  matchnum<-which(collen==collen1)%>%length()
+  allnum<-groupname%>%length()
+
+  if (as.numeric(matchnum) == as.numeric(allnum)) {
+    split_otux <- apply(
+      sapply(trt_id,function(x){
+        grep(x,colnames(otutab))
+      }),2,FUN = function(x){
+        otutab[,x]
+      })
+  } else {
+    split_otux <- lapply(
+      sapply(trt_id,function(x){
+        grep(x,colnames(otutab))
+      }),FUN = function(x){
+        otutab[,x]
+      })
+  }
+  return(split_otux)
+}

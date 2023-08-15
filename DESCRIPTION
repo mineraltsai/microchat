@@ -8,41 +8,7 @@ Description: To meet the needs of researchers for personalized analysis and adva
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: 
-    ggtreeExtra, 
-    phyloseq, 
-    edgeR,
-    limma,
-    ggpubr,   
-    picante,	
-    vegan, 
-    multcomp,
-    multcompView,
-    pgirmess,
-    rstatix,
-    rdacca.hp,
-    patchwork,
-    ggVennDiagram,
-    pairwiseAdonis, 
-    MicrobiotaProcess, 
-    ape,
-    ggrepel,
-    circlize,
-    tidyverse, 
-    ggtree, 
-    treeio, 
-    cowplot, 
-    dplyr, 
-    ggrepel, 
-    doParallel, 
-    reshape2, 
-    UpSetR,
-    doBy, 
-    multcomp, 
-    edgeR, 
-    Hmisc, 
-    ggtext,
-    plotrix,
+Imports:  
     stringr
 RoxygenNote: 7.2.1
 Depends: 

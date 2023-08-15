@@ -159,6 +159,9 @@
                                               color_group=colorCustom(5,pal = "gygn"),
                                               export_path="microbial chat") {
 
+  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  dir.create(export_path, recursive = TRUE)
+
   dir.create(export_path, recursive = TRUE)
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
@@ -1015,6 +1018,8 @@
                                             char.stop=10,
                                             color_taxa=colorCustom(50,pal = "gygn"),
                                             export_path="microbial communication analysis/inter-taxa-interaction") {
+  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  dir.create(export_path, recursive = TRUE)
 
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
@@ -1270,12 +1275,6 @@
                 niceFacing = TRUE, adj = c(-0.3, 0.5), cex = textsize)
   }, bg.border = NA)
 
-  lgd <- ComplexHeatmap::Legend(at = names(grid.color),
-                                type = "grid",ncol=2,
-                                legend_gp = grid::gpar(fill = grid.col),
-                                title = lgd_title)
-  ComplexHeatmap::draw(lgd, x = unit(lgdxpoi, "npc") ,
-                       y = unit(lgdypoi, "npc"), just = c("right","bottom"))
 
   circos.clear()
 
@@ -1304,7 +1303,7 @@
   group_all<-split_otu$data_venn%>%rownames()
   group_num<-length(group_all)
 
-  ncol<-((group_num/2)%>%as.integer())+1
+  ncol<-ncol_layout(group_num)[[1]]%>%max()
 
   otudatax<-otudata
   otudatax<-otudatax[,-which(colSums(otudatax)==0)]
@@ -1774,6 +1773,8 @@
                                                color.heatmap = colorCustom(50,pal = "gygn"),
                                                export_path="microbial communication analysis/inter-taxa-interaction") {
 
+  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  dir.create(export_path, recursive = TRUE)
 
   if (class(microchatInterobj)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")

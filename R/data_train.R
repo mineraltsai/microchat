@@ -423,12 +423,13 @@
                                corrected=TRUE,
                                robust=0.05,
                                maxnum=1.15,minnum=0.85,
-                               decim=0,
                                addTo.sample.size=12,
                                add.sample.size=6){
   require(matrixStats)
   if (class(abunx)!="list") {
     if (length(unique(substr(rownames(abunx),start = 1,stop = 2)))!=1) {
+      as<-strsplit(as.character(abunx[1,1]), NULL)[[1]]
+      decim<-length(as)-match(".",as)
       abunx<-t(abunx)%>%data.frame()
       if (corrected) abunx<-data_corr(abunx,robust=robust,maxnum=maxnum,minnum=minnum)
       abunx<-addMicrochatsample(abunx,
@@ -437,6 +438,8 @@
                                 addTo.sample.size=addTo.sample.size,
                                 add.sample.size=add.sample.size)%>%t()%>%data.frame()
     } else {
+      as<-strsplit(as.character(abunx[1,1]), NULL)[[1]]
+      decim<-length(as)-match(".",as)
       if (corrected) abunx<-data_corr(abunx,robust=robust,maxnum=maxnum,minnum=minnum)
       abunx<-addMicrochatsample(abunx,
                                 maxnum=maxnum,minnum=minnum,
@@ -451,6 +454,8 @@
     abunxx<-list()
     for (i in names(abunx)) {
       param_indiv<-abunx[[which(names(abunx)==i)]]
+      as<-strsplit(as.character(param_indiv[1,1]), NULL)[[1]]
+      decim<-length(as)-match(".",as)
       if (corrected) param_indiv<-data_corr(param_indiv,robust=robust,maxnum=maxnum,minnum=minnum)
       param_indiv<-t(param_indiv)%>%data.frame()
       param_indiv<-param_indiv%>%as.matrix()

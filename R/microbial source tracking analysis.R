@@ -1,15 +1,3 @@
-x<-c("vegan", "dplyr", "ggrepel", "doParallel", "foreach" ,"mgcv", "reshape2", "ggplot2")
-lapply(x, require, character.only = TRUE)
-library("vegan")
-library("dplyr")
-library("doParallel")
-library("foreach")
-library("mgcv")
-library("reshape2")
-library("ggplot2")
-library("cowplot")
-library("Rcpp")
-library("RcppArmadillo")
 
 "schur" <- function(a,b) {
   return(a*b)
@@ -171,8 +159,8 @@ library("RcppArmadillo")
 }
 
 
-"sourcetracker_file" <- function(abun,source_group = c("M0","M3","M4"),
-                                 sink_group = "M3") {
+"sourcetracker_file" <- function(sink_group = "M3",
+                                 abun,source_group = c("M0","M3","M4")) {
 
   group_all<-substr(colnames(abun),start = 1,stop = 2)
 
@@ -201,7 +189,7 @@ library("RcppArmadillo")
 
   metadata$SampleID<-colnames(abun_all)
   otus<-abun_all
-  metadata<-column_to_rownames(metadata,var = "SampleID")
+  metadata<-tibble::column_to_rownames(metadata,var = "SampleID")
 
 
   return(list(otus=otus,metadata=metadata))
@@ -209,8 +197,67 @@ library("RcppArmadillo")
 
 
 
-"sourcetrack" <- function(metadata,otus) {
+"calc.st" <- function(it,Proportions_est,Ids,different_sources_flag=1,metadata,otus,envs,EM_iterations) {
+
+  # Extract the source environments and source/sink indices
+  if(different_sources_flag == 1){
+
+    train.ix <- which(metadata$SourceSink=='Source' & metadata$id == Ids[it])
+    test.ix <- which(metadata$SourceSink=='Sink' & metadata$id == Ids[it])
+
+  } else{
+
+    train.ix <- which(metadata$SourceSink=='Source')
+    test.ix <- which(metadata$SourceSink=='Sink' & metadata$id == Ids[it])
+  }
+
+  num_sources <- length(train.ix)
+  COVERAGE =  min(rowSums(otus[c(train.ix, test.ix),]))
+  #Can be adjusted by the user
+
+  # Define sources and sinks
+  sources <- as.matrix(microchat::rarefy(otus[train.ix,], COVERAGE))
+  sinks <- as.matrix(microchat::rarefy(t(as.matrix(otus[test.ix,])), COVERAGE))
+  print(paste("Number of OTUs in the sink sample = ",length(which(sinks > 0))))
+  print(paste("Seq depth in the sources and sink samples = ",COVERAGE))
+  print(paste("The sink is:", envs[test.ix]))
+
+  # Estimate source proportions for each sink
+
+  FEAST_output<-microchat::FEAST(source=sources, sinks = t(sinks), env = envs[train.ix], em_itr = EM_iterations, COVERAGE = COVERAGE)
+  Proportions_est <- FEAST_output$data_prop[,1]
+
+
+  if(length(unique(as.character(envs[train.ix])))<length(as.character(envs[train.ix]))) {
+    feastdata<-list()
+    for (k in 1:length(unique(as.character(envs[train.ix])))) {
+      samplename<-unique(as.character(envs[train.ix]))[k]
+      pos<-which(as.character(envs[train.ix])==samplename)
+
+      feastdata1<-Proportions_est[pos]%>%sum()
+      {
+        feastdata<-rbind(feastdata,feastdata1)
+      }
+    }
+
+    feastdata<-feastdata%>%as.numeric()
+
+    Proportions_est<-c(feastdata,
+                             Proportions_est[length(Proportions_est)])
+    names(Proportions_est) <- c(unique(as.character(envs[train.ix])), "unknown")
+  }
+
+  print("Source mixing proportions")
+  print(Proportions_est)
+
+  return(Proportions_est)
+}
+
+
+"sourcetrack" <- function(metadata,otus,nworker=4) {
+  require(parallel)
   EM_iterations = 1000 #default value
+  nworker=nworker
   ##if you use different sources for each sink, different_sources_flag = 1, otherwise = 0
   different_sources_flag = 1
 
@@ -240,70 +287,30 @@ library("RcppArmadillo")
   Ids <- na.omit(unique(metadata$id))
   Proportions_est <- list()
 
-
-  for(it in 1:length(Ids)){
-
-
-    # Extract the source environments and source/sink indices
-    if(different_sources_flag == 1){
-
-      train.ix <- which(metadata$SourceSink=='Source' & metadata$id == Ids[it])
-      test.ix <- which(metadata$SourceSink=='Sink' & metadata$id == Ids[it])
-
-    } else{
-
-      train.ix <- which(metadata$SourceSink=='Source')
-      test.ix <- which(metadata$SourceSink=='Sink' & metadata$id == Ids[it])
+  if (nworker!=1) {
+    c1 <- try(parallel::makeCluster(nworker, type = "PSOCK"))
+    if (class(c1)[1] == "try-error") {
+      c1 <- try(parallel::makeCluster(nworker, setup_timeout = 0.5))
     }
-
-    num_sources <- length(train.ix)
-    COVERAGE =  min(rowSums(otus[c(train.ix, test.ix),]))
-    #Can be adjusted by the user
-
-    # Define sources and sinks
-
-    sources <- as.matrix(rarefy(otus[train.ix,], COVERAGE))
-    sinks <- as.matrix(rarefy(t(as.matrix(otus[test.ix,])), COVERAGE))
-
-
-    print(paste("Number of OTUs in the sink sample = ",length(which(sinks > 0))))
-    print(paste("Seq depth in the sources and sink samples = ",COVERAGE))
-    print(paste("The sink is:", envs[test.ix]))
-
-    # Estimate source proportions for each sink
-
-    FEAST_output<-FEAST(source=sources, sinks = t(sinks), env = envs[train.ix], em_itr = EM_iterations, COVERAGE = COVERAGE)
-    Proportions_est[[it]] <- FEAST_output$data_prop[,1]
-
-
-    if(length(unique(as.character(envs[train.ix])))<length(as.character(envs[train.ix]))) {
-      feastdata<-list()
-      for (k in 1:length(unique(as.character(envs[train.ix])))) {
-        samplename<-unique(as.character(envs[train.ix]))[k]
-        pos<-which(as.character(envs[train.ix])==samplename)
-
-        feastdata1<-Proportions_est[[it]][pos]%>%sum()
-        {
-          feastdata<-rbind(feastdata,feastdata1)
-        }
-      }
-
-      feastdata<-feastdata%>%as.numeric()
-
-      Proportions_est[[it]]<-c(feastdata,
-                               Proportions_est[[it]][length(Proportions_est[[it]])])
-      names(Proportions_est[[it]]) <- c(unique(as.character(envs[train.ix])), "unknown")
+    if (class(c1)[1] == "try-error") {
+      c1 <- try(parallel::makeCluster(nworker, setup_strategy = "sequential"))
     }
+    message("Now randomizing by parallel computing. Begin at ",
+            date(), ". Please wait...")
+    clusterExport(c1, "%>%")
+    Proportions_est = parallel::parLapply(c1, 1:length(Ids), calc.st,
+                                          Proportions_est,Ids,
+                                          different_sources_flag=1,
+                                          metadata=metadata,
+                                          otus=otus,
+                                          envs=envs,
+                                          EM_iterations=1000)
 
-    print("Source mixing proportions")
-    print(Proportions_est[[it]])
-
-
+    parallel::stopCluster(c1)
   }
 
-
   ss<-lapply(Proportions_est, function(x){
-    y<-x%>%data.frame()
+   data.frame(x)
 
   })
   rowna<-data.frame()
@@ -932,6 +939,7 @@ library("RcppArmadillo")
 
 
 "calcMicrochatSourceTimes" <- function(submchat,
+                                       nworker=4,
                                        sink_group = "ml",
                                        source_group="ct") {
 
@@ -956,7 +964,7 @@ library("RcppArmadillo")
     metadata<-stdata$metadata
     otus<-stdata$otus
 
-    data_st<-sourcetrack(metadata,otus)
+    data_st<-sourcetrack(metadata,otus,nworker=nworker)
 
     FEAST_output<-data_st
     colnames(FEAST_output) = paste("repeat_",1:length(colnames(FEAST_output)),sep = "") #取Ids作为平行代号
@@ -989,7 +997,7 @@ library("RcppArmadillo")
       metadata<-stdata$metadata
       otus<-stdata$otus
 
-      data_st<-sourcetrack(metadata,otus)
+      data_st<-sourcetrack(metadata,otus,nworker=4)
 
       FEAST_output<-data_st
       colnames(FEAST_output) = paste("repeat_",1:length(colnames(FEAST_output)),sep = "") #取Ids作为平行代号
@@ -1039,7 +1047,10 @@ library("RcppArmadillo")
   func="times"
 
 
-  return(list(FEAST_output=FEAST_output,sink_group=sink_group,source_group=source_group,fun=func))
+  return(list(FEAST_output=FEAST_output,
+              sink_group=sink_group,
+              source_group=source_group,fun=func,
+              otu_table=submchat$otu_table))
 
 
 }
@@ -1047,6 +1058,7 @@ library("RcppArmadillo")
 
 
 "calcMicrochatSource" <- function(submchat,
+                                  nworker=4,
                                   sink_group = "ml",
                                   source_group="ct") {
 
@@ -1072,7 +1084,7 @@ library("RcppArmadillo")
     metadata<-stdata$metadata
     otus<-stdata$otus
 
-    data_st<-sourcetrack(metadata,otus)
+    data_st<-sourcetrack(metadata,otus,nworker=nworker)
 
     FEAST_output<-data_st
     colnames(FEAST_output) = paste("repeat_",1:length(colnames(FEAST_output)),sep = "") #取Ids作为平行代号
@@ -1102,7 +1114,7 @@ library("RcppArmadillo")
       metadata<-stdata$metadata
       otus<-stdata$otus
 
-      data_st<-sourcetrack(metadata,otus)
+      data_st<-sourcetrack(metadata,otus,nworker=nworker)
 
       FEAST_output<-data_st
       colnames(FEAST_output) = paste("repeat_",1:length(colnames(FEAST_output)),sep = "") #取Ids作为平行代号
@@ -1140,22 +1152,32 @@ library("RcppArmadillo")
   }
 
   func="common"
-  return(list(FEAST_output=FEAST_output,sink_group=sink_group,source_group=source_group,fun=func))
+  return(list(FEAST_output=FEAST_output,
+              sink_group=sink_group,source_group=source_group,fun=func,
+              otu_table=submchat$otu_table))
 }
 
 
 "plot_sourcetrack" <- function(microchatSourceobj,
+                               color_unknown="red",
                                sourcecolor = colorCustom(5,pal ="gygn" ),
                                plot_type=c("pie","chord","barplot"),
                                repeatiton=TRUE,
                                barplot.nogreyback=FALSE,
                                export_path="sourcetracker") {
   plot_type<-match.arg(plot_type)
+  export_path<-paste(export_path,"/microbial sourcetracking analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   library(dplyr)
   single_st<-microchatSourceobj
   FEAST_output<-single_st$FEAST_output
   sink_group<-single_st$sink_group
+  otu_tab<-single_st$otu_table
+  all.g<-unique(substr(colnames(otu_tab),start = 1,stop = 2))
+  sourcecolor<-sourcecolor[1:length(all.g)]
+  names(sourcecolor)<-all.g
+  sourcecolor<-c(sourcecolor[match(c(sink_group,single_st$source_group),
+                                 names(sourcecolor))],color_unknown)
 
   ttnum<-length(colnames(FEAST_output))/2
   if (!is.integer(ttnum)) {
@@ -1165,13 +1187,14 @@ library("RcppArmadillo")
   }
 
   if (plot_type=="pie") {
+    sourcecolor<-sourcecolor[2:length(sourcecolor)]
     if (sink_group=="all") {
       stop("\n","No pie plot could be seen. Please refer to barplot.")
     }
     if (repeatiton) {
       pdf(paste(export_path,"/sink(",sink_group,")_",
                 single_st$source_group,"_",plot_type,".pdf",sep = ""),
-          width=10, height=10)
+          width=10, height=10,family = "serif")
       par(mfrow=c(2,ttnum), mar=c(1,1,1,1))
       for (i in 1:length(colnames(FEAST_output))) {
 
@@ -1204,7 +1227,7 @@ library("RcppArmadillo")
       labs <- paste0(row.names(asx_norm)," (", round(asx_norm[,1]/sum(asx_norm[,1])*100,2), "%)")
       pdf(paste(export_path,"/sink(",sink_group,")_",
                 single_st$source_group,"_",plot_type,".pdf",sep = ""),
-          width=10, height=10)
+          width=10, height=10,family = "serif")
       pie(asx_norm[,1],labels=labs, init.angle=90,
           col =  sourcecolor,
           border="white",main = sink_group)
@@ -1231,7 +1254,7 @@ library("RcppArmadillo")
       circlize::circos.clear()
       pdf(paste(export_path,"/sink(",sink_group,")_",
                 single_st$source_group,"_",plot_type,".pdf",sep = ""),
-          width=10, height=10)
+          width=10, height=10,family = "serif")
 
       par(mfrow=c(2,ttnum), mar=c(1,1,1,1),family="serif")
       for (i in 1:length(colnames(FEAST_output))) {
@@ -1352,7 +1375,7 @@ library("RcppArmadillo")
       circlize::circos.clear()
       pdf(paste(export_path,"/sink(",sink_group,")_",
                 single_st$source_group,"_",plot_type,".pdf",sep = ""),
-          width=10, height=10)
+          width=10, height=10,family = "serif")
       par(family="serif")
       asx = as.data.frame(rowMeans(FEAST_output))
       asx  = as.matrix(asx)
@@ -1479,16 +1502,22 @@ library("RcppArmadillo")
         feastdata_bar<-feastdata_bar%>%rownames_to_column(var = "row")
 
         feastdata_bar$label<-paste(round(feastdata_bar$proport*100,2),"%")
+        feastdata_bar$proport<-feastdata_bar$proport*100
         feastdata_bar$label.pos<-feastdata_bar$proport+0.03
 
         feastdata_bar$row<-factor(feastdata_bar$row,levels = unique(feastdata_bar$row))
+        names(sourcecolor)[2:length(sourcecolor)]<-c(single_st$source_group,"unknown")
+        sourcecolorx<-sourcecolor[match(c(single_st$source_group,"unknown"),
+                                       names(sourcecolor))]
 
         p<-ggplot(feastdata_bar,aes(x=row,y=proport)) +
           geom_col(aes(fill=row),width = 0.5)+
-          scale_fill_manual(values = sourcecolor)+
-          scale_y_continuous(expand = c(0,0),limits=c(0,1))+
+          scale_fill_manual(values = sourcecolorx)+
+          scale_y_continuous(expand = c(0,0),limits=c(0,100))+
           geom_text(aes(x = row,y = label.pos,label = label),
-                    size = 5,color = "black",family = "serif")+labs(x = "Source",y="Proportion (%)")
+                    vjust=-0.5,
+                    size = 5,color = "black",family = "serif")+
+          labs(x = "Source",y="Proportion (%)",title = paste("Sink ",sink_group,sep = ""))
 
         if (barplot.nogreyback) {
           p<-p+
@@ -1497,10 +1526,10 @@ library("RcppArmadillo")
               axis.ticks.length = unit(0.2,"lines"),
               axis.ticks = element_line(color='black'),
               #axis.line = element_line(colour = "black"),
-              axis.title.x=element_text(colour='black', size=24,face = "bold",family = "serif",vjust = -1),
-              axis.title.y=element_text(colour='black', size=24,face = "bold",family = "serif",vjust = 1.5),
-              axis.text.y=element_text(colour='black',size=12,family = "serif"),
-              axis.text.x=element_text(colour = "black",size = 12,
+              axis.title.x=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = -1),
+              axis.title.y=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+              axis.text.y=element_text(colour='black',size=10,family = "serif"),
+              axis.text.x=element_text(colour = "black",size = 10,
                                        angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
               strip.text = element_text(colour = "red",size = 10,face = "bold",family = "serif"),
               strip.background = element_rect(fill = "white"),
@@ -1508,13 +1537,14 @@ library("RcppArmadillo")
               legend.position = "none",aspect.ratio = 1)}
 
         p<-p+theme(#panel.border = element_blank(),
+          text = element_text(family = "serif"),
           axis.ticks.length = unit(0.2,"lines"),
           axis.ticks = element_line(color='black'),
           #axis.line = element_line(colour = "black"),
-          axis.title.x=element_text(colour='black', size=24,face = "bold",family = "serif",vjust = -1),
-          axis.title.y=element_text(colour='black', size=24,face = "bold",family = "serif",vjust = 1.5),
-          axis.text.y=element_text(colour='black',size=12,family = "serif"),
-          axis.text.x=element_text(colour = "black",size = 12,
+          axis.title.x=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = -1),
+          axis.title.y=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+          axis.text.y=element_text(colour='black',size=10,family = "serif"),
+          axis.text.x=element_text(colour = "black",size = 10,
                                    angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
           strip.text = element_text(colour = "red",size = 10,face = "bold",family = "serif"),
           strip.background = element_rect(fill = "white"),
@@ -1547,13 +1577,17 @@ library("RcppArmadillo")
         }
 
         feastdata_bar$label<-paste(round(feastdata_bar$value*100,2),"%")
-
+        feastdata_bar$value<-feastdata_bar$value*100
         feastdata_bar$sink<-factor(feastdata_bar$sink,levels = unique(feastdata_bar$sink))
+        names(sourcecolor)[2:length(sourcecolor)]<-c(single_st$source_group,"unknown")
+        sourcecolorx<-sourcecolor[match(c(single_st$source_group,"unknown"),
+                                        names(sourcecolor))]
+
         p<- ggplot(feastdata_bar, aes(x=sink, y=value, fill=row)) +
           geom_bar(stat = "identity", width=0.5, col='white') +
-          scale_fill_manual(values = sourcecolor)+
-          scale_y_continuous(expand = c(0,0),limits=c(0,1)) +
-          geom_text(aes(x = sink,y = value.pos,label = label),
+          scale_fill_manual(values = sourcecolorx)+
+          scale_y_continuous(expand = c(0,0),limits=c(0,100)) +
+          geom_text(aes(x = sink,y = value.pos,label = label), vjust=-0.5,
                     size = 5,color = "black",family = "serif")
 
         if (barplot.nogreyback) {
@@ -1574,6 +1608,7 @@ library("RcppArmadillo")
               legend.position = "none",aspect.ratio = 1)}
 
         p<-p+ theme(#panel.border = element_blank(),
+          text = element_text(family = "serif"),
           axis.ticks.length = unit(0.2,"lines"),
           axis.ticks = element_line(color='black'),
           #axis.line = element_line(colour = "black"),

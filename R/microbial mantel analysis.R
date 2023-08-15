@@ -1,101 +1,56 @@
-"plot_mantel_heatmap" <- function(data12,
-                                  edge.curve.min = -0.3,
-                                  edge.curve.max = 0.3,add.sig=TRUE,
-                                  layout = c("lower","upper"),
-                                  grid.background =TRUE,
-                                  mantel.node.pos.para=TRUE, ###false,不平行，则需要调整下面参数
-                                  mantel.node.x.pos=c(5,7,9,11),
-                                  mantel.node.y.pos=c(13,11,9,7),
-                                  adjust.diag=TRUE, ###是否调整对角线距离
-                                  adjust.diag.para=TRUE, ###是否平行调整对角线距离
-                                  adjust.diag.para.dist=1,  ###是否平行调整对角线距离为1
-                                  adjust.node = c(5,7),
-                                  adjust.diag.dist = c(3,4),
-                                  diag.node.size = 5,
-                                  heatmap.node.size.ratio=15,
-                                  mantel.node.size.para=TRUE,
-                                  mantel.node.size=5,
-                                  mantel.node.size.custom=rep(5,4),  ###5为大小，4为数量
-                                  heatmap.shape = 1,
-                                  diag.node.shape.order = 1,
-                                  mantel.node.shape.order = c(1,2,3,4),
-                                  adjust.text.x = 0.8,
-                                  adjust.text.y = 0.8,
-                                  grid.color = "grey90",
-                                  diag.frame.color = "red",
-                                  mantel.frame.color="purple",
-                                  space.h=1.6,
-                                  space.v=1.5,
-                                  node.color.postive = "blue",
-                                  node.color.mid = "white",
-                                  node.color.negative = "red",
-                                  diag.node.color = "red",
-                                  mantel.node.color = "purple",
-                                  label.cex=1,
-                                  edge.size.max = 8,
-                                  edge.size.center= 4,
-                                  edge.size.min = 2,
-                                  arrow.width = 0,
-                                  arrow.size = 0,
-                                  pbreaks = c(-Inf,0.001, 0.01, 0.05, Inf),
-                                  plabels = c("< 0.001", "0.001 - 0.01", "0.01 - 0.05", ">= 0.05"),
-                                  color.p=c("grey90","red","blue","yellow"),
-                                  rbreaks = c(-Inf,0, 0.4, 0.8, Inf),
-                                  rlabels = c("< 0","0 - 0.2", "0.2 - 0.8", ">= 0.8"),
-                                  size.r=c(0.5,2,5,10),
-                                  node.label.color=NULL) {
+"plot_mantel_heatmap"<-function(data12,
+                                edge.curve.min = -0.3,
+                                edge.curve.max = 0.3,add.sig=TRUE,
+                                layout = c("lower","upper"),
+                                grid.background =TRUE,
+                                mantel.node.pos.para=TRUE, ###false,不平行，则需要调整下面参数
+                                mantel.node.x.pos=c(5,7,9,11),
+                                mantel.node.y.pos=c(13,11,9,7),
+                                adjust.diag=TRUE, ###是否调整对角线距离
+                                adjust.diag.para=TRUE, ###是否平行调整对角线距离
+                                adjust.diag.para.dist=1,  ###是否平行调整对角线距离为1
+                                adjust.node = c(5,7),
+                                adjust.diag.dist = c(3,4),
+                                diag.node.size = 5,
+                                heatmap.node.size.ratio=15,
+                                mantel.node.size.para=TRUE,
+                                mantel.node.size=5,
+                                mantel.node.size.custom=rep(5,4),  ###5为大小，4为数量
+                                heatmap.shape = 1,
+                                diag.node.shape.order = 1,
+                                mantel.node.shape.order = c(1,2,3,4),
+                                adjust.text.x = 0.8,
+                                adjust.text.y = 0.8,
+                                grid.color = "grey90",
+                                diag.frame.color = "red",
+                                mantel.frame.color="purple",
+                                space.h=1.6,
+                                space.v=1.5,
+                                node.color.postive = "blue",
+                                node.color.mid = "white",
+                                node.color.negative = "red",
+                                diag.node.color = "red",
+                                mantel.node.color = "purple",
+                                label.cex=1,
+                                edge.size.max = 8,
+                                edge.size.center= 4,
+                                edge.size.min = 2,
+                                arrow.width = 0,
+                                arrow.size = 0,
+                                pbreaks = c(-Inf,0.001, 0.01, 0.05, Inf),
+                                plabels = c("< 0.001", "0.001 - 0.01", "0.01 - 0.05", ">= 0.05"),
+                                color.p=c("grey90","red","blue","yellow"),
+                                rbreaks = c(-Inf,0, 0.4, 0.8, Inf),
+                                rlabels = c("< 0","0 - 0.2", "0.2 - 0.8", ">= 0.8"),
+                                size.r=c(0.5,2,5,10),
+                                node.label.color=NULL) {
 
   if (grid.background) {
-    "mantel_data" <- function(data12) {
-
-      corr<-data12$occor.r
-      corp<-data12$occor.p
-      mantel<-data12$mantel
-
-      d3<-subset(mantel,select=c(1:3))
-      d4<-subset(mantel,select=c(1:2,4))
-
-      d5<-tidyr::spread(d3,key = "spec",value = r,drop=FALSE)
-      d5<-tibble::column_to_rownames(d5,var = "env")
-
-      d6<-tidyr::spread(d4,key = "spec",value = p,drop=FALSE)
-      d6<-tibble::column_to_rownames(d6,var = "env")
-      mantelr<-d5%>%as.matrix()%>%abs()
-      mantelp<-d6%>%as.matrix()%>%abs()
-
-      netc<-matrMerge(corr,mantelr)
-      netp<-matpMerge(corp,mantelp)
-
-
-      return(list(corr=corr,corp=corp,
-                  diagcorr=netc,diagp=netp))
-    }
 
     mantel_data<-mantel_data(data12)
     net3<-mantel_data$corr%>%abs()
     corr<-mantel_data$corr
     corp<-mantel_data$corp
-
-    "coord_matrix" <- function(net3)
-    {
-      mat1<-net3
-      diag1<-length(row.names(mat1))
-      diag<-diag1+1
-      for (kk in 2:(nrow(net3)-1)) {
-        matk<-net3[kk:nrow(net3),kk:nrow(net3)]
-
-        {
-          mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), nrow(matk))),
-                      cbind(matrix(0, nrow(matk), ncol(mat1)),matk))
-          diag_num<-length(row.names(mat1))+1
-          diag<-rbind(diag,diag_num)
-        }
-      }
-      matend<-net3[nrow(net3),nrow(net3)]
-      mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), 1)),
-                  cbind(matrix(0, 1, ncol(mat1)),matend))
-      return(list(mat1=mat1,diag=diag))
-    }
 
     mat11<-coord_matrix(net3)
     mat1<-mat11$mat1
@@ -139,8 +94,8 @@
 
 
     if (mantel.node.pos.para) {
-      xscale<-seq(as.integer(nrow(netc)/2),nrow(netc),length.out=add.node)
-      yscale<- ymax+7-xscale
+      xscale<-seq(nrow(netc)*2/5,nrow(netc),length.out=add.node)
+      yscale<- ymax+1+1+2/3*(ymax-3)-xscale
     } else {
       xscale<- mantel.node.x.pos
       yscale<- mantel.node.y.pos
@@ -326,14 +281,17 @@
 
     sub_net_layout2<-rbind(sub_net_layout,sub_net_layout)
     layout=layout
-
     if (add.sig) {
       corp<-pp$corrPos[,1:6]
       corp$p.value<-corp$p.value%>%as.double()
-      corp[which(corp$p.value<=0.001 & corp$p.value >0),]$p.value <-"***"
-      corp[which(corp$p.value<=0.01 & corp$p.value >0.001),]$p.value <-"**"
-      corp[which(corp$p.value<0.05 & corp$p.value >0.01),]$p.value <-"*"
-      corp[which(corp$p.value>=0.05 | corp$p.value==0),]$p.value<-""
+
+      corp %>%
+        mutate(p.value = case_when(
+          p.value <=0.001 & p.value > 0 ~ "***",
+          p.value <=0.01 & p.value > 0.001 ~ "**",
+          p.value <=0.05 & p.value > 0.01 ~ "*",
+          TRUE ~ ""
+        )) -> corp
       corp<-corp$p.value%>%as.matrix()
 
       newp<-corp
@@ -355,11 +313,12 @@
 
       edge.curved1<- matrix(rep(1,add.node),ncol(netp),nrow(netp))
       for (jj in 1:add.node) {
-        order <- jj*2
+        order <- nrow(corr)
+        order1<-(order/2)%>%as.integer()
         edge.curved<-rep(1,nrow(corr))
         edge.curved[order]<-0
-        edge.curved[1:order]<-seq(edge.curve.max,0,length.out=order)
-        edge.curved[order:length(edge.curved)]<-seq(0,edge.curve.min,length.out=length(edge.curved)-order+1)
+        edge.curved[1:order1]<-seq(edge.curve.max,0,length.out=order1)
+        edge.curved[order1:order]<-seq(0,edge.curve.min,length.out=order-order1+1)
         edge.curved1[,jj]<-edge.curved
       }
 
@@ -389,11 +348,12 @@
 
       edge.curved1<- matrix(rep(1,add.node),ncol(netp),nrow(netp))
       for (jj in 1:add.node) {
-        order <- jj*2
+        order <- nrow(corr)
+        order1<-(order/2)%>%as.integer()
         edge.curved<-rep(1,nrow(corr))
         edge.curved[order]<-0
-        edge.curved[1:order]<-seq(edge.curve.max,0,length.out=order)
-        edge.curved[order:length(edge.curved)]<-seq(0,edge.curve.min,length.out=length(edge.curved)-order+1)
+        edge.curved[1:order1]<-seq(edge.curve.max,0,length.out=order1)
+        edge.curved[order1:order]<-seq(0,edge.curve.min,length.out=order-order1+1)
         edge.curved1[,jj]<-edge.curved
       }
 
@@ -408,56 +368,10 @@
            vertex.label.dist = label.dist2,
            vertex.label.family = "serif")}} else {
 
-             "mantel_data" <- function(data12) {
-
-               corr<-data12$occor.r
-               corp<-data12$occor.p
-               mantel<-data12$mantel
-
-               d3<-subset(mantel,select=c(1:3))
-               d4<-subset(mantel,select=c(1:2,4))
-
-               d5<-tidyr::spread(d3,key = "spec",value = r,drop=FALSE)
-               d5<-tibble::column_to_rownames(d5,var = "env")
-
-               d6<-tidyr::spread(d4,key = "spec",value = p,drop=FALSE)
-               d6<-tibble::column_to_rownames(d6,var = "env")
-               mantelr<-d5%>%as.matrix()%>%abs()
-               mantelp<-d6%>%as.matrix()%>%abs()
-
-               netc<-matrMerge(corr,mantelr)
-               netp<-matpMerge(corp,mantelp)
-
-
-               return(list(corr=corr,corp=corp,
-                           diagcorr=netc,diagp=netp))
-             }
-
              mantel_data<-mantel_data(data12)
              net3<-mantel_data$corr%>%abs()
              corr<-mantel_data$corr
              corp<-mantel_data$corp
-
-             "coord_matrix" <- function(net3)
-             {
-               mat1<-net3
-               diag1<-length(row.names(mat1))
-               diag<-diag1+1
-               for (kk in 2:(nrow(net3)-1)) {
-                 matk<-net3[kk:nrow(net3),kk:nrow(net3)]
-
-                 {
-                   mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), nrow(matk))),
-                               cbind(matrix(0, nrow(matk), ncol(mat1)),matk))
-                   diag_num<-length(row.names(mat1))+1
-                   diag<-rbind(diag,diag_num)
-                 }
-               }
-               matend<-net3[nrow(net3),nrow(net3)]
-               mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), 1)),
-                           cbind(matrix(0, 1, ncol(mat1)),matend))
-               return(list(mat1=mat1,diag=diag))
-             }
 
              mat11<-coord_matrix(net3)
              mat1<-mat11$mat1
@@ -500,8 +414,9 @@
              add.node<-ncol(netc)
 
              if (mantel.node.pos.para) {
-               xscale<-seq(as.integer(nrow(netc)/2),nrow(netc),length.out=add.node)
-               yscale<- ymax+7-xscale
+               xscale<-seq(nrow(netc)*2/5,nrow(netc),length.out=add.node)
+               yscale<- ymax+1+1+2/3*(ymax-3)-xscale
+               ###mantel节点比同x坐标下对角线节点高4
              } else {
                xscale<- mantel.node.x.pos
                yscale<- mantel.node.y.pos
@@ -549,7 +464,8 @@
              igraph::V(g)$size <- V(g)$weight
 
              ###节点形状
-             cat("\n","shape: ",shapes(),sep = "\n")
+             shape.sel<-data.frame(shape=shapes(),number=1:length(shapes()))
+             print(shape.sel)
              diag.node.shape = shapes()[diag.node.shape.order]
              mantel.node.shape = shapes()[mantel.node.shape.order]
              ##定义所有节点形状
@@ -691,10 +607,13 @@
              if (add.sig) {
                corp<-pp$corrPos[,1:6]
                corp$p.value<-corp$p.value%>%as.double()
-               corp[which(corp$p.value<=0.001 & corp$p.value >0),]$p.value <-"***"
-               corp[which(corp$p.value<=0.01 & corp$p.value >0.001),]$p.value <-"**"
-               corp[which(corp$p.value<0.05 & corp$p.value >0.01),]$p.value <-"*"
-               corp[which(corp$p.value>=0.05 | corp$p.value==0),]$p.value<-""
+               corp %>%
+                 mutate(p.value = case_when(
+                   p.value <=0.001 & p.value > 0 ~ "***",
+                   p.value <=0.01 & p.value > 0.001 ~ "**",
+                   p.value <=0.05 & p.value > 0.01 ~ "*",
+                   TRUE ~ ""
+                 )) -> corp
                corp<-corp$p.value%>%as.matrix()
 
                newp<-corp
@@ -715,11 +634,12 @@
 
                edge.curved1<- matrix(rep(1,add.node),ncol(netp),nrow(netp))
                for (jj in 1:add.node) {
-                 order <- jj*2
+                 order <- nrow(corr)
+                 order1<-(order/2)%>%as.integer()
                  edge.curved<-rep(1,nrow(corr))
                  edge.curved[order]<-0
-                 edge.curved[1:order]<-seq(edge.curve.max,0,length.out=order)
-                 edge.curved[order:length(edge.curved)]<-seq(0,edge.curve.min,length.out=length(edge.curved)-order+1)
+                 edge.curved[1:order1]<-seq(edge.curve.max,0,length.out=order1)
+                 edge.curved[order1:order]<-seq(0,edge.curve.min,length.out=order-order1+1)
                  edge.curved1[,jj]<-edge.curved
                }
 
@@ -748,11 +668,12 @@
              if (layout == "upper") {##vertex.attributes(g2)
                edge.curved1<- matrix(rep(1,add.node),ncol(netp),nrow(netp))
                for (jj in 1:add.node) {
-                 order <- jj*2
+                 order <- nrow(corr)
+                 order1<-(order/2)%>%as.integer()
                  edge.curved<-rep(1,nrow(corr))
                  edge.curved[order]<-0
-                 edge.curved[1:order]<-seq(edge.curve.max,0,length.out=order)
-                 edge.curved[order:length(edge.curved)]<-seq(0,edge.curve.min,length.out=length(edge.curved)-order+1)
+                 edge.curved[1:order1]<-seq(edge.curve.max,0,length.out=order1)
+                 edge.curved[order1:order]<-seq(0,edge.curve.min,length.out=order-order1+1)
                  edge.curved1[,jj]<-edge.curved
                }
 
@@ -765,10 +686,58 @@
                     layout=sub_net_layout2,
                     vertex.label.degree = label.locs,
                     vertex.label.dist = label.dist2,
-                    vertex.label.family = "serif")}}
+                    vertex.label.family = "serif")
+             }
+           }
+
+  gg <- recordPlot()
+  return(gg)
 }
 
+"mantel_data" <- function(data12) {
 
+  corr<-data12$occor.r
+  corp<-data12$occor.p
+  mantel<-data12$mantel
+
+  d3<-subset(mantel,select=c(1:3))
+  d4<-subset(mantel,select=c(1:2,4))
+
+  d5<-tidyr::spread(d3,key = "spec",value = r,drop=FALSE)
+  d5<-tibble::column_to_rownames(d5,var = "env")
+
+  d6<-tidyr::spread(d4,key = "spec",value = p,drop=FALSE)
+  d6<-tibble::column_to_rownames(d6,var = "env")
+  mantelr<-d5%>%as.matrix()%>%abs()
+  mantelp<-d6%>%as.matrix()%>%abs()
+
+  netc<-matrMerge(corr,mantelr)
+  netp<-matpMerge(corp,mantelp)
+
+
+  return(list(corr=corr,corp=corp,
+              diagcorr=netc,diagp=netp))
+}
+
+"coord_matrix" <- function(net3) {
+  mat1<-net3
+  diag1<-length(row.names(mat1))
+  diag<-diag1+1
+  for (kk in 2:(nrow(net3)-1)) {
+    matk<-net3[kk:nrow(net3),kk:nrow(net3)]
+
+    {
+      mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), nrow(matk))),
+                  cbind(matrix(0, nrow(matk), ncol(mat1)),matk))
+      diag_num<-length(row.names(mat1))+1
+      diag<-rbind(diag,diag_num)
+    }
+  }
+  matend<-net3[nrow(net3),nrow(net3)]
+  mat1<-rbind(cbind(mat1,matrix(0, ncol(mat1), 1)),
+              cbind(matrix(0, 1, ncol(mat1)),matend))
+  return(list(mat1=mat1,diag=diag))
+}
 
 "matrMerge" <- function(corp,mantelp) {
   d1<-corp
@@ -986,7 +955,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }
@@ -1154,7 +1123,8 @@
 
   title.pos = c(0, space.v)
   text(title.pos[1], title.pos[2], paste0("Micro-occurrence communication network"), cex = 1,family="serif")
-
+  gg <- recordPlot()
+  return(gg)
 }
 
 
@@ -1216,7 +1186,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }
@@ -1384,7 +1354,8 @@
   title.pos = c(0, space.v)
   text(title.pos[1], title.pos[2], paste0("Micro-occurrence network"), cex = 1,family="serif")
 
-
+  gg <- recordPlot()
+  return(gg)
 
 }
 
@@ -1576,6 +1547,8 @@
 
 
 "plot_hireedd" <- function(data12,
+                           color.use,
+                           vertex.receiver,
                            node.label.color=NULL,
                            arrow.width = arrow.width,
                            arrow.size = arrow.size) {
@@ -1588,8 +1561,8 @@
                          arrow.width = arrow.width,
                          arrow.size = arrow.size,
                          node.label.color=node.label.color,
-                         vertex.receiver = seq(1,6),
-                         color.use=colorCustom(50,pal = "pkgn"))
+                         vertex.receiver = vertex.receiver,
+                         color.use=color.use)
 
   matchat_net_2hierarchy(data12,
                          vertex.weight.keep = 5,
@@ -1599,8 +1572,8 @@
                          arrow.width = arrow.width,
                          arrow.size = arrow.size,
                          node.label.color=node.label.color,
-                         vertex.receiver = seq(1,6),
-                         color.use=colorCustom(50,pal = "pkgn"))
+                         vertex.receiver = vertex.receiver,
+                         color.use=color.use)
 
 
 }
@@ -1652,7 +1625,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }
@@ -1866,7 +1839,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }
@@ -2035,7 +2008,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }
@@ -2206,7 +2179,7 @@
   mean<-list()
   colnum<-length(colnames(data))
   for (k in 1:colnum) {
-    data[,k]<-normalize(data[,k])$x
+    data[,k]<-microchat::normalize(data[,k])$x
     sum[k]<-sum(data[,k])
     mean[k]<-mean(data[,k])
   }

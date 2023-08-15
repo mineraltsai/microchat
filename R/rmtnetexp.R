@@ -78,6 +78,47 @@
 
 }
 
+"get.MutiPie"<-function(g,taxon) {
+  taxon$name<-rownames(taxon)
+  m.node_phylum.m<-data.frame()
+  for(i in 1:length(g)){
+    g1 <- g[[i]]
+    E(g1)$correlation <- E(g1)$weight
+    E(g1)$weight <- abs(E(g1)$weight)
+    node_table = as.data.frame(vertex.attributes(g1))
+    node_table$degree = degree(g1)
+    node_table$closeness=closeness(g1)
+    node_table$coreness<-coreness(g1)
+    node_table$eccentricity<-eccentricity(g1, vids = V(g1), mode = "all")
+    node_table$strength<-strength(g1,vids = V(g1),mode = "all",loops = TRUE, weights = NULL)
+    node_table$betweenness=betweenness(g1)
+    node_table$evcent=evcent(g1)$vector
+    module_membership = membership(cluster_fast_greedy(g1))
+    node_table$module= membership(cluster_fast_greedy(g1))
+    edge_table = as.data.frame(edge.attributes(g1))
+    edge_names = unlist(strsplit(attr(E(g1), "vnames"), "|", fixed=T))
+    edge_table$node1 = edge_names[seq(from = 1, to = (length(edge_names) - 1), by = 2)]
+    edge_table$node2 = edge_names[seq(from = 2, to = length(edge_names), by = 2)]
+    edge_table$cor[which(edge_table$correlation < 0)] = "-1"
+    edge_table$cor[which(edge_table$correlation > 0)] = "1"
+    node_table<-merge(node_table,taxon,by="name")
+    node_table$id<-node_table$name
+
+    node_phylum.m<-data.frame()
+    for (moduled in unique(node_table$module)) {
+      node_module <- subset(node_table, module == moduled)
+      node_phylum <- data.frame(table(node_module$Phylum))
+
+      node_phylum$module<-moduled
+
+      node_phylum.m<-rbind(node_phylum.m,node_phylum)
+    }
+    node_phylum.m$group<-names(g)[i]
+    m.node_phylum.m<-rbind(m.node_phylum.m,node_phylum.m)
+
+  }
+  return(data=m.node_phylum.m)
+}
 
 "plot_rmnet_modnode_barplot_export" <- function(g,taxon,
                                                 geom.align=c("center","bottom"),
@@ -92,10 +133,10 @@
                                                 color_module=colorCustom(50,pal = "gygn"),
                                                 color_group=colorCustom(10,pal = "gygn"),
                                                 export_path ='network/module_nodenum_barplot') {
-
   geom.align<-match.arg(geom.align)
   point.direction<-match.arg(point.direction)
 
+  export_path<-paste(export_path,"/microbial network analysis/module_nodenum_barplot",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   taxon$name<-rownames(taxon)
@@ -661,6 +702,9 @@
                                          color_taxa=colorCustom(40,pal = "cyto_pie"),
                                          export_path ='network/cyto_module_pie') {
 
+  export_path<-paste(export_path,"/microbial network analysis/cyto_module_pie",sep = "")
+  dir.create(export_path, recursive = TRUE)
+
   taxon$name<-rownames(taxon)
   color <- color_taxa
   phy_num<-length(taxon$Phylum%>%unique())
@@ -792,7 +836,7 @@
 
 
 
-"plot_TreatModuleEigen_heatmap" <- function(g,
+"plot_TreatModuleEigen_heatmap" <- function(g,abun,
                                             heatmap.advanced=TRUE,
                                             color_me=colorCustom(50,pal = "gygn"),
                                             color_group=colorCustom(50,pal = "gygn"),
@@ -801,6 +845,16 @@
                                             heatmap.top.class=5,
                                             heatmap.sample.angle=90,
                                             heatmap.taxa.angle=0) {
+  colname<-colnames(abun)
+  colname<-substr(colname,start = 1,stop = 2)
+  trt_id <-unique(colname)
+
+  split_otu <- lapply(
+    apply(
+      sapply(trt_id,function(x){grep(x,colnames(abun))}),2,
+      FUN = function(x){abun[,x]}),
+    function(x){x[-(which(rowSums(x)==0)),]})
+
   maxmod<-data.frame()
   for(i in 1:length(g)){
     g1 <- g[[i]]
@@ -1195,7 +1249,13 @@
   if (ncols>4 & ncols <=9) ncol=3
   if (ncols>9 & ncols <=16) ncol=4
   if (ncols>16 & ncols <=25) ncol=5
-  if (ncols>25) ncol=6
+  if (ncols>25 & ncols <=36) ncol=6
+  if (ncols>36 & ncols <=49) ncol=7
+  if (ncols>49 & ncols <=64) ncol=8
+  if (ncols>64 & ncols <=81) ncol=9
+  if (ncols>81 & ncols <=100) ncol=10
+  if (ncols>100 & ncols <=121) ncol=11
+
   ssxsa<-seq(from=1, to=ncols,by=(ncol))
 
   kl<-data.frame()
@@ -1416,7 +1476,10 @@
                                 link.pos.size=0.2,
                                 link.neg.size=0.2,
                                 export_path='cs2/microbial network analysis/topo_esti_compare') {
+
+  export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
+  dir.create(paste(export_path,'/cyto_style',sep = ""), recursive = TRUE)
   nodes<-rmnet_cg$node_table
   edges<-rmnet_cg$edge_table
 
@@ -1462,10 +1525,15 @@
                                         group.pos.coffe=0.1825,
                                         prop.coffe=1.05,
                                         bar.alpha=0.5,
+                                        xlabsname=xlabname,
+                                        add.line=FALSE,
+                                        linetype=1,
                                         bar.text.color="orange",
                                         color_cor=c('grey',"#6E0000"),
                                         color_bar=c('grey',"#6E0000"),
                                         export_path='cs2/microbial network analysis/topo_esti_compare') {
+  export_path<-paste(export_path,"/microbial network analysis/topo_esti_compare",sep = "")
+  dir.create(export_path, recursive = TRUE)
   nodes<-rmnet_cg$node_table
   edges<-rmnet_cg$edge_table
 
@@ -1526,7 +1594,7 @@
                                            name = 'Interaction proportion (%)',
                                            breaks = seq(-10,100,20)))+
     geom_line(aes(x= group,y=prop*(datainx%>%max()/100)),
-              linetype=3,cex=1)+
+              linetype=linetype,cex=1)+
     geom_point(aes(x= group,color=variable,y=prop*(datainx%>%max()/100)),
                stroke=3.5,shape=21,fill="black",
                size=2,show.legend=TRUE)+
@@ -1541,8 +1609,9 @@
           axis.ticks.length.y = unit(0.2,"lines"),
           axis.ticks.y  = element_line(size=1),
           axis.line  = element_line(size=0.25,colour = "black"),
-          axis.title.y=element_text(colour='black', size=18,face = "bold"),
+          axis.title.y=element_text(colour='black', size=12,face = "bold"),
           axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.title.x = element_blank(),
           #legend.title=element_blank(),
           legend.background = element_blank(),
           legend.text=element_text(size=8,face = "bold",colour = "black",
@@ -1552,14 +1621,14 @@
           legend.key = element_blank(),
           aspect.ratio = 1)
 
-  for (i in 1:(nrow(datain)/2)) {
+  if (add.line) for (i in 1:(nrow(datain)/2)) {
     p1 <- p1 + annotate('segment', linetype=3,
                         x = i, xend = i, y = datain$prop[i]*(datainx%>%max()/100),
                         yend = datain$revp[i]*(datainx%>%max()/100)
     )
   }
 
-  p1<-p1+scale_x_discrete(labels=as.character(rmnet_cg$netname),
+  p1<-p1+scale_x_discrete(labels=xlabsname,
                           position = "bottom",
                           limits=as.character(rmnet_cg$netname))
   ggsave(paste(export_path,'/',"Interaction strength.pdf", sep = ''),
@@ -1575,10 +1644,15 @@
                                      group.pos.coffe=0.1825,
                                      prop.coffe=1.05,
                                      bar.alpha=0.5,
+                                     xlabsname=xlabname,
+                                     add.line=FALSE,
+                                     linetype=1,
                                      bar.text.color="orange",
                                      color_cor=c('grey',"#6E0000"),
                                      color_bar=c('grey',"#6E0000"),
                                      export_path='cs2/microbial network analysis/topo_esti_compare') {
+  export_path<-paste(export_path,"/microbial network analysis/topo_esti_compare",sep = "")
+  dir.create(export_path, recursive = TRUE)
   nodes<-rmnet_cg$node_table
   edges<-rmnet_cg$edge_table
 
@@ -1662,7 +1736,7 @@
                                            name = 'Module link proportion (%)',
                                            breaks = seq(-10,100,20)))+
     geom_line(aes(x= group,y=prop*(datainx%>%max()/100)),
-              linetype=3,cex=1)+
+              linetype=linetype,cex=1)+
     geom_point(aes(x= group,color=variable,y=prop*(datainx%>%max()/100)),
                stroke=3.5,shape=21,fill="black",
                size=2,show.legend=TRUE)+
@@ -1677,8 +1751,9 @@
           axis.ticks.length.y = unit(0.2,"lines"),
           axis.ticks.y  = element_line(size=1),
           axis.line  = element_line(size=0.25,colour = "black"),
-          axis.title.y=element_text(colour='black', size=18,face = "bold"),
+          axis.title.y=element_text(colour='black', size=12,face = "bold"),
           axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.title.x = element_blank(),
           #legend.title=element_blank(),
           legend.background = element_blank(),
           legend.text=element_text(size=8,face = "bold",colour = "black",
@@ -1688,14 +1763,14 @@
           legend.key = element_blank(),
           aspect.ratio = 1)
 
-  for (i in 1:(nrow(datain)/2)) {
+  if (add.line) for (i in 1:(nrow(datain)/2)) {
     p1 <- p1 + annotate('segment', linetype=3,
                         x = i, xend = i, y = datain$prop[i]*(datainx%>%max()/100),
                         yend = datain$revp[i]*(datainx%>%max()/100)
     )
   }
 
-  p1<-p1+scale_x_discrete(labels=as.character(rmnet_cg$netname),
+  p1<-p1+scale_x_discrete(labels=xlabsname,
                           position = "bottom",
                           limits=as.character(rmnet_cg$netname))
   ggsave(paste(export_path,'/',"Within-among module link.pdf", sep = ''),
@@ -1871,6 +1946,8 @@
                                           point.size=1,
                                           text.size=2,
                                           export_path='cs2/microbial network analysis') {
+  export_path<-paste(export_path,"/microbial network analysis/Keynode",sep = "")
+  dir.create(export_path, recursive = TRUE)
   nodes<-rmnet_cg$node_table
   edges<-rmnet_cg$edge_table
 
@@ -1909,7 +1986,7 @@
 
 "calc_nodecoord" <- function(nodes,node1s,edge1s,
                              hub.position.adjust=FALSE,
-                             r=1) {
+                             r=1,min.node.num=5) {
 
   ncols<-unique(node1s$module)%>%length()
   casca<-lapply(lapply(ncol_layout(ncols), function(x){
@@ -1985,7 +2062,7 @@
   edge2sn<-edge2s[which(edge2s$cor<0),]
 
   sele.mod<-table(pcoord$module)%>%data.frame()
-  sele.mod<-sele.mod[which(sele.mod$Freq>5),]
+  sele.mod<-sele.mod[which(sele.mod$Freq>min.node.num),]
   sele.mod1<-sele.mod
   sele.mod<-sele.mod$Var1
 
@@ -2001,7 +2078,7 @@
               ncols=length(ncol_layout(ncols))))
 }
 
-"calcRMTnetNodeCoord"<- function(rmnet_cg) {
+"calcRMTnetNodeCoord"<- function(rmnet_cg,min.node.num=5) {
   #dir.create(export_path, recursive = TRUE)
   nodes<-rmnet_cg$node_table
   edges<-rmnet_cg$edge_table
@@ -2012,16 +2089,29 @@
   xtext<-data.frame()
   colu<-0
   xmaxwd<-c()
+  t=1
   for (t in unique(nodes$group)) {
     netname<-rmnet_cg$netname[t]
     node1s<-nodes[which(nodes$group==t),]
     node1s<-node1s[order(node1s$module,decreasing = FALSE),]
     edge1s<-edges[which(edges$group==t),]
 
-    xp<-calc_nodecoord(nodes,node1s,edge1s)
+    xp<-calc_nodecoord(nodes,node1s,edge1s,min.node.num=min.node.num)
     xp$node_pro$group<-netname
+
     xp$edge_pos$group<-netname
     xp$edge_neg$group<-netname
+
+    xp$edge_pos$modsource<-xp$node_pro$module[match(xp$edge_pos$source,xp$node_pro$name)]
+    xp$edge_pos$modtarget<-xp$node_pro$module[match(xp$edge_pos$target,xp$node_pro$name)]
+
+    xp$edge_neg$modsource<-xp$node_pro$module[match(xp$edge_neg$source,xp$node_pro$name)]
+    xp$edge_neg$modtarget<-xp$node_pro$module[match(xp$edge_neg$target,xp$node_pro$name)]
+
+
+    xp$edge_pos$cur<-ifelse(xp$edge_pos$modsource==xp$edge_pos$modtarget,"show","none")
+    xp$edge_neg$cur<-ifelse(xp$edge_neg$modsource==xp$edge_neg$modtarget,"show","none")
+
     xp$module.text$group<-netname
     wd<-xp$maxwidth
     ncols<-xp$ncols
@@ -2072,6 +2162,8 @@
 "calcRMTnetModPreserve"<- function(rmnet_cg,
                                    min.node.num=3,
                                    export_path="cs2/microbial network analysis") {
+
+  export_path<-paste(export_path,"/microbial network analysis/module preserve",sep = "")
   dir.create(export_path, recursive = TRUE)
   node_table2<-rmnet_cg$node_table
   edge_table2<-rmnet_cg$edge_table
@@ -2084,55 +2176,113 @@
   node_table2$group<-paste(node_table2$group,"_M",node_table2$module,sep = "")
   node_table2<-subset(node_table2, select=c(name,group,Group))
 
-  ddaxt<-model_preserve(node_table2 = node_table2,n = min.node.num,
+  ddaxt.dat<-model_preserve(node_table2 = node_table2,n = min.node.num,
                         export_path=export_path)
-
+  ddaxt<-ddaxt.dat$data
+  if (nrow(ddaxt)==0) stop("No module pairs were detected.")
 
   el <- matrix( c(ddaxt$module1,ddaxt$module2), nc = 2, byrow = FALSE)
   gg<-graph_from_edgelist(el,directed = FALSE)
   #plot(gg)
 
-  V(gg)$modularity <- membership(cluster_walktrap(gg))
+  V(gg)$modularity <- membership(cluster_fast_greedy(gg))
   ###共五个簇，需要5颜色
   modulenum<-length(cluster_fast_greedy(gg))
   node_table = as.data.frame(vertex.attributes(gg))
   colnames(node_table)[2]<-"clusters"
   ddaxt<-inner_join(ddaxt,node_table,by=c("module1"="name"))
 
+  ###remove connected module
+  wqc<-ddaxt
+  wqc$module1<-wqc$module2
+  wqc<-rbind(ddaxt,wqc)
+
+  rm.n<-c()
+  for (sel.mod in unique(wqc$module1)) {
+    sel.dat<-wqc[which(wqc$module1==sel.mod),]
+    sel.dat$Both<-sel.dat$Both%>%as.numeric()
+    max.row<-which(sel.dat$Both==max(sel.dat$Both))
+
+    sel.data<-sel.dat[which(sel.dat$clusters!=sel.dat[max.row,]$clusters),]
+    rm.num<-sel.data%>%rownames()%>%as.numeric()
+    if (length(rm.num[rm.num<=(nrow(wqc)/2)])!=0) rm.num[rm.num<=(nrow(wqc)/2)]<-rm.num[rm.num>(nrow(wqc)/2)]
+    if (length(rm.num[rm.num>(nrow(wqc)/2)])!=0) rm.num[rm.num>(nrow(wqc)/2)]<-rm.num[rm.num>(nrow(wqc)/2)]-(nrow(wqc)/2)
+    rm.n<-c(rm.n,rm.num)
+  }
+if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
+
+  rownames(ddaxt)<-1:nrow(ddaxt)
+
+  cat("\n","Totally ",nrow(ddaxt)," module pairs were preserved after removing the inter-clusters shared module, accounted for ",
+      paste(round(nrow(ddaxt)/ddaxt.dat$pairs_sum*100,2),"%.",sep = ""),sep = "")
+  cat("\n","All preserved module pairs have been exported to"," '",export_path,"'.",sep = "")
+
   return(ddaxt)
 
 }
 
 
-"plotRMTnetModPreserve" <- function(rmnet_cg,
+"plotRMTnetModPreserve" <- function(g,taxon,
                                     pdf.sel=FALSE,
+                                    xlabname,
+                                    bar.height=NULL, ### or 随便一个数字
+                                    display.panel.border=FALSE,
+                                    display.interval.line=FALSE,
+                                    display.interval.line.style=c("grey","dashed",1),
                                     pal_taxa ="gygn",
                                     pal_cluster = "set2",
+                                    color_bar.text="black",
                                     min.node.num=3,
                                     show.modulepairs.node=FALSE,
                                     curvature=0,
                                     link.pos="grey",
                                     link.neg="#6E0000",
-                                    link.alpha=0.2,
+                                    link.left.alpha=0.3,
+                                    link.right.alpha=0.2,
                                     link.pos.size=0.2,
                                     link.neg.size=0.2,
                                     link.clu.size=0.5,
+                                    point.size=1,
                                     point.clu.size=20,
                                     export_path="cs2/microbial network analysis") {
   require(igraph)
+  export_pathx<-export_path
+  export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
-  newtt<-calcRMTnetNodeCoord(rmnet_cg)
+  rmnet_cg<-rmnet_cytogephi_export(g,taxon,
+                                   file.save=FALSE,
+                                   export_path =export_path)
+
+  xa<-get.MutiPie(g,taxon)
+  xa$mod<-paste0(xa$group,xa$module)
+
+  newtt<-calcRMTnetNodeCoord(rmnet_cg,min.node.num=min.node.num-1)
   pcoord<-newtt$node_pro
   edge2sp<-newtt$edge_pos
   edge2sn<-newtt$edge_neg
   pcoordxs<-newtt$mtext
   totalncol<-newtt$tncol
   maxwidth<-newtt$maxwidth
+  nodes<-newtt$node_pro
 
   pcoord$Phylum<-factor(pcoord$Phylum,levels = unique(nodes$Phylum))
   pcoord<-pcoord[order(pcoord$Phylum,decreasing = FALSE),]
   color_module<-colorCustom(length(unique(pcoord$Phylum)),pal=pal_taxa)
   names(color_module)<-unique(pcoord$Phylum)
+
+  ###merge scatterpie coord
+  pcoord.pie<-pcoord
+  newpcoord.pie<-subset(pcoord.pie, select=c(x0,y0,r,module,degree,group))
+  newpcoord.pie$cluster<-paste(newpcoord.pie$group,newpcoord.pie$module,sep = "")
+  newpcoord.pie<-newpcoord.pie[!duplicated(newpcoord.pie$cluster),]
+
+  xxa<-inner_join(xa,newpcoord.pie,by=c("mod"="cluster"))
+  xxa$value<-xxa$Freq
+  xxa$type<-xxa$Var1
+  pc.sel<-pcoordxs
+  pc.sel$clu<-paste0(pc.sel$group,pc.sel$Var1)
+  mods.sel<-unique(pc.sel$clu)
+  xxa<-xxa[which(xxa$mod %in% mods.sel),]
 
   all.roles<-c("Peripheral","Connector", "Module hub","Network hub")
   shapes<-c(19,17,18,15)
@@ -2146,22 +2296,23 @@
   newpcoord<-newpcoord[!duplicated(newpcoord$cluster),]
 
   ###module pairs
-  export_path2<-paste(export_path,"/module preserve",sep = "")
   ddaxt<-calcRMTnetModPreserve(rmnet_cg,
                                min.node.num=min.node.num,
-                               export_path=export_path2)
+                               export_path=export_pathx)
 
 
   sel.modu<-unique(c(ddaxt$module1,ddaxt$module2))
+  cat("\nTaken above, totally",nrow(newpcoord),"single modules were tested.\n")
   newpcoord<-newpcoord[match(sel.modu,newpcoord$cluster),]
+  cat("Totally",nrow(newpcoord),"single modules were linked.\n")
 
   xpcoord<-data.frame(x=c(ddaxt$module1,ddaxt$module2),
                       clusters=c(ddaxt$clusters,ddaxt$clusters))
   xpcoord<-xpcoord[!duplicated(xpcoord$x),]
   newpcoord<-inner_join(newpcoord,xpcoord,by=c("cluster"="x"))
-
-  newpcoord$clusters<-paste("Clusters",newpcoord$clusters,sep = "")
   newpcoord<-newpcoord[order(newpcoord$clusters),]
+  newpcoord$clusters<-paste("Clusters",newpcoord$clusters,sep = "")
+
   newpcoord$clusters<-factor(newpcoord$clusters,levels = unique(newpcoord$clusters))
   color_cluster<-colorCustom(length(unique(newpcoord$clusters)), pal = pal_cluster)
   names(color_cluster)<-unique(newpcoord$clusters)
@@ -2170,22 +2321,36 @@
   edge3s<-subset(newpcoord, select=c(cluster,x0,y0,clusters))
   edge2s<-inner_join(ddaxt,edge2s,by = c("module1" = "cluster"))
   edge2s<-inner_join(edge2s,edge3s,by = c("module2" = "cluster"))
+  edge2s$clusters<-edge2s$clusters.y
+
   edge2s<-edge2s[order(edge2s$clusters),]
-  edge2s$clusters<-factor(edge2s$clusters,levels = unique(edge2s$clusters))
+  edge2s$clusters<-factor(edge2s$clusters,levels = levels(newpcoord$clusters))
   color_ecluster<-colorCustom(length(unique(edge2s$clusters)), pal = pal_cluster)
   names(color_ecluster)<-unique(edge2s$clusters)
   newpcoord$Mtext<-paste("M",newpcoord$module,sep = "")
 
   ppx<-ggplot()+
-    geom_curve(data =edge2sp,curvature = curvature,size = link.pos.size,
-               colour =link.pos,alpha=(link.alpha+0.3),
+    geom_curve(data =edge2sp[which(edge2sp$cur=="show"),],
+               curvature = curvature,size = link.pos.size,
+               colour =link.pos,alpha=link.left.alpha,
                aes(x = x.x, y = y.x,
                    xend = x.y, yend = y.y) )+
-    geom_curve(data =edge2sn,curvature = curvature,size = link.neg.size,
-               colour = link.neg,alpha=(link.alpha+0.3),
+    geom_curve(data =edge2sp[which(edge2sp$cur!="show"),],
+               curvature = 0,size = link.pos.size,
+               colour =link.pos,alpha=link.left.alpha,
                aes(x = x.x, y = y.x,
                    xend = x.y, yend = y.y) )+
-    geom_point(data = pcoord,size=1,
+    geom_curve(data =edge2sn[which(edge2sn$cur=="show"),],
+               curvature = curvature,size = link.neg.size,
+               colour = link.neg,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_curve(data =edge2sn[which(edge2sn$cur!="show"),],
+               curvature = 0,size = link.neg.size,
+               colour = link.neg,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_point(data = pcoord,size=point.size,
                aes(x=x,y=y,color=Phylum,shape=role.x))+
     geom_text(data=pcoordxs,show.legend = FALSE,
               aes(x=x0,y=y0,label=Mtext,
@@ -2197,7 +2362,124 @@
     theme_void()+
     theme(legend.position = "none",
           text = element_text(family = "serif"),
-          aspect.ratio = (totalncol+1)/maxwidth)
+          aspect.ratio = (3*totalncol-1)/(3*maxwidth-1))+
+    labs(title="Modularity")+
+    theme(plot.title=element_text(size=20,
+                                  face="bold",
+                                  hjust=0.5,
+                                  lineheight=1.2))
+
+  line.coord<-calcIntervalLineCoord(pcoord)
+
+  if (display.interval.line) for (i in 1:length(line.coord$line.y)) {
+    ppx <- ppx + annotate('segment',
+                          linetype=display.interval.line.style[2],
+                          size=as.numeric(display.interval.line.style[3]),
+                          color=display.interval.line.style[1],
+                        x = line.coord$xmin, xend = line.coord$xmax,
+                        y = line.coord$line.y[i],
+                        yend = line.coord$line.y[i])
+
+  }
+
+  if (display.panel.border) ppx<-ppx+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1.5,
+             yend = 1.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1-2*totalncol-totalncol+1-0.5,
+             yend = 1-2*totalncol-totalncol+1-0.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])
+
+  ###plot with scatterpie
+  ppxx<-ggplot()+
+    geom_curve(data =edge2sp[which(edge2sp$cur=="show"),],
+               curvature = curvature,size = link.pos.size,
+               colour =link.pos,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_curve(data =edge2sp[which(edge2sp$cur!="show"),],
+               curvature = 0,size = link.pos.size,
+               colour =link.pos,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_curve(data =edge2sn[which(edge2sn$cur=="show"),],
+               curvature = curvature,size = link.neg.size,
+               colour = link.neg,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_curve(data =edge2sn[which(edge2sn$cur!="show"),],
+               curvature = 0,size = link.neg.size,
+               colour = link.neg,alpha=link.left.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_point(data = pcoord[-which(paste0(pcoord$group,pcoord$module) %in% unique(xxa$mod)),],
+               size=point.size,
+               aes(x=x,y=y,color=Phylum,shape=role.x))+
+    scale_color_manual(values = color_module)+
+    scale_shape_manual(values = shapes,name="\nTopological role")+
+    theme_void()+
+    theme(legend.position = "none",
+          text = element_text(family = "serif"),
+          aspect.ratio = (3*totalncol-1)/(3*maxwidth-1))
+
+  line.coord<-calcIntervalLineCoord(pcoord)
+
+  if (display.interval.line) for (i in 1:length(line.coord$line.y)) {
+    ppxx <- ppxx + annotate('segment',
+                            linetype=display.interval.line.style[2],
+                            size=as.numeric(display.interval.line.style[3]),
+                            color=display.interval.line.style[1],
+                            x = line.coord$xmin, xend = line.coord$xmax,
+                            y = line.coord$line.y[i],
+                            yend = line.coord$line.y[i])
+
+  }
+
+  if (display.panel.border) ppxx<-ppxx+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1.5,
+             yend = 1.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1-2*totalncol-totalncol+1-0.5,
+             yend = 1-2*totalncol-totalncol+1-0.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])
+
+  ppxx<-ppxx+
+    scatterpie::geom_scatterpie(aes(x=x0, y=y0,r=1.15),
+                      data=xxa,
+                      cols = "type",color=NA,
+                      long_format=TRUE)+
+    scale_fill_manual(values = color_module)+
+    labs(title="Microbial composition")+
+    theme(plot.title=element_text(size=20,
+                                  face="bold",
+                                  hjust=0.5,
+                                  lineheight=1.2))
+
+  edge.prop<-calcEdgeP(rmnet_cg)
+  dat.all<-calcRectCoord(line.coord,edge.prop,rmnet_cg,barh=bar.height,pcoord)
+  xx<-dat.all$xx
+  bar<-dat.all$bar
+  acc<-dat.all$acc
 
   if (!show.modulepairs.node) {
     pcoord$cluster<-paste(pcoord$group,"_M",pcoord$module,sep = "")
@@ -2206,15 +2488,27 @@
 
   ###visualization
   pp<-ggplot()+
-    geom_curve(data =edge2sp,curvature = curvature,size = link.pos.size,
-               colour =link.pos,alpha=link.alpha,
+    geom_curve(data =edge2sp[which(edge2sp$cur=="show"),],
+               curvature = curvature,size = link.pos.size,
+               colour =link.pos,alpha=link.right.alpha,
                aes(x = x.x, y = y.x,
                    xend = x.y, yend = y.y) )+
-    geom_curve(data =edge2sn,curvature = curvature,size = link.neg.size,
-               colour =link.neg,alpha=link.alpha,
+    geom_curve(data =edge2sp[which(edge2sp$cur!="show"),],
+               curvature = 0,size = link.pos.size,
+               colour =link.pos,alpha=link.right.alpha,
                aes(x = x.x, y = y.x,
                    xend = x.y, yend = y.y) )+
-    geom_point(data = pcoord,size=1,
+    geom_curve(data =edge2sn[which(edge2sn$cur=="show"),],
+               curvature = curvature,size = link.neg.size,
+               colour = link.neg,alpha=link.right.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_curve(data =edge2sn[which(edge2sn$cur!="show"),],
+               curvature = 0,size = link.neg.size,
+               colour = link.neg,alpha=link.right.alpha,
+               aes(x = x.x, y = y.x,
+                   xend = x.y, yend = y.y) )+
+    geom_point(data = pcoord,size=point.size,
                aes(x=x,y=y,color="grey",shape=role.x))+
     geom_text(data=pcoordxs,show.legend = FALSE,
               aes(x=x0,y=y0,label=Mtext,
@@ -2224,16 +2518,47 @@
     scale_color_manual(values = color_module,name="Phylum",
                        guide=guide_legend(keywidth = 1,
                                           keyheight = 1,
+                                          ncol=1,
                                           order=0,
                                           override.aes=list(size=3)))+
     scale_shape_manual(values = shapesx,name="\nTopological role")+
     theme_void()+
     theme(legend.position = "right",
           text = element_text(family = "serif"),
-          aspect.ratio = (totalncol+1)/maxwidth)
+          aspect.ratio = (3*totalncol-1)/(3*maxwidth-1))
+
+  if (display.panel.border) pp<-pp+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1.5,
+             yend = 1.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])+
+    annotate(geom = "segment",
+             x = line.coord$xmin,
+             xend = line.coord$xmax,
+             y = 1-2*totalncol-totalncol+1-0.5,
+             yend = 1-2*totalncol-totalncol+1-0.5,
+             linetype=display.interval.line.style[2],
+             size=as.numeric(display.interval.line.style[3]),
+             color=display.interval.line.style[1])
+
+  if (display.interval.line) for (i in 1:length(line.coord$line.y)) {
+    pp <- pp + annotate('segment',
+                        linetype=display.interval.line.style[2],
+                        size=as.numeric(display.interval.line.style[3]),
+                        color=display.interval.line.style[1],
+                          x = line.coord$xmin, xend = line.coord$xmax,
+                          y = line.coord$line.y[i],
+                          yend = line.coord$line.y[i])
+
+  }
+
 
   pp<-pp+ggnewscale::new_scale_color()+
-    geom_curve(data =edge2s,curvature = curvature,size = link.clu.size,
+    geom_curve(data =edge2s,curvature = 0,size = link.clu.size,
                show.legend = FALSE,
                aes(x = x0.x, y = y0.x,
                    xend = x0.y, yend = y0.y,colour =clusters) )+
@@ -2251,26 +2576,94 @@
                        guide=guide_legend(keywidth = 1,
                                           keyheight = 1,
                                           order=0,
+                                          ncol = 1,
                                           override.aes=list(size=3)))+
     geom_text(data=newpcoord,aes(x=x0,y=y0,label=Mtext,
                                  size=1),show.legend = FALSE,
               color="white",
-              family = "serif",fontface="bold")
+              family = "serif",fontface="bold")+
+    labs(title="Module pairs preserved")+
+    theme(plot.title=element_text(size=20,
+                                    face="bold",
+                                    hjust=0.5,
+                                    lineheight=1.2))
 
+
+  diff.mean<-data.frame(x=rep(line.coord$text.x,length(line.coord$text.y)),
+                        y=line.coord$text.y,
+                        gname=unique(pcoord$group))
+
+  diff.mean$gpname<-xlabname
+  tp<-ggplot(diff.mean) +
+    geom_text(aes(x=0,y=y,label = gpname),family="serif",
+              angle=90,
+              fontface = "bold",inherit.aes = FALSE,size = 5) +
+    ylim(1-2*totalncol-totalncol+1,1)+
+    theme(panel.background = element_blank(),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          axis.title = element_blank())
+
+  col<-c(link.pos,link.neg)
+  names(col)<-c("posnew","negnew")
+  bp<-ggplot(xx,aes(x=0,y=1))+
+    theme(text = element_text(family = "serif"),
+          legend.position = "none")+
+    ylim(1-2*totalncol-totalncol+1,1)+theme_void()
+
+  for (j in 1:nrow(acc)) {
+    bp<-bp+
+      annotate(geom = "rect",
+               xmin = 3,
+               xmax = 6,
+               fill=col[1],
+               ymin = acc[j,]$y.m,
+               ymax = acc[j,]$y.h,
+               alpha = link.left.alpha)+
+      annotate(geom = "rect",
+               xmin = 3,
+               xmax = 6,
+               fill=col[2],
+               ymin = acc[j,]$y.l,
+               ymax = acc[j,]$y.m,
+               alpha = link.left.alpha)+
+      annotate("text", family="serif",font="bold",
+               x = 4.5,angle=90,color=color_bar.text,
+               y = (acc[j,]$y.m+acc[j,]$y.h)/2,
+               label = paste(bar[j,]$posnew,"%",sep = ""))+
+      annotate("text",  family="serif",font="bold",
+               x = 4.5,angle=90,color=color_bar.text,
+               y = (acc[j,]$y.m+acc[j,]$y.l)/2,
+               label = paste(bar[j,]$negnew,"%",sep = ""))
+}
 
   library(patchwork)
-  xp<-ppx+pp
+  xp<-tp+bp+ppx+ppxx+pp+plot_layout(ncol = 5,
+                                    widths = c(0.5,0.3,maxwidth,maxwidth,maxwidth),
+                                    byrow = TRUE)
+
   export_path2<-paste(export_path,"/module preserve",sep = "")
   export_path1<-paste(export_path,"/cyto_style",sep = "")
   dir.create(export_path2, recursive = TRUE)
   dir.create(export_path1, recursive = TRUE)
-
   if (pdf.sel) {
-  ggsave(paste(export_path2,"/module preserve.pdf",sep = ""),width = 2*maxwidth+2,height = totalncol,xp)
-  ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),width = 2*maxwidth+2,height = totalncol,xp)
+  ggsave(paste(export_path2,"/module preserve (CMYK).pdf",sep = ""),
+         colormodel="cmyk",
+         width = 3*maxwidth+3,height = totalncol,xp)
+  ggsave(paste(export_path2,"/module preserve (RGB).pdf",sep = ""),
+         colormodel="srgb",
+         width = 3*maxwidth+3,height = totalncol,xp)
+  ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),
+         width = 3*maxwidth+3,height = totalncol,xp)
 
-  ggsave(paste(export_path1,"/module preserve.pdf",sep = ""),width = 2*maxwidth+2,height = totalncol,xp)
-  ggsave(paste(export_path1,"/module preserve.tiff",sep = ""),width = 2*maxwidth+2,height = totalncol,xp)
+  ggsave(paste(export_path1,"/module preserve (CMYK).pdf",sep = ""),colormodel="cmyk",
+         width = 3*maxwidth+3,height = totalncol,xp)
+  ggsave(paste(export_path1,"/module preserve (RGB).pdf",sep = ""),colormodel="srgb",
+         width = 3*maxwidth+3,height = totalncol,xp)
+  ggsave(paste(export_path1,"/module preserve.tiff",sep = ""),
+         width = 3*maxwidth+3,height = totalncol,xp)
   } else {
   ggsave(paste(export_path2,"/module preserve.pdf",sep = ""),xp)
   ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),xp)
@@ -2285,6 +2678,41 @@
   return(xp)
 }
 
+"calcIntervalLineCoord" <- function(pcoord) {
+
+  ycd<-c()
+  yycd<-c()
+  for (gt in unique(pcoord$group)) {
+    sel.pcd<-pcoord[which(pcoord$group==gt),]
+    lowcd<-sel.pcd$y0%>%min()-1
+    higcd<-sel.pcd$y0%>%max()+1
+    {
+      ycd<-rbind(ycd,lowcd)
+      yycd<-rbind(yycd,higcd)
+    }
+  }
+
+  line.y<-c()
+  for (kk in 1:(length(unique(pcoord$group))-1)) {
+    hasu<-(ycd[kk]+yycd[kk+1])/2
+    {
+      line.y<-c(line.y,hasu)
+    }
+  }
+
+  text.y<-c()
+  for (kk in 1:(length(unique(pcoord$group)))) {
+    hasux<-(ycd[kk]+yycd[kk])/2
+    {
+      text.y<-c(text.y,hasux)
+    }
+  }
+
+  xmin<-pcoord$x0%>%min()-1
+  xmax<-pcoord$x0%>%max()+1
+
+  return(list(line.y=line.y,xmin=xmin,xmax=xmax,text.y=text.y,text.x=xmin-1))
+}
 
 
 "rand.remov.once"<-function(netRaw, rm.percent, sp.ra, abundance.weighted=T){
@@ -2401,7 +2829,9 @@
 }
 
 "calcRMTnetRandrm" <- function(rmnet_igraph,rmnet_cg,split_otu,
+                               nperm=100,
                                export_path="cs2/microbial network analysis") {
+  export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(paste(export_path,"/network stability/random removal",sep = ""), recursive = TRUE)
 
   net<-rmnet_igraph$net
@@ -2436,11 +2866,11 @@
     Weighted.simu<-rmsimu(netRaw=network.raw,
                           rm.p.list=seq(0.05,1,by=0.05),
                           sp.ra=sp.ra2,
-                          abundance.weighted=T,nperm=100)
+                          abundance.weighted=T,nperm=nperm)
     Unweighted.simu<-rmsimu(netRaw=network.raw,
                             rm.p.list=seq(0.05,1,by=0.05),
                             sp.ra=sp.ra2,
-                            abundance.weighted=F,nperm=100)
+                            abundance.weighted=F,nperm=nperm)
 
     dat1<-data.frame(Proportion.removed=rep(seq(0.05,1,by=0.05),2),
                      rbind(Weighted.simu$result,Unweighted.simu$result),
@@ -2468,7 +2898,9 @@
 }
 
 "calcRMTnetTargetrm" <- function(rmnet_igraph,rmnet_cg,split_otu,
+                                 nperm=100,otu.sel=NULL,
                                  export_path="cs2/microbial network analysis") {
+  export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(paste(export_path,"/network stability/target removal",sep = ""), recursive = TRUE)
 
   net<-rmnet_igraph$net
@@ -2478,6 +2910,7 @@
 
   currentdat<-data.frame()
   modulehub.num<-c()
+  i=1
   for (i in 1:length(net)) {
     gname<-names(net)[i]
     cormatrix<-rmt_mat[[i]]
@@ -2502,6 +2935,7 @@
     if (isTRUE(unique(row.names(network.raw)==names(sp.ra2)))) cat("\nEvergthing is OK !!!","\n") else message("\nSome problems seem to happen !!!") #check if matched
 
     node.attrix<-node.attri[which(node.attri$group==i),]
+   if (is.null(otu.sel)) {
     module.hub<-as.character(node.attrix$name[node.attrix$zi >= 2.5 | node.attrix$pi >= 0.62])
     tem<-length(module.hub)
 
@@ -2511,17 +2945,29 @@
       module.hub<-ret3$name[1:tem]
     }
 
-
-
     Weighted.simu<-rm2simu(netRaw=network.raw,
                            rm.p.list=1:length(module.hub),
                            keystonelist=module.hub,
                            sp.ra=sp.ra2,
-                           abundance.weighted=T,nperm=100)
+                           abundance.weighted=T,nperm=nperm)
     Unweighted.simu<-rm2simu(netRaw=network.raw,
                              rm.p.list=1:length(module.hub),
                              keystonelist=module.hub, sp.ra=sp.ra2,
-                             abundance.weighted=F,nperm=100)
+                             abundance.weighted=F,nperm=nperm)
+   } else {
+     module.hub<-otu.sel
+     tem<-length(module.hub)
+
+     Weighted.simu<-rm2simu(netRaw=network.raw,
+                            rm.p.list=1:length(module.hub),
+                            keystonelist=module.hub,
+                            sp.ra=sp.ra2,
+                            abundance.weighted=T,nperm=nperm)
+     Unweighted.simu<-rm2simu(netRaw=network.raw,
+                              rm.p.list=1:length(module.hub),
+                              keystonelist=module.hub, sp.ra=sp.ra2,
+                              abundance.weighted=F,nperm=nperm)
+    }
 
     dat1<-data.frame(Number.hub.removed=rep(1:length(module.hub),2),
                      rbind(Weighted.simu$result,Unweighted.simu$result),
@@ -2595,7 +3041,7 @@
   plot.data<-subset(plot.data,select=-c(group,rep))
   colnames(plot.data)<-c("Weighted_robustness","unweighted_robustness")
 
-  newfile<-paste(export_path,"/network stability/random removal/random remove ",select.rm.prop*100," percent nodes",sep = "")
+  newfile<-paste(export_path,"/microbial network analysis/network stability/random removal/random remove ",select.rm.prop*100," percent nodes",sep = "")
   dir.create(newfile, recursive = TRUE)
 
   file1=paste(newfile,"/data.csv",sep = "")
@@ -2618,6 +3064,7 @@
                           export_path=newfile)
 
   if (geom=="boxplot") plotMicrochatParamMutiBoxplot(microchatParamobj,
+                                                     geom.line=FALSE,
                                                      xlabname=xlabname,
                                                      yaxis.italic=yaxis.italic,
                                                      strictmod=strictmod,
@@ -2690,7 +3137,7 @@
   plot.data<-subset(plot.data,select=-c(group,rep))
   colnames(plot.data)<-c("Weighted_robustness","unweighted_robustness")
 
-  newfile<-paste(export_path,"/network stability/target removal/target remove ",select.rm.prop,"  module hub(s)",sep = "")
+  newfile<-paste(export_path,"/microbial network analysis/network stability/target removal/target remove ",select.rm.prop,"  module hub(s)",sep = "")
   dir.create(newfile, recursive = TRUE)
 
   file1=paste(newfile,"/data.csv",sep = "")
@@ -2713,6 +3160,7 @@
                           export_path=newfile)
 
   if (geom=="boxplot") plotMicrochatParamMutiBoxplot(microchatParamobj,
+                                                     geom.line=FALSE,
                                                      xlabname=xlabname,
                                                      yaxis.italic=yaxis.italic,
                                                      strictmod=strictmod,
@@ -2767,7 +3215,6 @@
 }
 
 "calcRMTnetVulner" <- function(rmnet_igraph,rmnet_cg) {
-  dir.create(paste(export_path,"/network stability/random removal",sep = ""), recursive = TRUE)
 
   net<-rmnet_igraph$net
   rmt_mat<-lapply(net, function(x) {x$cleaned.matrix})
@@ -2837,3 +3284,151 @@
               network.vulnerability=ee))
 }
 
+
+
+
+
+"plotRMTnetModPreserveCircle" <- function(modpre_data,
+                                          edge.curved=0.5,
+                                          sel.layout,
+                                          color_group,
+                                          color_cluster) {
+  modpre_datax<-modpre_data
+  modpre_datax$Both<-modpre_datax$Both%>%as.numeric()
+  modpre_datax$P1A2<-modpre_datax$P1A2%>%as.numeric()
+  modpre_datax$P2A1<-modpre_datax$P2A1%>%as.numeric()
+  modpre_datax$A1A2<-modpre_datax$A1A2%>%as.numeric()
+
+  modpre_datax$weight<-modpre_datax$Both+modpre_datax$P1A2+modpre_datax$P2A1+modpre_datax$A1A2
+  modpre_datax$p_raw<-modpre_datax$p_raw%>%as.numeric()
+  modpre_datax$p_adj<-modpre_datax$p_adj%>%as.numeric()
+  modpre_datax$p_raw<-sprintf("%0.3f",round(modpre_datax$p_raw,3))
+  modpre_datax$p_adj<-sprintf("%0.3f",round(modpre_datax$p_adj,3))
+  modpre_datax[,c("group1","mod1")]<-stringr::str_split_fixed(modpre_datax$module1,"_",2)
+  modpre_datax[,c("group2","mod2")]<-stringr::str_split_fixed(modpre_datax$module2,"_",2)
+
+  sel.modu<-unique(c(modpre_datax$mod1,modpre_datax$mod2))
+  df.mat<-modpre_datax%>%as.matrix()
+  gg<-igraph::graph_from_edgelist(df.mat[,c(1,2)],directed = FALSE)
+
+  if (sel.layout=="circle") layout = in_circle()
+  if (sel.layout=="nicely") layout = nicely()
+  if (sel.layout=="random") layout = randomly()
+  if (sel.layout=="fr") layout = with_fr()
+  if (sel.layout=="kk") layout = with_kk()
+  if (sel.layout=="sphere") layout = on_sphere()
+  if (sel.layout=="dh") layout = with_dh()
+  if (sel.layout=="lgl") layout = with_lgl()
+  if (sel.layout=="tree") layout = as_tree()
+  if (sel.layout=="grid") layout = on_grid()
+  if (sel.layout=="graphopt") layout = with_graphopt()
+  if (sel.layout=="gem") layout = with_gem()
+  if (sel.layout=="mds") layout = with_mds()
+
+  coords <- layout_(gg, layout)
+  coords_scale = scale(coords)
+  names(color_group)<-unique(c(modpre_datax$group1,modpre_datax$group2))
+  names(color_cluster)<-unique(c(modpre_datax$clusters))
+
+  E(gg)$weight<-normalize(modpre_datax$Both)$x*10
+  igraph::V(gg)$color <- color_group[match(substr(igraph::V(gg)$name,start = 1,stop = 2),
+                                           names(color_group))]
+
+  color_clusterx<-color_cluster[match(modpre_datax$clusters,
+                                      names(color_cluster))]
+  igraph::E(gg)$color <- grDevices::adjustcolor(color_clusterx, 0.6)
+
+  "radian.rescale" <- function(x, start = 0, direction = 1) {
+    c.rotate <- function(x) (x + start)%%(2 * pi) * direction
+    c.rotate(scales::rescale(x, c(0, 2 * pi), range(x)))
+  }
+  if (sel.layout=="circle") label.locs <- radian.rescale(x = 1:length(igraph::V(gg)),
+                                                         direction = -1, start = 0)
+
+
+
+  V(gg)$size<-modpre_datax$weight/min(modpre_datax$weight)*6
+  E(gg)$width<-E(gg)$weight
+  if (sel.layout=="circle") plot(gg,edge.curved=edge.curved,
+                                 rescale = TRUE,
+                                 layout=coords,
+                                 vertex.size=V(gg)$size,
+                                 vertex.shape="circle",
+                                 vertex.label.degree = label.locs,
+                                 vertex.label.dist = 4,
+                                 vertex.label=vertex_attr(gg)$name,
+                                 vertex.frame.color = "white",
+                                 vertex.label.family = "serif",
+                                 edge.label.family = "serif")
+
+  if (sel.layout!="circle") plot(gg,edge.curved=edge.curved,
+                                 rescale = TRUE,
+                                 layout=coords,
+                                 vertex.size=V(gg)$size,,
+                                 vertex.shape="circle",
+                                 vertex.label.dist = 3,
+                                 vertex.label=vertex_attr(gg)$name,
+                                 vertex.frame.color = "white",
+                                 vertex.label.family = "serif",
+                                 edge.label.family = "serif")
+
+  sas<-recordPlot()
+  return(sas)
+}
+
+"calcRectCoord" <- function(line.coord,edge.prop,rmnet_cg,barh=NULL,pcoord) {
+  kh.all.sel<-c()
+  for (ttk in 1:length(line.coord$text.y)) {
+    pcd.sel<-pcoord[which(pcoord$group==rmnet_cg$netname[ttk]),]
+    kh.sel<-max(pcd.sel$y0)-min(pcd.sel$y0)
+    {
+      kh.all.sel<-c(kh.all.sel,kh.sel)
+    }
+  }
+
+  acc<-c()
+  bar<-data.frame()
+  for (ttk in 1:length(line.coord$text.y)) {
+    bar.sel<-edge.prop[which(edge.prop$group==rmnet_cg$netname[ttk]),]
+    text.c<-line.coord$text.y[ttk]
+    if (is.null(barh)) barhx<-kh.all.sel[ttk] else barhx<-min(kh.all.sel)
+    act.c<-calcRTc(bar.sel,text.c,barhx)
+    act.c<-data.frame(y.h=act.c[1],
+                      y.m=act.c[2],
+                      y.l=act.c[3])
+    rownames(act.c)<-rmnet_cg$netname[ttk]
+    {
+      acc<-rbind(acc,act.c)
+      bar<-rbind(bar,bar.sel)
+    }
+  }
+
+  bar$value<-sprintf("%0.2f",round(bar$value,2))
+  bar<-spread(bar,key=variable,value = value)
+  xx<-acc%>%rownames_to_column(var = "group")
+  reshape2::melt(xx)
+
+  return(list(xx=xx,bar=bar,acc=acc))
+}
+
+"calcRTc" <- function(bar.sel,text.c,barh) {
+  y.h<-barh/2+text.c
+  y.l<-text.c-barh/2
+  y.m<-y.h-bar.sel$value[1]/100*barh
+  return(c(y.h,y.m,y.l))
+}
+"calcEdgeP" <- function(rmnet_cg) {
+  edge.prop<-table(rmnet_cg$edge_table$group,rmnet_cg$edge_table$cor)%>%data.frame()
+  edge.prop$Var1<-rep(rmnet_cg$netname,2)
+  edge.prop<-spread(edge.prop,key = Var2,value = Freq)
+  colnames(edge.prop)<-c("group","neg","pos")
+  edge.prop$group<-factor(edge.prop$group,levels = rmnet_cg$netname)
+  rownames(edge.prop)<-1:nrow(edge.prop)
+  edge.prop$negnew<-edge.prop$neg/(edge.prop$neg+edge.prop$pos)*100
+  edge.prop$posnew<-edge.prop$pos/(edge.prop$neg+edge.prop$pos)*100
+
+  edge.prop<-reshape2::melt(edge.prop[,c(1,4,5)])
+  edge.prop$variable<-factor(edge.prop$variable,levels = c("posnew","negnew"))
+  edge.prop<-edge.prop[order(edge.prop$group,edge.prop$variable),]
+  return(edge.prop)
+}

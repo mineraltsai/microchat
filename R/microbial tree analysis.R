@@ -11,6 +11,9 @@
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object !!!")
   }
+  export_path<-paste(export_path,"/microbial tree analysis",sep = "")
+  dir.create(export_path, recursive = TRUE)
+
   suppressMessages(library(ggtree))
   suppressMessages(library(ggnewscale))
   suppressMessages(library(ggtreeExtra))
@@ -1031,7 +1034,7 @@
                                        species.num=100,
                                        color_taxa=colorCustom(50,pal = "gygn"),
                                        export_path="microbial tree analysis") {
-
+  export_path<-paste(export_path,"/microbial tree analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object !!!")

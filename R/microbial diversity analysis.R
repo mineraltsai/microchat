@@ -20,7 +20,7 @@
 
 "calcMicrochatAlphadiv" <- function(submchat,
                                     export_path="microbial diversity analysis") {
-
+  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(submchat)!="microchat") {
@@ -144,6 +144,8 @@
 
 
   method<-match.arg(method)
+  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
+
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatAlphadivobj)[1]!="microchat") {
@@ -363,6 +365,16 @@
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
@@ -373,6 +385,16 @@
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
@@ -428,7 +450,6 @@
 
       if ( method == "kruskal.test") {
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
-
         input.data<-reshape2::melt(variance.data)
         input.data1<-kruskalmuticomp.t(input.data)
         for (i in 2:length(colnames(variance.data))) {
@@ -663,6 +684,16 @@
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
@@ -673,6 +704,16 @@
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
@@ -777,7 +818,7 @@
 
   }
 
-  #write.table(data.alpha,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
+  #write.table(data_err,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
   message("\n","The alpha diversity has been statistically analyzed. You could check it.","\n")
 
   microchatAlphadivStatobj<-list(data.alpha,data_poi,data_err,index,method,y.ratio,sig_label_new,all.group)
@@ -803,9 +844,11 @@
                                     seg=TRUE,
                                     errorbar.point.size=0.1,
                                     y.point.adj=NULL,
+                                    xlabname=xlabname,
                                     color_group=colorCustom(5,pal = "gygn"),
-                                    color_backgroud="grey90",
+                                    color_background="grey90",
                                     export_path="microbial diversity analysis") {
+  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity",sep = "")
 
   dir.create(export_path, recursive = TRUE)
 
@@ -916,10 +959,10 @@
     theme(#panel.border = element_blank(),
       axis.ticks.length = unit(0.2,"lines"),
       axis.ticks = element_line(color='black'),
-      panel.background = element_rect(fill = color_backgroud),
+      panel.background = element_rect(fill = color_background),
       #axis.line = element_line(colour = "black"),
       axis.title.x=element_blank(),
-      axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+      axis.title.y=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
       axis.text.y=element_text(colour='black',size=10,family = "serif"),
       axis.text.x=element_text(colour = "black",size = 10,
                                angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
@@ -961,7 +1004,7 @@
       theme(#panel.border = element_blank(),
         axis.ticks.length = unit(0.2,"lines"),
         axis.ticks = element_line(color='black'),
-        panel.background = element_rect(fill = color_backgroud),
+        panel.background = element_rect(fill = color_background),
         #axis.line = element_line(colour = "black"),
         axis.title.x=element_blank(),
         axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
@@ -1004,7 +1047,7 @@
      theme(#panel.border = element_blank(),
        axis.ticks.length = unit(0.2,"lines"),
        axis.ticks = element_line(color='black'),
-       panel.background = element_rect(fill = color_backgroud),
+       panel.background = element_rect(fill = color_background),
        #axis.line = element_line(colour = "black"),
        axis.title.x=element_blank(),
        axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
@@ -1026,7 +1069,7 @@
                  x = 1, y = min(data_poi$value),label=method)}
 
   }
-
+p<-p+scale_x_discrete(labels=xlabname)
   ggsave(paste(export_path,"/alpha_diversity (",index,") .pdf",sep = ""),p)
   cat("\n","Alpha diversity barplot has been exported. Please check it.","\n")
 
@@ -1040,7 +1083,7 @@
                                    ordination="PCoA",
                                    export_path="microbial diversity analysis") {
 
-
+  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity/data_PCoA",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   message(" bray distance based on abudance table，jaccard distance based on community structure.")
@@ -1160,7 +1203,8 @@
 
 "plotMicrochatBetadiv" <- function(microchatBetadivobj,
                                    color_group=colorCustom(5,pal = "gygn"),
-                                   color_backgroud="grey90",
+                                   color_background="grey90",
+                                   xlabname=xlabname,
                                    pcoa_3d=FALSE,
                                    chull.shape=1,
                                    text.size=2.5,
@@ -1169,6 +1213,7 @@
                                    export_path="microbial diversity analysis") {
 
   layout<-match.arg(layout)
+  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatBetadivobj)[1]!="microchat") {
@@ -1204,7 +1249,7 @@
   }
 
   p <- ggplot(data = site,aes(x = PCoA1, y = PCoA2, color = group)) +
-    geom_point(aes(x = PCoA1, y = PCoA2, color = group), size = 2)
+    geom_point(aes(x = PCoA1, y = PCoA2, color = group), size = 2,show.legend = FALSE)
 
 
 
@@ -1226,10 +1271,13 @@
     geom_polygon(data=timer,aes(x=PCoA1,y=PCoA2,color=site,fill=site),
                  linetype=ellipse.linetype,alpha=0.1,show.legend = F)
 
-
+  site$sample<-"none"
+  for (j in 1:length(unique(xlabname))) {
+    site[which(site$group==unique(site$group)[j]),]$sample<-unique(xlabname)[j]
+  }
 
   p<-p+
-    ggrepel::geom_text_repel(aes(x = PCoA1, y = PCoA2, label = sampleid),
+    ggrepel::geom_text_repel(data=site,aes(x = PCoA1, y = PCoA2, label = sample),
 
                              size = text.size,family="serif",
                              box.padding = unit(0.3, 'lines'), show.legend = FALSE,
@@ -1244,9 +1292,14 @@
                           aesthetics = "fill")+
     xlab(paste("PCoA1: ",pcoa_exp[1],"%",sep = ""))+
     ylab(paste("PCoA2: ",pcoa_exp[2],"%",sep = ""))+
-    theme(panel.background = element_rect(fill = color_backgroud),
-          text = element_text(family = "serif"),aspect.ratio = 1)
-
+    theme(panel.background = element_rect(fill = color_background),
+          text = element_text(family = "serif"),
+          axis.title.y=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+          axis.title.x=element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+          axis.text.y=element_text(colour='black',size=10,family = "serif"),
+          axis.text.x=element_text(colour = "black",size = 10,
+                                   angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
+          aspect.ratio = 1)
 
 
   colors<-color.use
@@ -1273,13 +1326,8 @@
   yposi<-yposi+1
   yposi<-yposi/10
 
-  p<-p+
-    annotate('text', label = sprintf('italic(pvalue) == %.3f', signif(pvalue,3)),
-             x = xpos*0.9, y =ypos*1.05, size = 3, parse = TRUE,family = "serif")+
-    annotate('text', label = sprintf('italic(r2) == %.3f', signif(r2,3)),
-             x = xpos*0.5, y =ypos*1.05, size = 3, parse = TRUE,family = "serif")+
-    annotate('text', label = "permanova",
-             x = xpos*0.9, y =ypos*1.1, size = 5, parse = TRUE,family = "serif")
+  p<-p+ labs(title = paste(str_to_title(microchatBetadivobj$distance)," distance",sep = ""))
+
 
   if (layout== "chull") p<-p+xlim(-xposi,xposi)+ylim(-yposi,yposi)
 
@@ -1312,7 +1360,7 @@
   ordination<-microchatBetadivobj$ordination
   distance<-microchatBetadivobj$distance
 
-  ggsave(paste(export_path,"/beta_diversity (",ordination,") based on",distance," .pdf",sep = ""),p)
+  ggsave(paste(export_path,"/beta_diversity (",ordination,") based on ",distance," distance.pdf",sep = ""),p)
   cat("\n","Beta diversity cluster plot has been exported. Please check it.","\n")
   return(p)
 }
@@ -1324,7 +1372,7 @@
                                   distance = 'bray',
                                   export_path="cs2/microbial diversity analysis"){
 
-  dir.create(paste(export_path,"/beta diversity/anosim",sep = ""), recursive = TRUE)
+  dir.create(paste(export_path,"/Permutation tests/anosim",sep = ""), recursive = TRUE)
   group<-group_generate(otu)
   otu <- data.frame(t(otu), stringsAsFactors = FALSE)
   otu <- otu[rowSums(otu[])>0,]
@@ -1376,7 +1424,7 @@
   anosim_result_two$distance<-distance
   anosim_result_two$p.adj<-sprintf('%.3f',round(anosim_result_two$p.adj,3))
 
-  file2=paste(export_path,"/beta diversity/anosim/anosim_",distance,".txt",sep = "")
+  file2=paste(export_path,"/Permutation tests/anosim/anosim_",distance,".txt",sep = "")
   write.table(anosim_result_two,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
   cat("\n","beta diversity based on ANOSIM_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
@@ -1389,7 +1437,7 @@
                                   p.adjust.m = "BH",
                                   distance = 'bray',
                                   export_path="cs2/microbial diversity analysis") {
-  dir.create(paste(export_path,"/beta diversity/adonis",sep = ""), recursive = TRUE)
+  dir.create(paste(export_path,"/Permutation tests/adonis",sep = ""), recursive = TRUE)
   group<-group_generate(otu)
   otux <- data.frame(t(otu), stringsAsFactors = FALSE)
   otux <- otux[rowSums(otux[])>0,]
@@ -1419,7 +1467,7 @@
 
   if (distance == 'bray') distance<-"Bray-curtis"
   if (distance == 'jaccard') distance<-"Jaccard"
-  file2=paste(export_path,"/beta diversity/adonis/adonis_",distance,".txt",sep = "")
+  file2=paste(export_path,"/Permutation tests/adonis/adonis_",distance,".txt",sep = "")
   write.table(dune.pairwise.adonis,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
   cat("\n","beta diversity based on Adonis_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
@@ -1454,7 +1502,7 @@
                                p.adjust.m = "BH",
                                distance = 'bray',
                                export_path="cs2/microbial diversity analysis") {
-  dir.create(paste(export_path,"/beta diversity/mrpp",sep = ""), recursive = TRUE)
+  dir.create(paste(export_path,"/Permutation tests/mrpp",sep = ""), recursive = TRUE)
   sim.method<-distance
   group<-group_generate(otu)
   otu<-t(otu)%>%data.frame()
@@ -1487,7 +1535,7 @@
   if (distance == 'bray') distance<-"Bray-curtis"
   if (distance == 'jaccard') distance<-"Jaccard"
 
-  file2=paste(export_path,"/beta diversity/mrpp/mrpp_",distance,".txt",sep = "")
+  file2=paste(export_path,"/Permutation tests/mrpp/mrpp_",distance,".txt",sep = "")
   write.table(dune.pairwise.xmrpp,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
   cat("\n","beta diversity based on MRPP_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
@@ -1512,10 +1560,13 @@
                                 p.adjust.m = "BH",
                                 distance = 'bray',
                                 export_path="cs2/microbial diversity analysis") {
-  dir.create(paste(export_path,"/beta diversity",sep = ""), recursive = TRUE)
+  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity",sep = "")
+  dir.create(paste(export_path,"/Permutation tests",sep = ""), recursive = TRUE)
   suppressMessages(library(vegan))
   p.adjust.method()
   otu<-submchat$otu_table
+
+  whole.dat<-comm.diff.wholedat(otu,distance)
 
   anosim.dat <- dune.pairwise.anosim(otu,
                                      p.adjust.m = p.adjust.m,
@@ -1531,6 +1582,10 @@
                                  export_path=export_path)
 
   comm.diff.dat<-cbind(anosim.dat[,c(1,3,4)],adonis.dat[,c(3,4)],mrpp.dat[,c(5,6)])
+
+  colnames(whole.dat)<-colnames(comm.diff.dat)
+  comm.diff.dat<-rbind(whole.dat,comm.diff.dat)
+
   colnames(comm.diff.dat)<-c("Comparison","r","P","F","P","∂","P")
 
   comm.diff.data<-rbind(colnames(comm.diff.dat),comm.diff.dat)
@@ -1581,10 +1636,11 @@
 
   print(p)
 
-
-
-  file2=paste(export_path,"/beta diversity/Three permutation tests (",distance,").txt",sep = "")
+  file2=paste(export_path,"/Permutation tests/Three permutation tests (",distance,").txt",sep = "")
   write.table(comm.diff.data,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+
+  file3=paste(export_path,"/Permutation tests/Three permutation tests (",distance,").pdf",sep = "")
+  ggsave(file3,p)
   cat("\n","beta diversity based on three different permutation tests under ",distance," has been exported to","/",export_path,"",sep = "","\n")
   cat("\n","Copywriting (Title): Significance tests of the networked communities between pairwise comparison")
   cat("\n"," Copywriting (Note): Three different permutation tests were performed (MRPP, ANOSIM and Adonis) on the basis of ",distance," distance",sep = "")
@@ -1592,3 +1648,36 @@
   return(comm.diff.data)
 }
 
+"comm.diff.wholedat" <- function(otu,distance) {
+  group<-group_generate(otu)
+  otu <- data.frame(t(otu), stringsAsFactors = FALSE)
+
+  anosim_result_otu <- vegan::anosim(otu, group$group,
+                                     permutations = 999,
+                                     distance =distance)
+
+  adonis_result_otu <- vegan::adonis2(otu~group, group,
+                                      distance = distance,
+                                      permutations = 999)
+
+  mrpp_result_otu <- vegan::mrpp(otu, group$group,
+                                 distance = distance,
+                                 permutations = 999)
+
+  anosim_result_otu$statistic<-sprintf('%.3f',
+                                       round(anosim_result_otu$statistic,3))
+  adonis_result_otu$statistic<-sprintf('%.3f',
+                                       round(adonis_result_otu$F[1],3))
+  mrpp_result_otu$statistic<-sprintf('%.3f',
+                                     round(mrpp_result_otu$E.delta,3))
+
+  whole.dat<-data.frame(comparison="Whole data",
+                        r=anosim_result_otu$statistic,
+                        p=anosim_result_otu$signif,
+                        f=adonis_result_otu$statistic[1],
+                        p=adonis_result_otu$`Pr(>F)`[1],
+                        delta=mrpp_result_otu$statistic,
+                        p=mrpp_result_otu$Pvalue)
+
+  return(whole.dat)
+}

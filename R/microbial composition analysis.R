@@ -19,10 +19,10 @@
 
   plot_data<-microchatcomobj$plot_data
 
-  export_path<-microchatcomobj$export_path
+
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
-
+  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -32,8 +32,9 @@
   }
 
   if (data_type=="relative") {
-    if (sample_type=="allsamples") genus_top<-microchatcomobj$wide_allsample_rel
-    if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_rel
+    if (sample_type=="allsamples") genus_top<-microchatcomobj$wide_allsample_rel*100
+    if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_rel*100
+    microchatcomobj$long_group_rel$value<-microchatcomobj$long_group_rel$value*100
     split_otu3<-microchatcomobj$long_group_rel
   }
 
@@ -258,10 +259,11 @@
 
   plot_data<-microchatcomobj$plot_data
 
-  export_path<-microchatcomobj$export_path
+
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
+  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -296,7 +298,7 @@
     split_otu4<-split_otu3[which(split_otu3$variable==gname),]
     split_otu4$tax<-factor(split_otu4$tax,levels = unique(split_otu4$tax))
     split_otu4$labelxs<-paste(sprintf("%0.2f",round(split_otu4$value/sum(split_otu4$value),4)*100),"%",sep = "")
-    split_otu4$labelxs[which(split_otu4$value<0.01)]<-""
+    split_otu4$labelxs[which(split_otu4$value<0.04)]<-""
 
     p1<-ggplot(split_otu4, aes(x = '', y = value,fill= tax)) +
       geom_bar(stat = 'identity', show.legend = TRUE,width = 1) +
@@ -369,10 +371,10 @@
 
   plot_data<-microchatcomobj$plot_data
 
-  export_path<-microchatcomobj$export_path
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
+  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (!rescale) {
@@ -590,10 +592,11 @@
 
   plot_data<-microchatcomobj$plot_data
 
-  export_path<-microchatcomobj$export_path
+
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
+  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -698,10 +701,10 @@
 
   plot_data<-microchatcomobj$plot_data
 
-  export_path<-microchatcomobj$export_path
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
+  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -800,487 +803,17 @@
 }
 
 
-"plotMicrocom" <- function(microchatcomobj,
-                               data_type=c("absolute","relative"),
-                               plot_type=c("barplot","pie","heatmap","chord","bubble"),
-                               sample_type=c("allsamples","groups"),
-                               color_taxa=NULL,
-                               color_group=NULL,
-
-                               barplot.barwidth=0.6,
-
-                               bubble.color.taxa=TRUE,
-                               bubble.max.size=9,
-                               bubble.shape=19,
-
-                               color.heatmap=NULL,  ###至少两种颜色
-                               heatmap.add.line=TRUE,
-                               heatmap.top.class=5,
-                               heatmap.sample.angle=90,
-                               heatmap.taxa.angle=0,
-
-                               aspect.ratio=0.8,
-                               export_path="microbial composition") {
-  data_type=match.arg(data_type)
-  plot_type=match.arg(plot_type)
-  sample_type=match.arg(sample_type)
-
-  if (class(microchatcomobj)!="microchat") {
-    stop("\n","Please convert the data into a 'microchat' object")
-  }
-
-  plot_data<-microchatcomobj$plot_data
-
-  export_path<-microchatcomobj$export_path
-  taxa_num<-microchatcomobj$selected_taxanum
-  taxa<-microchatcomobj$selected_taxa
-
-  dir.create(export_path, recursive = TRUE)
-
-  if (data_type=="absolute") {
-    if (sample_type=="allsamples") genus_top<-microchatcomobj$wide_allsample_abs
-    if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_abs
-    split_otu3<-microchatcomobj$long_group_abs
-  }
-
-  if (data_type=="relative") {
-    if (sample_type=="allsamples") genus_top<-microchatcomobj$wide_allsample_rel
-    if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_rel
-    split_otu3<-microchatcomobj$long_group_rel
-  }
-
-  if (plot_type=="barplot") {
-
-    if (sample_type=="groups") {
-  color_value<-c(randomcolor((length(unique(split_otu3$tax))-1)),"grey90")
-  names(color_value)<-unique(split_otu3$tax)[order(unique(split_otu3$tax))]
-
-  p1<-ggplot(data = split_otu3 ,
-             aes(x = variable, y = value,
-                                    fill = tax)) +
-    geom_col(position = 'fill', width = barplot.barwidth) +
-    scale_fill_manual(values = color_value) +
-    labs(x = '', y = 'Relative Abundance(%)') +
-    theme_bw()+
-    theme(panel.grid.minor.y = element_line(colour = "black"),
-          text = element_text(family = "serif"),
-          panel.background = element_rect(color = 'black',
-                                          fill = 'transparent'),aspect.ratio = aspect.ratio)
-
-  if (!is.null(color_taxa)) {
-    color_value<-color_taxa
-    color_taxa<-color_value[1:(taxa_num+1)]
-    names(color_taxa)<-unique(split_otu3$tax)[order(unique(split_otu3$tax))]
-
-    message("use self-selected color")
-    p1<-p1+
-      ggnewscale::new_scale_color()+
-      ggnewscale::new_scale_fill()+
-      scale_discrete_manual(values=color_taxa,
-                            aesthetics = "colour")+
-      scale_discrete_manual(values=color_taxa,
-                            aesthetics = "fill")
-
-  }}
-    if (sample_type=="allsamples") {
-      genus_topt<-tibble::rownames_to_column(genus_top,var = "tax")
-      genus_topt<-reshape2::melt(genus_topt)
-
-      color_value<-c(randomcolor((length(unique(genus_topt$tax))-1)),"grey90")
-      names(color_value)<-unique(genus_topt$tax)[order(unique(genus_topt$tax))]
-
-      p1<-ggplot(data = genus_topt ,
-                 aes(x = variable, y = value,
-                     fill = tax)) +
-        geom_col(position = 'fill', width = barplot.barwidth) +
-        scale_fill_manual(values = color_value) +
-        labs(x = '', y = 'Relative Abundance(%)') +
-        theme_bw()+
-        theme(panel.grid.minor.y = element_line(colour = "black"),
-              text = element_text(family = "serif"),
-              panel.background = element_rect(color = 'black',
-                                              fill = 'transparent'),aspect.ratio = aspect.ratio)
-
-      if (!is.null(color_taxa)) {
-        color_value<-color_taxa
-        color_taxa<-color_value[1:(taxa_num+1)]
-        names(color_taxa)<-unique(genus_topt$tax)[order(unique(genus_topt$tax))]
-
-        message("use self-selected color")
-        p1<-p1+
-          ggnewscale::new_scale_color()+
-          ggnewscale::new_scale_fill()+
-          scale_discrete_manual(values=color_taxa,
-                                aesthetics = "colour")+
-          scale_discrete_manual(values=color_taxa,
-                                aesthetics = "fill")
-
-      }}
-
-    ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type,".pdf",sep = ""),p1)
-    cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type," has been exported to ",export_path,sep = "","\n")
-
-}
-
-  if (plot_type=="pie") {
-
-    color_value1<-c(randomcolor((length(unique(split_otu3$tax))-1)),"grey90")
-    names(color_value1)<-unique(split_otu3$tax)[order(unique(split_otu3$tax))]
-
-    p1<-ggplot(split_otu3, aes(x = '', y = value,fill= tax)) +
-      geom_bar(stat = 'identity', show.legend = TRUE,width = 1) +
-      facet_wrap(.~variable,ncol = 3) +
-      coord_polar(theta = 'y') +
-      scale_fill_manual(values = color_value1) +
-      theme_void()+
-      theme(panel.grid = element_blank(),
-            panel.background = element_blank(),
-            text = element_text(family = "serif"),
-            axis.text.x = element_blank(), legend.position = "right",
-            legend.text = element_text(family = "serif"),
-            plot.background = element_blank())
-
-    if (!is.null(color_taxa)) {
-      color_value1<-color_taxa
-      color_taxa<-color_value1[1:(taxa_num+1)]
-      names(color_taxa)<-unique(split_otu3$tax)[order(unique(split_otu3$tax))]
-
-      message("use self-selected color")
-
-      p1<-p1+
-        ggnewscale::new_scale_fill()+
-        scale_discrete_manual(values=color_taxa,
-                                   aesthetics = "fill")
-
-    }
-    ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type,".pdf",sep = ""),p1)
-    cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type," has been exported to ",export_path,sep = "","\n")
-
-  }
-
-  if (plot_type=="heatmap") {
-
-    net<-genus_top%>%as.matrix()
-
-    samplename<-colnames(net)
-    groupname<-substr(samplename,start = 1, stop = 2)%>%unique()
-
-    ###color groups
-    if (is.null(color_group)) {
-      color_group<-randomcolor(length(groupname))
-    } else {
-      if (length(color_group)<length(groupname)) {
-        stop("There are no enough colors to fill all groups !!!")
-      } else {
-        color_group<-color_group[1:length(color_group)]
-      }
-    }
-
-    names(color_group)<-groupname
-
-    color_group1<-color_group%>%data.frame()
-    color_sample<-randomcolor(length(samplename))
-
-    ###color samples according to groups
-    for (ttks in 1:nrow(color_group1)) {
-      color_sample[which(substr(samplename,start = 1, stop = 2)==rownames(color_group1)[ttks])]<-color_group1[ttks,]
-    }
-    names(color_sample)<-samplename
-
-    ###color taxa
-    taxa_name<-rownames(net)
-    if (is.null(color_taxa)) {
-      color_taxa<-randomcolor(length(taxa_name))
-    } else {
-      if (length(color_taxa)<length(taxa_name)) {
-        stop("There are no enough colors to fill all taxa !!!")
-      } else {
-        color_taxa<-color_taxa[1:length(taxa_name)]
-        }
-      }
-    names(color_taxa)<-taxa_name
-
-    ###color heatmap blocks
-    if (is.null(color.heatmap)) {
-      color.heatmap.use = grDevices::colorRampPalette((
-        RColorBrewer::brewer.pal(n = 9,name = "GnBu")
-      ))(100)
-    } else {
-      if (length(color.heatmap)<2) {
-        stop("There are no enough colors to fill heatmap blocks !!!")
-      } else {
-        color.heatmap.use = grDevices::colorRampPalette((
-          color.heatmap
-        ))(100)
-      }
-    }
-
-    df1 <- data.frame(group = colnames(net))
-    rownames(df1) <- colnames(net)
-    color.use1 = color_sample
-
-    col_annotation <- ComplexHeatmap::HeatmapAnnotation(df = df1, col = list(group = color.use1),
-                                                        which = "column", show_legend = TRUE, show_annotation_name = FALSE,
-                                                        simple_anno_size = grid::unit(0.2, "cm"),
-                                                        annotation_legend_param=list(title_gp = grid::gpar(fontsize = 8,
-                                                                                                           fontfamily="serif",
-                                                                                                           fontface = "plain"),
-                                                                                     title_position = "leftcenter-rot",
-                                                                                     border = NA,
-                                                                                     legend_height = unit(20, "mm"),
-                                                                                     labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
-                                                                                     grid_width = unit(2, "mm")))
-
-    df2 <- data.frame(group = rownames(net))
-    rownames(df2) <- rownames(net)
-
-    color.use2 = color_taxa
-
-    row_annotation <- ComplexHeatmap::HeatmapAnnotation(df = df2, col = list(group = color.use2),
-                                                        which = "row", show_legend = TRUE, show_annotation_name = FALSE,
-                                                        simple_anno_size = grid::unit(0.2, "cm"),
-                                                        annotation_legend_param=list(title_gp = grid::gpar(fontsize = 8,
-                                                                                                           fontfamily="serif",
-                                                                                                           fontface = "plain"),
-                                                                                     title_position = "leftcenter-rot",
-                                                                                     border = NA,
-                                                                                     legend_height = unit(20, "mm"),
-                                                                                     labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
-                                                                                     grid_width = unit(2, "mm")))
-
-    if (heatmap.add.line) {
-      ha1 = ComplexHeatmap::rowAnnotation(
-                                        Strength = ComplexHeatmap::anno_barplot(rowSums(abs(net)),
-                                                                                border = FALSE, gp = grid::gpar(
-                                                                                  fill = color.use2, col = color.use2)),
-                                        foo = anno_lines(rowSums(abs(net)),
-                                                         gp = grid::gpar(col = "red"),
-                                                         add_points = TRUE,smooth = TRUE, axis = FALSE,
-                                                         extend = 0.2,border = FALSE,
-                                                         pt_gp =grid::gpar(fill = color.use2,col = color.use2),
-                                                         height = unit(1, "cm")),
-                                        show_annotation_name = FALSE)
-    ha2 = ComplexHeatmap::HeatmapAnnotation(
-                                            #pt = anno_points(colSums(abs(net[1:heatmap.top.class,])), gp = gpar(fill = color.use1,col = color.use1),height = unit(1, "cm")),
-                                            foo = anno_lines(colSums(abs(net[1:heatmap.top.class,])),
-                                                             gp = grid::gpar(col = "red"),
-                                                             add_points = TRUE,smooth = TRUE, axis = FALSE,
-                                                             extend = 0.2,border = FALSE,
-                                                             pt_gp = grid::gpar(fill = color.use1,col = color.use1),
-                                                             height = unit(1, "cm")),
-                                            Strength = ComplexHeatmap::anno_barplot(colSums(abs(net)),
-                                                                                    border = FALSE, gp = grid::gpar(
-                                                                                      fill = color.use1, col = color.use1)),
-                                            show_annotation_name = FALSE)
-    } else {
-      ha1 = ComplexHeatmap::rowAnnotation(
-        Strength = ComplexHeatmap::anno_barplot(rowSums(abs(net)),
-                                                border = FALSE, gp = grid::gpar(
-                                                  fill = color.use2, col = color.use2)),
-        show_annotation_name = FALSE)
-      ha2 = ComplexHeatmap::HeatmapAnnotation(
-        Strength = ComplexHeatmap::anno_barplot(colSums(abs(net)),
-                                                border = FALSE, gp = grid::gpar(
-                                                  fill = color.use1, col = color.use1)),
-        show_annotation_name = FALSE)
-
-    }
-
-    pdf(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type,".pdf",sep = ""),
-        width=10, height=10)
-    ComplexHeatmap::Heatmap(net,
-                            col = color.heatmap.use,
-                            na_col = "white",
-                            name = paste(stringr::str_to_title(data_type)," abundance",sep = ""),
-                            bottom_annotation = col_annotation,
-                            left_annotation = row_annotation,
-                            top_annotation = ha2,
-                            right_annotation = ha1,
-                            cluster_rows = FALSE,
-                            cluster_columns = FALSE,
-                            row_names_side = "left",
-                            row_names_rot = heatmap.taxa.angle,
-                            row_names_gp = grid::gpar(fontsize = 6,
-                                                      fontfamily="serif"),
-                            column_names_gp = grid::gpar(fontsize = 6,
-                                                         fontfamily="serif"),
-                            column_names_rot = heatmap.sample.angle,
-                            heatmap_legend_param = list(nrow=3,
-                                                        title_gp = grid::gpar(fontsize = 8,
-                                                                              fontfamily="serif",
-                                                                              fontface = "plain"),
-                                                        title_position = "leftcenter-rot",
-                                                        border = NA,
-                                                        legend_height = unit(20, "mm"),
-                                                        labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
-                                                        grid_width = unit(2, "mm")))
-
-    dev.off()
-
-    p1<-ComplexHeatmap::Heatmap(net,
-                                col = color.heatmap.use,
-                                na_col = "white",
-                            name = paste(stringr::str_to_title(data_type)," abundance",sep = ""),
-                            bottom_annotation = col_annotation,
-                            left_annotation = row_annotation,
-                            top_annotation = ha2,
-                            right_annotation = ha1,
-                            cluster_rows = FALSE,
-                            cluster_columns = FALSE,
-                            row_names_side = "left",
-                            row_names_rot = heatmap.taxa.angle,
-                            row_names_gp = grid::gpar(fontsize = 6,
-                                                      fontfamily="serif"),
-                            column_names_gp = grid::gpar(fontsize = 6,
-                                                         fontfamily="serif"),
-                            column_names_rot = heatmap.sample.angle,
-                            heatmap_legend_param = list(nrow=3,
-                                                        title_gp = grid::gpar(fontsize = 8,
-                                                                              fontfamily="serif",
-                                                                              fontface = "plain"),
-                                                        title_position = "leftcenter-rot",
-                                                        border = NA,
-                                                        legend_height = unit(20, "mm"),
-                                                        labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
-                                                        grid_width = unit(2, "mm")))
-
-
-  }
-
-  if (plot_type=="bubble") {
-    if (bubble.color.taxa) {
-      cat("\n","color taxa according to the params 'color_taxa'")
-      genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
-      genus_topxx<-reshape2::melt(genus_topxx)
-
-      color_taxa<-c(color_taxa[1:taxa_num],"grey50")
-      names(color_taxa)<-unique(genus_topxx$tax)
-
-      p1<-ggplot(data=genus_topxx, mapping=aes(x=variable,y=tax,color=tax))+
-        geom_point(stat= "identity",aes(size=value),
-                   shape=bubble.shape,
-                   alpha=bubble.alpha,show.legend = TRUE)+
-        scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
-        scale_color_manual(values=color_taxa)+
-        theme(aspect.ratio = aspect.ratio,
-              axis.title = element_blank(),
-              text = element_text(family = "serif"),
-              legend.position = "none")
-
-      ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type,".pdf",sep = ""),p1)
-      cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type," has been exported to ",export_path,sep = "","\n")
-
-    } else {
-      cat("\n","color taxa according to the params 'color_group'")
-
-      genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
-      genus_topxx<-reshape2::melt(genus_topxx)
-
-      samplename<-unique(genus_topxx$variable)
-      groupname<-substr(samplename,start = 1, stop = 2)%>%unique()
-
-      color_group<-color_group[1:length(groupname)]
-      names(color_group)<-groupname
-
-      color_group1<-color_group%>%data.frame()
-      color_sample<-randomcolor(length(samplename))
-
-      ###color samples according to groups
-      for (ttks in 1:nrow(color_group1)) {
-        color_sample[which(substr(samplename,start = 1, stop = 2)==rownames(color_group1)[ttks])]<-color_group1[ttks,]
-      }
-      names(color_sample)<-samplename
-
-      p1<-ggplot(data=genus_topxx, mapping=aes(x=variable,y=tax,color=factor(variable)))+
-        geom_point(stat= "identity",aes(size=value),
-                   shape=bubble.shape,
-                   alpha=bubble.alpha,show.legend = TRUE)+
-        scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
-        scale_color_manual(values=color_sample)+
-        theme(aspect.ratio = aspect.ratio,
-              axis.title = element_blank(),
-              text = element_text(family = "serif"),
-              legend.position = "none")
-
-      ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type,".pdf",sep = ""),p1)
-      cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_",plot_type," has been exported to ",export_path,sep = "","\n")
-
-    }
-  }
-
-  if (plot_type=="chord") {
-    genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
-    genus_topxx<-reshape2::melt(genus_topxx)
-
-    samplename<-unique(genus_topxx$variable)
-    groupname<-substr(samplename,start = 1, stop = 2)%>%unique()
-
-    genus_topxx$group<-substr(genus_topxx$variable,start = 1,stop = 2)
-    df.plot<-subset(genus_topxx,select=c(group,tax,value))
-    order.sector<- c(unique(df.plot$group)[length(unique(df.plot$group)):1],
-                     unique(df.plot$tax))
-
-    grid.color<-c(color_group[1:length(groupname)],
-                  c(color_taxa[1:taxa_num],"grey50"))
-
-    names(grid.color)<-c(unique(df.plot$group),unique(df.plot$tax))
-
-
-    circlize::circos.clear()
-    par(family="serif",mar=c(0,0,1,1))
-    circlize::chordDiagram(df.plot,
-                               order = order.sector,
-                               diffHeight = 0.06,
-                               grid.col = grid.color,
-                               transparency = 0.4,
-                               directional = 1,
-                               direction.type = c("diffHeight","arrows"),
-                               link.arr.type = "big.arrow",
-                               annotationTrack = "grid",
-                               annotationTrackHeight = 0.03,
-                               preAllocateTracks = list(track.height = 0.1),
-                               small.gap = 1,
-                               big.gap = 10,
-                               link.visible = TRUE,
-                               scale = FALSE,
-                               reduce = -1)
-
-    circlize::circos.track(track.index = 2, panel.fun = function(x, y) {
-      xlim = circlize::get.cell.meta.data("xlim")
-      xplot = circlize::get.cell.meta.data("xplot")
-      ylim = circlize::get.cell.meta.data("ylim")
-      sector.name = circlize::get.cell.meta.data("sector.index")
-      circlize::circos.text(mean(xlim), ylim[2], sector.name,
-                  facing = "clockwise",family = par("serif"),
-                  niceFacing = TRUE, adj = c(-0.25, 0), cex = 1)
-    }, bg.border = NA)
-
-    lgd <- ComplexHeatmap::Legend(at = names(grid.color),
-                                  type = "grid",ncol=2,
-                                  legend_gp = grid::gpar(fill = grid.color,
-                                                         fontfamily="serif",
-                                                         fontface = "plain"))
-
-    ComplexHeatmap::draw(lgd, x = unit(0.4, "npc") ,
-                         y = unit(0.8, "npc"), just = c("right","bottom"))
-
-    p1<-recordPlot()
-
-    message("\n","The chord plot need to be saved manually.")
-    }
-  return(p1)
-}
-
 "calcMicrochatcom" <- function(mchat,
                            taxa="Class",
                            taxa_num=10,
+                           file.save=TRUE,
                            export_path="microbial composition") {
 
   if (class(mchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
   }
-
-  dir.create(export_path, recursive = TRUE)
+  export_path<-paste(export_path,"/microbial composition/data_composition",sep = "")
+  if (file.save) dir.create(export_path, recursive = TRUE)
 
   if (length(which(colSums(mchat$otu_table)==0)) !=0) mchat$otu_table<-mchat$otu_table[,-which(colSums(mchat$otu_table)==0)]
   if (length(which(colSums(mchat$otu_table)==0)) ==0) mchat$otu_table<-mchat$otu_table
@@ -1359,6 +892,7 @@
   cat("-----------------------------------------------------------------------")
 
 
+  if (file.save) {
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_absabun.txt",sep = "" )
   write.table(genus_top,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
@@ -1388,7 +922,7 @@
   write.table(split_otu4,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
-
+}
   ###create S3 object
   microchatcomobj <- list(plot_data,
                           genus_top,
@@ -1987,8 +1521,8 @@ par(family="serif")
 
 "exportMicrochatVennCyto" <- function(microchatVennobj,
                                       export_path="microbial composition") {
-
-  dir.create(export_path, recursive = TRUE)
+  export_path_new<-paste(export_path,"/microbial composition/data_venn",sep = "")
+  dir.create(export_path_new, recursive = TRUE)
   if (class(microchatVennobj)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
   }
@@ -1998,8 +1532,836 @@ par(family="serif")
 
   edge_table<-data_ori$data_edge
   node_table<-data_ori$data_node
-  write.table(edge_table,file = paste(export_path,"/cyto_edge_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","The edge_table used for cytoscape software. Please check it.")
-  write.table(node_table,file = paste(export_path,"/cyto_node_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","The node_table used for cytoscape software. Please check it.")
+  node_table$charnum<-nchar(node_table$sort)
+  ori_node<-node_table$OTUID
+  node_table<-node_table[which(node_table$charnum == 2 | node_table$charnum == max(node_table$charnum)),]
+  rm.node<-setdiff(ori_node,node_table$OTUID)
+
+  edge_table<-edge_table[-which(edge_table$OTUID %in% rm.node),]
+
+  write.table(edge_table,file = paste(export_path_new,"/Venn_cyto_edge_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
+  cat("\n","The edge table used for cytoscape Please check it.")
+  write.table(node_table,file = paste(export_path_new,"/Venn_cyto_node_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
+  cat("\n","The node table used for cytoscape Please check it.")
+}
+
+
+"keep.tax" <- function(taxon_table,taxon.keep) {
+
+  allchar<-character()
+  for (tk in 1:length(colnames(taxon_table))) {
+    allcharr<-taxon_table[,tk]%>%unique()
+    {
+      allchar<-c(allchar,allcharr)
+    }
+  }
+
+  if (is.null(taxon.keep)) {
+    taxon_table<-taxon_table
+    fulltaxon=unique(taxon_table$Phylum)
+  } else {
+    taxon.keep1<-taxon.keep[1]
+    if (substr(taxon.keep1,start = 2,stop = 3)!="__") {
+      taxon.keep<-stringr::str_to_title(taxon.keep)
+    } else {
+      splitdata<-str_split_fixed(taxon.keep,pattern="__",2)
+      splitdata[,2]<-stringr::str_to_title(splitdata[,2])
+      taxon.keep<-paste(splitdata[,1],"__",splitdata[,2],sep = "")
+    }
+
+    fulltaxon<-lapply(
+      lapply(
+        sapply(as.list(taxon.keep), grep,allchar),
+        function (x) {
+          x<-x[1]
+        }),
+      function(y) {
+        allchar[y]
+      })%>%as.character()
+
+    taxon_table2<-data.frame()
+    for (sk in 1:length(colnames(taxon_table))) {
+      taxon_table1<-taxon_table[which(taxon_table[,sk] %in% fulltaxon),]
+      {
+        taxon_table2<-rbind(taxon_table2,taxon_table1)
+      }
+    }
+
+    taxon_table<-taxon_table2
+
+    cat("\n","Taxa belonging to '",fulltaxon,"' have (has) been kept in microchat object.",sep=" ")
+  }
+  return(list(taxon_table=taxon_table,fulltaxon=fulltaxon))
+}
+
+"rm.dup" <- function(data) {
+  dupunclass<-which(substr(data$KO3,start = 1,stop = 7)=="unclass")
+  dupunculture<-which(substr(data$KO3,start = 1,stop = 9)=="unculture")
+  if (length(dupunclass)!=0) {
+    for (i in dupunclass) {
+      data$KO3[i]<-paste("unclassified",match(i,dupunclass),sep = "")
+    }
+  }
+  if (length(dupunculture)!=0) {
+    for (j in dupunculture) {
+      data$KO3[j]<-paste("uncultured",match(j,dupunculture),sep = "")
+    }
+  }
+  return(data)
+}
+
+"calcmicrochatComDiff" <- function(submchat,
+                                   comparison_sel="CT-CS",
+                                   taxon.keep=NULL,    ###null 则选择全部
+                                   taxa_sel=c("Phylum","Class","Genus"),
+                                   padj=FALSE,
+                                   min.fun.abun = 0.3,
+                                   filter=TRUE) {
+
+  tt<-str_split_fixed(comparison_sel,'-',2)%>%as.character()
+
+  otu_table<-submchat$otu_table
+  taxon_table<-submchat$taxon_table
+  taxo.data<-keep.tax(taxon_table,taxon.keep)
+  taxon_table<-taxo.data$taxon_table
+  fulltax<-taxo.data$fulltaxon
+
+  name_select<-rownames(taxon_table)
+  otu_table <- otu_table[which(rownames(otu_table) %in% name_select),]
+  otu_table<-otu_table[,which(substr(colnames(otu_table),start = 1,stop = 2) %in% tt)]
+  sampleda<-group_generate(otu_table)
+  sampleda<-sampleda[which(sampleda$group %in% tt),]
+
+  otu_table<-otu_table%>%tibble::rownames_to_column(var = "name")
+  taxon_table<-taxon_table%>%tibble::rownames_to_column(var = "name")
+  funpred1<-merge(otu_table,taxon_table,by="name")
+
+  tax.pos<-match(tolower(taxa_sel),tolower(colnames(funpred1)))
+
+  funpred1<-subset(funpred1, select = c(1:(nrow(sampleda)+1),tax.pos))
+  colnames(funpred1)[(ncol(funpred1)-2):ncol(funpred1)]<-c("KO1","KO2","KO3")
+  funpred1$KO1<-str_split_fixed(funpred1$KO1,pattern="__",2)[,2]
+  funpred1$KO2<-str_split_fixed(funpred1$KO2,pattern="__",2)[,2]
+  funpred1$KO3<-str_split_fixed(funpred1$KO3,pattern="__",2)[,2]
+  funpred<-funpred1
+  microchatTaxFun<-list(submchat=submchat,
+                        comparison_sel=comparison_sel,
+                        funpred=funpred,
+                        sampleda=sampleda)
+
+  fp.dat<-microchatTaxFun
+  abun<-fp.dat$submchat$otu_table
+  funpred <- fp.dat$funpred
+  group<-sampleda
+
+  message("Control selected is ",tt[1])
+  message("Treatment selected is ",tt[2])
+  funpred[which(funpred$KO3==""),]$KO3<-"unclassified"
+  a<-subset(funpred,select=c(2:(nrow(group)+1),KO1,KO2,KO3))
+  datako2<-subset(funpred,select=c(2:(nrow(group)+1),KO2))
+  datako3<-subset(funpred,select=c(2:(nrow(group)+1),KO3))
+  datako4<-subset(funpred,select=c(2:(nrow(group)+1),KO1,KO3))
+  datako4<-unite(datako4,"KO3",KO1,KO3,sep = ";")
+
+  datako4 %>%
+    group_by(KO3) %>%
+    summarise_all(sum) -> data
+  data[,c("KO1","KO3")]<-str_split_fixed(data$KO3,pattern=";",2)
+
+  data<-rm.dup(data)
+  funpred<-rm.dup(funpred)
+  fulltax.sel<-str_split_fixed(fulltax,pattern="__",2)[,2]
+  data<-data[which(data$KO1 %in% fulltax.sel),]
+
+  data<-subset(data,select = c(-KO1))
+  data<-column_to_rownames(data,var = "KO3")
+
+  data<-data/colSums(data)
+  data <- data*100
+  if (!is.null(min.fun.abun)) data <- data %>% filter(apply(data,1,mean) > min.fun.abun) else data <- data
+
+  data <- t(data)
+  data1 <- data.frame(data,group$group)
+  colnames(data1) <- c(colnames(data),"Group")
+  data1$Group <- as.factor(data1$Group)
+
+  diff <- data1 %>%
+    select_if(is.numeric) %>%
+    map_df(~ broom::tidy(t.test(. ~ Group,data = data1)), .id = 'var')
+
+  if (padj) diff$p.value <- p.adjust(diff$p.value,"fdr")
+  if (filter) {
+    diff1 <- diff %>% filter(p.value < 0.05)
+    if (nrow(diff1) <= 0) {
+      diff<-diff
+    } else {
+      diff<-diff1
+    }
+  }
+
+  ## left barplot layout
+  abun.bar <- data1[,c(diff$var,"Group")] %>%
+    gather(variable,value,-Group) %>%
+    group_by(variable,Group) %>%
+    summarise(Mean = mean(value),
+              n=n(),
+              sd=sd(value),
+              se=sd/n)
+
+  kk1<-subset(funpred,select=c(KO1,KO2,KO3))
+  kk1$varx<-kk1$KO3
+  kk12<-kk1[!duplicated(kk1$varx),]
+  KKK<-inner_join(abun.bar,kk12,by=c("variable"="varx"))
+  abun.bar<-KKK
+
+  ## right point layout
+  diff.mean <- diff[,c("var","estimate","conf.low","conf.high","p.value")]
+  diff.mean$Group <- c(ifelse(diff.mean$estimate >0,levels(data1$Group)[1],
+                              levels(data1$Group)[2]))
+  diff.mean <- diff.mean[order(diff.mean$estimate,decreasing = TRUE),]
+
+
+  abun.bar<-abun.bar[order(abun.bar$KO1,abun.bar$KO2),]
+  rownames(abun.bar)<-1:nrow(abun.bar)
+  abun.bar$variable<-factor(abun.bar$variable,levels=rev(unique(abun.bar$variable)))
+
+  diff.mean$KO3<-diff.mean$var
+  ajj<-merge(diff.mean,kk1,by="KO3", all = TRUE,sort = FALSE)
+  df<-filter(ajj,ajj$var!="NA")
+  abun.bar1<-abun.bar
+
+  abun.bar1$KO4<-abun.bar1$KO2
+  abun.bar1$KO4[setdiff(1:nrow(abun.bar1),match(unique(abun.bar1$KO4),abun.bar1$KO4))]<-""
+  abun.bar1$KO4[match(unique(abun.bar1$KO4),abun.bar1$KO4)]<-abun.bar1$KO4[match(unique(abun.bar1$KO4),abun.bar1$KO4)]
+
+  ## right text layout
+  abun.bar33<-subset(abun.bar1,select=c(KO2,KO3))
+  abun.bar33<-abun.bar33[duplicated(abun.bar33$KO3),]
+  rownames(abun.bar33)<-1:nrow(abun.bar33)
+
+  diff.mean1<-diff.mean
+  diff.mean1[,"KO2"]<-abun.bar33$KO2[match(diff.mean$KO3,abun.bar33$KO3)]
+  diff.mean1<-diff.mean1[order(diff.mean1$KO2,diff.mean1$KO3),]
+
+  diff.mean1$KO2 <- factor(diff.mean1$KO2,levels = rev(unique(diff.mean1$KO2)))
+  diff.mean1$p.value <- signif(diff.mean1$p.value,3)
+  diff.mean1$p.value <- as.character(diff.mean1$p.value)
+  diff.mean1$var<-factor(diff.mean1$var,levels =rev(diff.mean1$var))
+
+  diff.mean1[,"sig"]<-ifelse(diff.mean1$p.value<0.001,"***",
+                             ifelse(diff.mean1$p.value<0.01,"**",
+                                    ifelse(diff.mean1$p.value<0.05,"*","ns") ))
+
+  cat("Totally seeking ",nrow(funpred)," ",taxa_sel[3]," levels from ",length(unique(funpred$KO2))," ",taxa_sel[2]," levels.\n",sep = "")
+  cat("Totally seeking ",nrow(diff.mean1)," ",taxa_sel[3]," significant levels, accounted for ",paste(sprintf("%0.2f",round(100*nrow(diff.mean1)/nrow(funpred))),"%",sep = ""),".\n",sep = "")
+  cat("Totally seeking ",length(unique(diff.mean1$KO2))," ",taxa_sel[2]," significant levels, accounted for ",paste(sprintf("%0.2f",round(100*length(unique(diff.mean1$KO2))/length(unique(funpred$KO2)))),"%",sep = ""),".\n",sep = "")
+
+  microchatTaxFunDiff<-list(abun.bar=abun.bar,diff.mean=diff.mean,df=df,
+                            comparison=comparison_sel,otu_table=abun,
+                            abun.bar1=abun.bar1,diff.mean1=diff.mean1,sampledata=sampleda)
+  return(microchatTaxFunDiff)
+}
+
+"plotmicrochatComDiff" <- function(microchatTaxFunDiff,
+                                   abundance.order=FALSE,
+                                   abundance.order.rev=FALSE,
+                                   abundance.regulation.order=FALSE,
+                                   ko2.bar.gradient=TRUE,
+                                   ko2.bar.gradient.rev=FALSE,
+                                   ko1.color=colorCustom(10,pal = "xiena"),
+                                   add.bar.color=color_group,
+                                   compare.color=color_group,
+                                   gradient.num=20,
+                                   sig.text.size=3,
+                                   sig.text.color="black",
+                                   ko2.text.size=4,
+                                   ko2.text.color="black",
+                                   add.bar.text.size=3,
+                                   add.bar.text.color="white",
+                                   pdf.width=NULL,
+                                   layout.rt=c(1,4,4,4,1.5),
+                                   ko1.bar.alpha=1,
+                                   ko2.bar.alpha=1,
+                                   ko1.text.size=4,
+                                   ko1.text.color="black",
+                                   errorbar.shape=21, ### 22 23
+                                   diffbar.border.color = "black",
+                                   export_path=export_path) {
+  comparison_sel<-microchatTaxFunDiff$comparison
+  export_path<-paste(export_path,"/microbial composition/Differential analysis/",comparison_sel,sep = "")
+  dir.create(export_path, recursive = TRUE)
+
+  if (abundance.order) {
+
+    diff.mean<-microchatTaxFunDiff$diff.mean
+    diff.mean1<-microchatTaxFunDiff$diff.mean1
+    upreg<-diff.mean$var[which(diff.mean$estimate>0)]
+    dwreg<-diff.mean$var[which(diff.mean$estimate<=0)]
+
+    if (!abundance.regulation.order) {
+      if (!abundance.order.rev){
+        abun.bar<-microchatTaxFunDiff$abun.bar%>%arrange(Mean)
+        abun.bar1<-microchatTaxFunDiff$abun.bar1%>%arrange(Mean)
+      } else {
+        abun.bar<-microchatTaxFunDiff$abun.bar%>%arrange(desc(Mean))
+        abun.bar1<-microchatTaxFunDiff$abun.bar1%>%arrange(desc(Mean))
+      }
+      abun.bar$variable<-factor(abun.bar$variable,levels = unique(abun.bar$variable))
+      diff.mean$var<-factor(diff.mean$var,levels = unique(abun.bar$variable))
+      abun.bar1$variable<-factor(abun.bar1$variable,levels = unique(abun.bar$variable))
+      diff.mean1$var<-factor(diff.mean1$var,levels = unique(abun.bar$variable))
+    } else {
+      if (!abundance.order.rev){
+        abun.bar<-rbind(
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% dwreg),])%>%arrange(Mean)
+        abun.bar1<-rbind(
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% dwreg),])%>%arrange(Mean)
+
+        abun.bar$variable<-factor(abun.bar$variable,levels = c(upreg,dwreg))
+        diff.mean$var<-factor(diff.mean$var,levels = c(upreg,dwreg))
+        abun.bar1$variable<-factor(abun.bar1$variable,levels = c(upreg,dwreg))
+        diff.mean1$var<-factor(diff.mean1$var,levels = c(upreg,dwreg))
+      } else {
+        abun.bar<-rbind(
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% dwreg),])%>%arrange(desc(Mean))
+        abun.bar1<-rbind(
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% dwreg),])%>%arrange(desc(Mean))
+        abun.bar$variable<-factor(abun.bar$variable,levels = c(dwreg,upreg))
+        diff.mean$var<-factor(diff.mean$var,levels = c(dwreg,upreg))
+        abun.bar1$variable<-factor(abun.bar1$variable,levels = c(dwreg,upreg))
+        diff.mean1$var<-factor(diff.mean1$var,levels = c(dwreg,upreg))
+      }
+    }
+
+  } else {
+    abun.bar<-microchatTaxFunDiff$abun.bar
+    abun.bar1<-microchatTaxFunDiff$abun.bar1
+    diff.mean<-microchatTaxFunDiff$diff.mean
+    diff.mean1<-microchatTaxFunDiff$diff.mean1
+  }
+
+  df<-microchatTaxFunDiff$df
+  sampledata<-microchatTaxFunDiff$sampledata
+  comparison=microchatTaxFunDiff$comparison
+  abun<-microchatTaxFunDiff$otu_table
+
+  tt<-str_split_fixed(comparison,'-',2)%>%as.character()
+  color.all<-compare.color
+  allg<-unique(substr(colnames(abun),start = 1,stop = 2))
+  if (length(color.all)<length(allg)) stop("Please provide more group colors, which is ",length(allg),".")
+  color.use<-color.all[match(tt,allg)]
+
+  gp.use<-xlabname[match(tt,allg)]
+  cbbPalette <- color.use
+  names(cbbPalette)<-tt
+
+  p1 <- ggplot(abun.bar,aes(variable,Mean,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable),label=NULL) +
+    scale_fill_manual(values=cbbPalette,
+                      labels=gp.use,
+                      limits = (unique(abun.bar$Group)))+
+    coord_flip() +
+    xlab("") +
+    ylab("Mean proportion (%)") +
+    theme(panel.background = element_rect(fill = 'transparent'),
+          panel.grid = element_blank(),
+          text = element_text(family = "serif"),
+          axis.ticks.length.y = unit(0,"lines"),
+          axis.ticks.y  = element_line(size=0),
+          axis.line  = element_line(colour = "black"),
+          axis.title.y=element_text(colour='black', size=8,face = "bold"),
+          axis.title.x=element_text(colour='black', size=12,face = "bold"),
+          axis.text=element_text(colour='black',size=10,face = "bold"),
+          legend.title=element_blank(),
+          legend.background = element_blank(),
+          legend.text=element_text(size=8,face = "bold",colour = "black",
+                                   family = "serif",
+                                   margin = margin(r = 20)),
+          legend.position = c(-0.5,-0.025),
+          legend.direction = "horizontal",
+          legend.key = element_rect(colour = "white"),
+          legend.key.width = unit(0.8,"cm"),
+          legend.key.height = unit(0.5,"cm"))
+
+  for (i in 1:(nrow(diff.mean) - 1)) {
+    p1 <- p1 + annotate('rect', xmin = i+0.5, xmax = i+1.5, ymin = -Inf, ymax = Inf,
+                        fill = ifelse(i %% 2 == 0, 'white', 'gray95'))
+  }
+
+
+  p1 <- p1 +
+    geom_errorbar(data = abun.bar,position = position_dodge(0.75),
+                  aes(ymin = Mean-se,
+                      ymax = Mean+se),
+                  colour = "grey50",
+                  width=.25)+
+    geom_bar(stat = "identity",position = "dodge",width = 0.7,colour = diffbar.border.color)
+
+
+  if (length(add.bar.color)<length(unique(abun.bar$KO2))) stop("Please provide more colors for coloring KEGG 2 levels, which is ",length(unique(abun.bar$KO2)),".")
+  colorsbar<-add.bar.color[1:length(unique(abun.bar$KO2))]
+
+  abun.barzz<-abun.bar
+  ko2.selected<-c()
+  for (i in unique(abun.barzz$KO1)) {
+    ko.selected<-abun.barzz[which(abun.barzz$KO1==i),]$KO2%>%unique()%>%rev()
+    {
+      ko2.selected<-c(ko2.selected,ko.selected)
+    }
+  }
+  names(colorsbar)<-ko2.selected%>%rev()
+  # need to set `coord_flip = TRUE` if you plan to use `coord_flip()`
+  if (!ko2.bar.gradient) {
+    ydens <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill()+
+      scale_x_discrete()+
+      coord_flip()+
+      geom_col(data=abun.bar1, aes(x=variable,
+                                   y=1,
+                                   fill=KO2),
+               color=NA,
+               alpha=ko2.bar.alpha, width = 1,
+               size=.2) +
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=2,
+                                    label=variable),size=add.bar.text.size,
+                color=add.bar.text.color,
+                family="serif",check_overlap = FALSE,
+                hjust = 1)+
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=0,
+                                    label=KO4),size=ko2.text.size,
+                color=ko2.text.color,
+                family="serif",check_overlap = FALSE,
+                hjust = 0)+
+      scale_fill_manual(values = colorsbar)+
+      labs(title="KO2   KO3")
+  } else {
+    colorsbar<-add.bar.color[1:length(unique(abun.bar$KO2))]
+
+    colorss<-list()
+    for (j in 1:length(colorsbar)) {
+      if (!ko2.bar.gradient.rev) {
+        colorss[[j]] <- grDevices::colorRampPalette(c("white",
+                                                      colorsbar[j]))(gradient.num)
+      } else {
+        colorss[[j]] <- grDevices::colorRampPalette(c(colorsbar[j],
+                                                      "white"))(gradient.num)
+      }
+
+    }
+
+    color.sel<-list()
+    for (j in 1:length(colorss[[1]])) {
+      c.sel<-c()
+      for (i in 1:length(colorss)) {
+        c.sel<-c(c.sel,colorss[[i]][j])
+        color.sel[[j]]<-c.sel
+      }
+    }
+
+    nworker<-parallel::detectCores()-2
+    if (nworker<=0) nworker<-parallel::detectCores()
+    if (nworker!=1) {
+      c1 <- try(parallel::makeCluster(nworker, type = "PSOCK"))
+      if (class(c1)[1] == "try-error") {
+        c1 <- try(parallel::makeCluster(nworker, setup_timeout = 0.5))
+      }
+      if (class(c1)[1] == "try-error") {
+        c1 <- try(parallel::makeCluster(nworker, setup_strategy = "sequential"))
+      }
+      message("\n","Now generating gradient color by multi threaded computing. Begin at ",
+              date(), ". Please wait...")
+      parallel::clusterExport(c1, "%>%")
+      ydensx = parallel::parLapply(c1, color.sel, gradp,
+                                   abun.bar,p1,abun.bar1,ko2.bar.alpha)
+      parallel::stopCluster(c1)
+    }
+
+    ydensx<-patchwork::wrap_plots(ydensx,nrow = 1,byrow = TRUE)
+
+    ydens2 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill()+
+      scale_x_discrete()+
+      coord_flip()+
+      geom_col(data=abun.bar1, aes(x=variable,
+                                   y=1), alpha=ko2.bar.alpha, width = 1,
+               fill=NA,
+               size=.2) +
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=0,
+                                    label=KO4),size=ko2.text.size,
+                color=ko2.text.color,inherit.aes = TRUE,
+                family="serif",check_overlap = FALSE,
+                hjust = 0)+
+      labs(title="KO2   KO3")
+
+    ydens3 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill()+
+      scale_x_discrete()+
+      coord_flip()+
+      geom_col(data=abun.bar1, aes(x=variable,
+                                   y=1),
+               fill=NA,
+               alpha=ko2.bar.alpha, width = 1,
+               size=.2) +
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=2,
+                                    label=variable),
+                size=add.bar.text.size,
+                color=add.bar.text.color,inherit.aes = TRUE,
+                family="serif",check_overlap = FALSE,
+                hjust = 1)+
+      labs(title="KO2   KO3")
+
+    ydensxZ<-ydensx+annotation_custom(grob=ggplotGrob(ydens3),
+                                      ymin = -(gradient.num*2)+2, ymax = 2,
+                                      xmin=0.4,
+                                      xmax=0.6+nrow(abun.bar)/2)
+
+    ydens<-ydensxZ+annotation_custom(grob=ggplotGrob(ydens2),
+                                     ymin = -(gradient.num*2)+2, ymax = 2,
+                                     xmin=0.4,
+                                     xmax=0.6+nrow(abun.bar)/2)
+
+  }
+
+
+  diff.mean2<-diff.mean1
+  diff.mean2$Group[which(diff.mean2$sig=="ns")]<-"ns"
+  cbbPalettex<-c(cbbPalette,"white")
+  names(cbbPalettex)<-c(names(cbbPalette),"ns")
+  p2 <- ggplot(diff.mean2,aes(x=var,y=estimate,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable)) +
+    coord_flip() +
+    theme(panel.background = element_rect(fill = 'transparent'),
+          panel.grid = element_blank(),
+          text = element_text(family = "serif"),
+          axis.ticks.length = unit(0.4,"lines"),
+          axis.ticks = element_line(color='black'),
+          axis.line = element_line(colour = "black"),
+          axis.title.x=element_text(colour='black', size=12,face = "bold"),
+          axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.text.y = element_blank(),
+          legend.position = "none",
+          axis.line.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          plot.title = element_text(size = 15,face = "bold",colour = "black",hjust = 0.5)) +
+
+    xlab("") +
+    ylab("Difference in mean proportions (%)") +
+    labs(title="95% confidence intervals")
+
+
+  for (i in 1:(nrow(diff.mean2) - 1))
+    p2 <- p2 + annotate('rect', xmin = i+0.5, xmax = i+1.5, ymin = -Inf, ymax = Inf,
+                        fill = ifelse(i %% 2 == 0, 'white', 'gray95'))
+
+  p2 <- p2 +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high),show.legend = FALSE,
+                  position = position_dodge(0.8), width = 0.5, size = 0.5) +
+    geom_point(shape = errorbar.shape,size = 3) +
+    scale_fill_manual(values=cbbPalettex) +
+    geom_hline(aes(yintercept = 0), linetype = 'dashed', color = 'black')
+
+
+
+  diff.mean1$p.value<-diff.mean1$p.value%>%as.numeric()
+  diff.mean1$p.value<-sprintf("%0.3f",round(diff.mean1$p.value,3))
+
+  p3 <- ggplot(diff.mean1,aes(var,estimate,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable)) +
+    geom_text(aes(y = 0,x = var),label = paste(diff.mean1$p.value,diff.mean1$sig,sep = ""),
+              family="serif",color=sig.text.color,show.legend = FALSE,
+              hjust = 0,fontface = "bold",inherit.aes = FALSE,size = sig.text.size) +
+    geom_text(aes(x = nrow(diff.mean1)/2 +0.5,y = 0.85),
+              label = "P-value (corrected)",show.legend = FALSE,
+              family="serif",srt = 270,fontface = "bold",size = 5) +
+    coord_flip() +
+    ylim(c(0,1)) +
+    theme(panel.background = element_blank(),
+          text = element_text(family = "serif"),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          axis.title = element_blank())
+
+
+  ## merge plots
+  library(patchwork)
+  ko1.color<-ko1.color[1:length(unique(abun.bar1$KO1))]
+  names(ko1.color)<-unique(abun.bar1$KO1)%>%rev()
+
+  ko1.text<-table(abun.bar1$KO1)
+  ko1.text<-ko1.text[match(names(ko1.color),names(ko1.text))]
+  ko1.text<-rev(ko1.text)
+  ko1.text<-ko1.text%>%data.frame()
+  if (nrow(ko1.text)==1) {
+    ko1.text$Freq<-ko1.text$.
+    ko1.text$freq<-ko1.text$Freq
+
+    ko1.text$half<-ko1.text$Freq/2
+    ko1.text$ycoord<-ko1.text$freq-ko1.text$half
+
+    abun.bar1$KO5<-""
+    ypos<-ko1.text$ycoord
+    abun.bar1$KO5[ypos]<-rownames(ko1.text)%>%as.character()
+  } else {
+    ko1.text$freq<-ko1.text$Freq%>%cumsum()
+    ko1.text$half<-ko1.text$Freq/2
+    ko1.text$ycoord<-ko1.text$freq-ko1.text$half
+
+    abun.bar1$KO5<-""
+    for (i in 1:nrow(ko1.text)) {
+      ypos<-ko1.text$ycoord[i]
+      abun.bar1$KO5[ypos]<-ko1.text$Var1[i]%>%as.character()
+    }
+  }
+
+  #str_split_fixed("Human Diseases"," ",n=2)
+  abun.bar1$KO5[which(abun.bar1$KO5=="Human Diseases")]<-"HD"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Genetic Information Processing")]<-"GIP"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Environmental Information Processing")]<-"EIP"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Cellular Processes")]<-"CellPro"
+
+  p4 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+    ggnewscale::new_scale_fill()+
+    scale_x_discrete()+
+    coord_flip()+
+    geom_col(data=abun.bar1, aes(x=variable,
+                                 y=1,
+                                 fill=KO1),
+             alpha=ko1.bar.alpha,
+             width = 1,show.legend = FALSE,
+             size=.2) +
+    scale_fill_manual(values = ko1.color)
+
+
+  whatsn<-abun.bar1$KO5[which(abun.bar1$KO5!="")]
+  whats<-(nrow(abun.bar1)/2)-(which(abun.bar1$KO5!="")/2)
+  for (i in 1:length(whats)) {
+    p4<-p4+annotate(geom = "text",
+                    family="serif",
+                    srt = 90,
+                    size=ko1.text.size,
+                    color=ko1.text.color,
+                    x = whats[i]+0.5,
+                    y = 1,
+                    label = whatsn[i])
+  }
+
+  #p4+ydens+plot_layout(widths = c(0.5,0.5),byrow=TRUE)
+
+  if (is.null(pdf.width)) widthx=15 else widthx= pdf.width
+  heighty=length(unique(abun.bar1$KO3))/4
+  if (heighty<(widthx/2)) heighty<-widthx/2 else  heighty<-heighty
+
+  p<-p4+ydens+p1 + p2 + p3 + plot_layout(widths = c(layout.rt[1],
+                                                    layout.rt[2],
+                                                    layout.rt[3],
+                                                    layout.rt[4],
+                                                    layout.rt[5]),byrow=TRUE)
+
+  message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
+  message("'ggplotify::as.ggplot' could be used for tranforming patchwork object into ggplot object !!!")
+
+  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (CMYK).pdf",sep = ""),
+         colormodel="cmyk",
+         width = widthx,height = heighty,p)
+  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (RGB).pdf",sep = ""),
+         colormodel="srgb",
+         width = widthx,height = heighty,p)
+  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot.tiff",sep = ""),
+         bg="white",width = widthx,height = heighty,p)
+  cat("\n已输出",
+      paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
+  print(p)
+  return(p)
+}
+
+
+
+"plotComDiffCombinedExtendbar" <- function(submchat,
+                                           my_comparisons,
+                                           taxon.keep=NULL,    ###null 则选择全部
+                                           taxa_sel=c("Phylum","Class","Genus"),
+                                           padj=FALSE,
+                                           min.fun.abun = 0.3,
+                                           filter=FALSE,
+                                           abundance.order=FALSE,
+                                           abundance.regulation.order=TRUE,
+                                           abundance.order.rev=TRUE,
+                                           ko2.bar.gradient=TRUE,
+                                           ko2.bar.gradient.rev=FALSE,
+                                           ko1.color=colorCustom(10,pal = "xiena"),
+                                           add.bar.color=color_group,
+                                           compare.color=color_group,
+                                           gradient.num=20,
+                                           sig.text.size=3,
+                                           sig.text.color="black",
+                                           ko2.text.size=4,
+                                           ko2.text.color="black",
+                                           add.bar.text.size=3,
+                                           add.bar.text.color="white",
+                                           pdf.width=NULL,
+                                           layout.rt=c(0.4,4,4,4,1.5),
+                                           ko1.bar.alpha=1,
+                                           ko2.bar.alpha=1,
+                                           ko1.text.size=4,
+                                           ko1.text.color="black",
+                                           errorbar.shape=21, ### 22 23
+                                           diffbar.border.color = "black",
+                                           export_path) {
+
+  xp<-list()
+  for (i in 1:length(my_comparisons)) {
+    microchatTaxFunDiff<-calcmicrochatComDiff(submchat,
+                                              comparison_sel=paste(my_comparisons[[i]][1],
+                                                                   "-",
+                                                                   my_comparisons[[i]][2],sep = ""),
+                                              taxon.keep=taxon.keep,    ###null 则选择全部
+                                              taxa_sel=taxa_sel,
+                                              padj=padj,
+                                              min.fun.abun = min.fun.abun,
+                                              filter=filter)
+
+    ptreat2<-plotmicrochatComDiff(microchatTaxFunDiff,
+                                  abundance.order=abundance.order,
+                                  abundance.regulation.order=abundance.regulation.order,
+                                  abundance.order.rev=abundance.order.rev,
+                                  ko2.bar.gradient=ko2.bar.gradient,
+                                  ko2.bar.gradient.rev=ko2.bar.gradient.rev,
+                                  ko1.color=ko1.color,
+                                  add.bar.color=add.bar.color,
+                                  compare.color=compare.color,
+                                  gradient.num=gradient.num,
+                                  sig.text.size=sig.text.size,
+                                  sig.text.color=sig.text.color,
+                                  ko2.text.size=ko2.text.size,
+                                  ko2.text.color=ko2.text.color,
+                                  add.bar.text.size=add.bar.text.size,
+                                  add.bar.text.color=add.bar.text.color,
+                                  pdf.width=pdf.width,
+                                  layout.rt=layout.rt,
+                                  ko1.bar.alpha=ko1.bar.alpha,
+                                  ko2.bar.alpha=ko2.bar.alpha,
+                                  ko1.text.size=ko1.text.size,
+                                  ko1.text.color=ko1.text.color,
+                                  errorbar.shape=errorbar.shape, ### 22 23
+                                  diffbar.border.color = diffbar.border.color,
+                                  export_path=export_path)
+
+    xp[[i]]<-ptreat2
+  }
+  message("A list object has been exported. Patchwork package is recommended to be used for combined plots.")
+  return(xp)
+}
+
+
+
+"plotmicrochatComBoxplot" <- function(submchat,
+                                      taxa="Genus",
+                                      taxa_num=10,
+                                      file.save=FALSE,
+                                      xlabname=xlabname,
+                                      ylim.fold=1, ##值越大，y轴显示范围越大
+                                      strictmod=TRUE,
+                                      method="t.test",
+                                      my_comparisons=my_comparisons,
+                                      color_group=color_group,
+                                      export_path=export_path) {
+
+  export_path<-paste(export_path,"/microbial composition/All-group statistical analysis/",taxa,sep = "")
+  dir.create(export_path, recursive = TRUE)
+
+  microchatcomobj<-calcMicrochatcom(submchat,
+                                    taxa=taxa,
+                                    taxa_num=taxa_num,
+                                    file.save=FALSE,
+                                    export_path=export_path)
+
+  microchatcomobj$wide_allsample_abs<-microchatcomobj$wide_allsample_abs[-nrow(microchatcomobj$wide_allsample_abs),]
+  params<-microchatcomobj$wide_allsample_abs%>%t()%>%data.frame()
+  mchat1<-setParamchat(NULL,NULL,NULL,params=params)
+  tidymchat1<-tidyMicrochat(mchat1,
+                           group.keep=NULL,  ### c("CT","SS","SA","SF","SC)
+                           group.rm=NULL,    ### ct
+                           sample.keep=NULL, ### c("ct1","ml1")
+                           sample.rm=NULL,   ### c("ct1","ml1")
+                           taxon.keep=NULL,  ### c("p__firm","c__bacter")
+                           taxon.rm=NULL,    ### c("firm","cyan")
+                           filter_pollution=TRUE,
+                           filter_Archaea=TRUE)
+  submchat1<-subsampleMicrochat(tidymchat1,sample.size=NULL,export_path=export_path)
+  microchatParamobj<-calcMicrochatParam(submchat1,
+                                        export_path=export_path)
+
+  p<-plotMicrochatParamMutiBoxplot(microchatParamobj,
+                                   xlabname=xlabname,
+                                   geom.line=FALSE,  ##是否添加线条图层
+                                   geom.line.size=0.5, ##线条粗细
+                                   ylim.fold=ylim.fold, ##值越大，y轴显示范围越大
+                                   yaxis.italic=FALSE,
+                                   strictmod=strictmod,
+                                   method=method,
+                                   comparison=my_comparisons,
+                                   color_group=color_group,
+                                   export_path=export_path)
+
+  return(p)
+}
+
+"plotmicrochatComBarplot" <- function(submchat,
+                                      taxa="Genus",
+                                      taxa_num=10,
+                                      file.save=FALSE,
+                                      xlabname=xlabname,
+                                      ylim.fold=1, ##值越大，y轴显示范围越大
+                                      strictmod=TRUE,
+                                      method="t.test",
+                                      my_comparisons=my_comparisons,
+                                      color_group=color_group,
+                                      export_path=export_path) {
+
+  export_path<-paste(export_path,"/microbial composition/All-group statistical analysis/",taxa,sep = "")
+  dir.create(export_path, recursive = TRUE)
+
+  microchatcomobj<-calcMicrochatcom(submchat,
+                                    taxa=taxa,
+                                    taxa_num=taxa_num,
+                                    file.save=FALSE,
+                                    export_path=export_path)
+
+  microchatcomobj$wide_allsample_abs<-microchatcomobj$wide_allsample_abs[-nrow(microchatcomobj$wide_allsample_abs),]
+  params<-microchatcomobj$wide_allsample_abs%>%t()%>%data.frame()
+  mchat<-setParamchat(NULL,NULL,NULL,params=params)
+  tidymchat<-tidyMicrochat(mchat,
+                           group.keep=NULL,  ### c("CT","SS","SA","SF","SC)
+                           group.rm=NULL,    ### ct
+                           sample.keep=NULL, ### c("ct1","ml1")
+                           sample.rm=NULL,   ### c("ct1","ml1")
+                           taxon.keep=NULL,  ### c("p__firm","c__bacter")
+                           taxon.rm=NULL,    ### c("firm","cyan")
+                           filter_pollution=TRUE,
+                           filter_Archaea=TRUE)
+  submchat<-subsampleMicrochat(tidymchat,sample.size=NULL,export_path=export_path)
+  microchatParamobj<-calcMicrochatParam(submchat,
+                                        export_path=export_path)
+
+  p<-plotMicrochatParamMutiBarplot(microchatParamobj,
+                                   xlabname=xlabname,
+                                   ylim.fold=ylim.fold, ##值越大，y轴显示范围越大
+                                   yaxis.italic=FALSE,
+                                   strictmod=strictmod,
+                                   method=method,
+                                   comparison=my_comparisons,
+                                   color_group=color_group,
+                                   export_path=export_path)
+
+  return(p)
 }

@@ -1090,6 +1090,7 @@
 
 "rmnet_thres_calc" <- function(abun,
                                filter_num = 1,
+                               seed=152510,
                                cor.method = "pearson") {
   library(igraph)
   library(dplyr)
@@ -1115,19 +1116,19 @@
   matchnum<-which(collen==collen1)%>%length()
   allnum<-groupname%>%length()
 
-
   if (as.numeric(matchnum) != as.numeric(allnum)) split_otu <- lapply(
-    lapply(
-      sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),
-      FUN = function(x){otu_rare[,x]}),
-    function(x){x[-(which(rowSums(x)==0)),]})
+    sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),
+    FUN = function(x){otu_rare[,x]})
 
-  if (as.numeric(matchnum) == as.numeric(allnum)) split_otu <- lapply(
-    apply(
-      sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),2,
-      FUN = function(x){otu_rare[,x]}),
-    function(x){x[-(which(rowSums(x)==0)),]})
+  if (as.numeric(matchnum) == as.numeric(allnum)) split_otu <- apply(
+    sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),2,
+    FUN = function(x){otu_rare[,x]})
 
+
+  #if (as.numeric(matchnum) != as.numeric(allnum)) split_otu <- lapply(lapply(sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),FUN = function(x){otu_rare[,x]}),function(x){x[-(which(rowSums(x)==0)),]})
+
+  #if (as.numeric(matchnum) == as.numeric(allnum)) split_otu <- lapply(apply(sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),2,FUN = function(x){otu_rare[,x]}),function(x){x[-(which(rowSums(x)==0)),]})
+  set.seed(seed)
   otu<-otu_filter(split_otu,filter_num = filter_num,filter = TRUE,self = TRUE)
 
 
@@ -1169,6 +1170,7 @@
 "rmnet_thres_select" <- function(trvalue,
                                  selected.thres=c(0.65,0.75,0.5,0.6,0.7),
                                  export_path="microbial network analysis") {
+  export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   if (length(selected.thres) <=1) {
 
@@ -1270,6 +1272,7 @@
 }
 
 "rmnet_matrix_export" <- function(net,export_path="network") {
+  export_path<-paste(export_path,"/microbial network analysis/subnet_matrix",sep = "")
   dir.create(export_path, recursive = TRUE)
   for (tt in 1:length(net)) {
     x<-net[[tt]]
@@ -1286,10 +1289,12 @@
 }
 
 "rmnet_cytogephi_export" <- function(g,taxon,
+                                     file.save=TRUE,
                                      export_path ='network/subnet_data_cyto_gephi') {
 
   taxon$name<-rownames(taxon)
-  dir.create(export_path, recursive = TRUE)
+  if (file.save) export_path<-paste(export_path,"/microbial network analysis/subnet_data_cyto_gephi",sep = "")
+  if (file.save) dir.create(export_path, recursive = TRUE)
 
 
   newdata1<-data.frame()
@@ -1342,7 +1347,7 @@
     netcartomod<-max(table(modu))/sum(unique(modu))
 
 
-
+if (file.save) {
     file1=paste(export_path,"/", netname, "_cyto_node",".txt",sep = "")
     write.table(node_table,file = file1, row.names = F, quote = F, sep = "\t")
 
@@ -1355,7 +1360,7 @@
     flie=paste(export_path,"/", netname, "_gephi_edge",".csv", sep = "")
     write.csv(edge_table,file = flie,row.names = FALSE)
     cat("\n",paste("network",i," (",netname,") ",sep = ""),"used for visualization in cytoscape and gephi has been exported to",export_path,"\n")
-
+}
     {
       newdata1<-rbind(newdata1,netcartomod)
       newdata2<-rbind(newdata2,edge)
@@ -1370,6 +1375,7 @@
 
 "rmnet_circosfile" <- function(rmnet_cg,abun,
                                export_path ='network/circos') {
+  export_path<-paste(export_path,"/microbial network analysis/circos",sep = "")
   dir.create(export_path, recursive = TRUE)
   newdata3<-rmnet_cg$node_table
   newdata2<-rmnet_cg$edge_table
@@ -1455,6 +1461,8 @@
                                  export_path ='network/circos') {
 
   options(warn = -1)
+  export_path<-paste(export_path,"/microbial network analysis/circos",sep = "")
+  dir.create(export_path, recursive = TRUE)
   for (tt in 1:length(unique(rmnet_cg$node_table$group))) {
 
     select_group<-paste("circos",tt,sep = "")
@@ -1496,6 +1504,8 @@
                  export_path ='network/circos') {
 
   #####------add color
+  export_path<-paste(export_path,"/microbial network analysis/circos",sep = "")
+  dir.create(export_path, recursive = TRUE)
     repnum<-(nrow(rmnet_cg$node_table) /length(color.circos))%>%as.integer()+1
 
     color.use<-rep(color.circos,repnum)
@@ -1574,7 +1584,7 @@
   return(data3)
 }
 
-"plot_rmnet_topo" <- function(rmnet_cg,abun,taxon,
+"plot_rmnet_ZPplot" <- function(rmnet_cg,abun,taxon,
                               type=c("mixed","all"),
                               taxa="Phylum",
                               taxanum=10,
@@ -1582,6 +1592,7 @@
                               export_path ='network/topological_roles') {
 
   type<-match.arg(type)
+  export_path<-paste(export_path,"/microbial network analysis/topological_roles",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   newdata3<-rmnet_cg$node_table
@@ -1822,11 +1833,15 @@
 }
 
 "rmnet_keynode_export" <- function(rmnet_cg,
+                                   xlabname=c("CS0","CS100","CA100","CD100"),
                                      export_path ='network/topological_roles') {
+
+  export_path<-paste(export_path,"/microbial network analysis/topological_roles",sep = "")
+  dir.create(export_path, recursive = TRUE)
 
   newdata3<-rmnet_cg$node_table
   groupname<-rmnet_cg$netname
-
+if (!is.null(xlabname)) names(groupname)<-xlabname else names(groupname)<-groupname
   for (tk in 1:length(groupname)) {
     newdata3$group[which(newdata3$group==tk)]<-groupname[tk]
   }
@@ -1838,8 +1853,11 @@
     stop("\n","No key nodes could be detected !!!")
   }
   tab1<-subset(pizi,select = c(name,group,role,module,degree,Phylum,Class,Order,Family,Genus))
-  tab1<-tab1[order(tab1$role,tab1$module),]
-
+  tab1$group<-factor(tab1$group,levels =rmnet_cg$netname )
+  tab1<-tab1[order(tab1$group,tab1$role,tab1$module),]
+  tab2<-tab1
+  tab1$group<-names(groupname)[match(tab1$group,groupname)]
+  tab2$regroup<-names(groupname)[match(tab2$group,groupname)]
   Topological_roles <- ggtexttable(tab1, theme = ttheme("blank"),rows = NULL) %>%
     tab_add_hline(at.row = c(1, 2), row.side = "top", linewidth = 3, linetype = 1) %>%
     tab_add_hline(at.row = c(length(tab1$name)+1), row.side = "bottom", linewidth = 3, linetype = 1) %>%
@@ -1847,12 +1865,12 @@
     tab_add_footnote(text = "*All data processed by R were presented.", size = 10, face = "italic")
 
   #ggsave('~/Desktop/11/all/topological_roles/Topological_roles.pdf')
-
+  print(Topological_roles)
   flie=paste(export_path,"/keynode",".csv", sep = "")
   write.csv(tab1,file = flie,row.names = FALSE)
   cat("\n","Key nodes topological roles result has been exported to ",export_path,"\n")
 
-  return(Topological_roles)
+  return(tab2)
 }
 
 "powerlaw_fit" <- function(g1,decimal=3,exchantime=999) {
@@ -2009,14 +2027,15 @@
   rownames(result) <- c("rand average cluster coefficient (avgCC)",
                         "rand modularity (M)",
                         "rand average path distance (GD)")
-
-  result$res<-paste(round(result$mean, decimal),
-                    round(result$se, decimal), sep = '±')
+  decimal
+  result$res<-paste(sprintf("%0.3f",round(result$mean, 3)),
+                    sprintf("%0.3f",round(result$se, 3)),
+                    sep = '±')
 
   res<-t(result$res)%>%data.frame()
-  colnames(res)<-c("rand avgCC",
-                   "rand modularity",
-                   "rand GD")
+  colnames(res)<-c("avgCC",
+                   "modularity",
+                   "GD")
 
 
   cat("\n","Calculating",times," random networks and their topological roles","\n")
@@ -2024,8 +2043,11 @@
 }
 
 "rmnet_toporoles_export" <- function(rmnet_igraph,randcalc_times=100,
+                                     add.params=NULL,
+                                     xlabname=c("CS0","CS100","CA100","CD100"),
                                      export_path ='network/topological_roles') {
-
+  export_path<-paste(export_path,"/microbial network analysis/topological_roles",sep = "")
+  dir.create(export_path, recursive = TRUE)
   g<-rmnet_igraph$g
   result<-rmnet_igraph$result
 
@@ -2080,33 +2102,33 @@
         #powerlaw_log,
         length(igraph::degree(g1)),
         nrow(data.frame(as_edgelist(g1))),
-        pos,
-        neg,
-        avgK,
-        GD,
+        sprintf("%0.2f",round(pos,2)),
+        sprintf("%0.2f",round(neg,2)),
+        sprintf("%0.3f",round(avgK,3)),
         modules,
-        M,
-        avgCC
+        sprintf("%0.3f",round(avgCC,3)),
+        sprintf("%0.3f",round(M,3)),
+        sprintf("%0.3f",round(GD,3))
       )%>%data.frame()
       topo<-t(topo)%>%data.frame()
       newdata<-rbind(newdata,topo)
     }
   }
   newdata<-t(newdata)%>%data.frame()
-  newdata$name<-c('similarity threshold',
+  newdata$name<-c('Similarity threshold (St)',
                   #'powerlaw',
                  # 'powerlaw_log',
-                  'node number',
-                  'edge number',
-                  'positive edges (%)',
-                  'negative edges (%)',
-                  'average degree',
-                  'average path distance',
-                  'module number',
-                  'modularity (M)',
-                  'average cluster coefficient')
+                  'Node number (N)',
+                  'Edge number (N)',
+                  'Positive edges (%)',
+                  'Negative edges (%)',
+                  'Average degree (avgK)',
+                  'Module number (N)',
+                  'Average cluster coefficient (avgCC)',
+                  'Modularity (M)',
+                 'Average path distance (GD)')
   newdata<-subset(newdata,select = c(name,1:length(g)))
-  colnames(newdata)<-c('parameters',names(g))
+  colnames(newdata)<-c('parameters',xlabname)
 
   newdata2<-data.frame()
   for(i in 1:length(g)){
@@ -2122,8 +2144,42 @@
   newdata2<-t(newdata2)%>%data.frame()
   newdata2$parameters<-rownames(newdata2)
   newdata2<-subset(newdata2,select = c(parameters,1:length(g)))
-  colnames(newdata2)<-c('parameters',names(g))
+  colnames(newdata2)<-c('parameters',xlabname)
+  newdata2$parameters<-c('Average cluster coefficient (avgCC)',
+                         'Modularity (M)',
+                         'Average path distance (GD)')
+  netn<-data.frame(rep("",1+length(g)))%>%t()%>%data.frame()
+  netn$X1[1]<-"Empirical Network"
+  colnames(netn)<-colnames(newdata)
+  newdata<-rbind(netn,newdata)
+
+  if (!is.null(add.params)) for (kk in 1:length(add.params)) {
+    if (class(add.params[[kk]])=="data.frame") {
+      add.params[[kk]]<-add.params[[kk]]$value[match(add.params[[kk]]$group,names(g))]
+    }
+  }
+
+
+  if (!is.null(add.params)) {
+    para.sel<-data.frame()
+    for (jk in 1:length(add.params)) {
+    par.sel<-sprintf("%0.3f",round(add.params[[jk]],3))
+    par.sel<-c(names(add.params)[jk],par.sel)
+    {
+      para.sel<-rbind(para.sel,par.sel)
+    }
+    }
+    colnames(para.sel)<-colnames(newdata)
+    newdata<-rbind(newdata[1:8,],para.sel,newdata[9:nrow(newdata),])
+  }
+
+  netr<-netn
+  netr$parameters[1]<-"Random Network"
+  newdata2<-rbind(netr,newdata2)
   newdata<-rbind(newdata,newdata2)
+rownames(newdata)<-1:nrow(newdata)
+
+
 
   emnet_randnet_com <- ggtexttable(newdata, theme = ttheme("blank"),rows = NULL) %>%
     tab_add_hline(at.row = c(1, 2), row.side = "top", linewidth = 3, linetype = 1) %>%
@@ -2134,8 +2190,8 @@
   flie=paste(export_path,"/Topological_roles",".csv", sep = "")
   write.csv(newdata,file = flie,row.names = FALSE)
   cat("\n","All co-occurrence netoworks topological roles result have been exported to ",export_path,"下")
-
-  return(emnet_randnet_com)
+print(emnet_randnet_com)
+  return(newdata)
 }
 
 "nodechar" <- function(g1,boot=1000) {
@@ -2235,7 +2291,7 @@
 
 "rmnet_topo_compare" <- function(g,boot_times=999,
                                  export_path ='network/topo_esti_compare') {
-
+  export_path<-paste(export_path,"/microbial network analysis/topo_esti_compare",sep = "")
   dir.create(export_path, recursive = TRUE)
   ##########
 
@@ -2243,8 +2299,6 @@
   for(i in 1:length(g)){
     network_node[i]<-list(nodechar(g[[i]],boot = boot_times))
   }
-
-
 
   scale_free_esti(network_node)
 

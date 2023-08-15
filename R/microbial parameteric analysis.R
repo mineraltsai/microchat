@@ -47,7 +47,7 @@
     }
   }
 
-  cat("--------------------------------------------------------------------------------------")
+  cat("--------------------------------------------------------------------------------------\n")
   ###Homogeneity of variance
   variance.data<-subset(param_table,select = -c(sample))
   vttest<-data.frame()
@@ -153,11 +153,16 @@
 
   ### words match
   all.index<-microchatParamobj$all.index
+  #select.index<-all.index[2]
   index<-all.index[match(tolower(select.index),tolower(all.index))]
 
   ###define new alpha table according to the selected alpha index
   data_poi<-alphadiv.use[which(alphadiv.use$variable==index),]
   data_poi$group <- factor(data_poi$group , levels = unique(data_poi$group))
+
+  data_max<-subset(data_poi,select=c(1,4))%>%
+    group_by(group)%>%
+    summarise_all(max)
 
   ###define new statistics table according to the selected alpha index
   data_err<-microchatParamobj$statistics
@@ -333,7 +338,7 @@
         data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
         data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
       }
-
+      opc.data<-NULL
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
     }
@@ -358,22 +363,44 @@
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
+
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
             aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1$mcletters$Letters)
+            test.b <- cbind(test.b,res1)
           } else {
             input.data=subset(variance.data,select = c(group,i))
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
+
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
             {
               aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1$mcletters$Letters)
+              test.b <- cbind(test.b,res1)
             }
           }
         }
@@ -451,6 +478,7 @@
         }
 
         input.data<-input.data1[which(input.data1$variable==index),]
+        input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
         sig_label_new$valuey<-sig_label_new$mean+sig_label_new$std*sqrt(samplenum)
@@ -467,6 +495,8 @@
         )
         y.ratio=NULL
       }
+      opc.data<-get.opc(microchatParamobj)
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
 
     }
 
@@ -633,7 +663,7 @@
         data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
         data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
       }
-
+      opc.data<-NULL
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
     }
@@ -657,23 +687,47 @@
             input.data=subset(variance.data,select = c(group,i))
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
+            res1 <- multcomp::cld(tuk1,level=0.05)
+
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                            x=dif, reversed = TRUE,
+                            input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
+
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
             aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1$mcletters$Letters)
+            test.b <- cbind(test.b,res1)
           } else {
             input.data=subset(variance.data,select = c(group,i))
             fit1<-aov.test(input.data,colnames(input.data)[2])
             tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
             res1 <- multcomp::cld(tuk1,alpah=0.05)
+
+            diffx<-data.frame(res1$comps)
+            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
+            dif<-res1$signif
+            names(dif)<-diffx$com
+            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
+                                   x=dif, reversed = TRUE,
+                                   input.data)
+            resx<-resx$Letters
+            res2<-resx[match(unique(input.data$group),names(resx))]
+            res1<-res2
+
             ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
             ano1<-ano$`Pr(>F)`%>%data.frame()
             colnames(ano1)<-colnames(variance.data)[i]
             {
               aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1$mcletters$Letters)
+              test.b <- cbind(test.b,res1)
             }
           }
         }
@@ -751,6 +805,7 @@
         }
 
         input.data<-input.data1[which(input.data1$variable==index),]
+        input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
         sig_label_new$valuey<-sig_label_new$mean+sig_label_new$std*sqrt(samplenum)
@@ -767,12 +822,14 @@
         )
         y.ratio=NULL
       }
+      opc.data<-get.opc(microchatParamobj)
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
 
     }
 
   }
 
-  opc.data<-get.opc(microchatParamobj)
+
   #write.table(data.alpha,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
   message("The parameteric properities has been statistically analyzed. You could check it.")
 
@@ -800,7 +857,7 @@
                                         ylim.fold=1.1,
                                         xlabname=NULL,
                                         yaxis.italic=TRUE,
-                                        errorbar.pos.adj=FALSE,
+                                        errorbar.pos.adj=TRUE,
                                     errorbar.line.add=FALSE,
                                     seg=TRUE,
                                     add.spline=TRUE,
@@ -809,7 +866,6 @@
                                     color_group=colorCustom(5,pal = "gygn"),
                                     color_backgroud="grey90",
                                     export_path="microbial diversity analysis") {
-
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatParamStatobj)[1]!="microchat") {
@@ -832,8 +888,8 @@
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
   gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
-  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
   subtitile<-paste(liner,quad,sep = " ")
   }
 
@@ -860,14 +916,15 @@
         }
       }
 
-    p<-ggplot(data=data_poi)
+    p<-ggplot(data=data_poi,aes(x=group, y=value))
     if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
                                   aes(x=group, y=mean, group=index))
     p<-p+geom_errorbar(data = data_err,
                        aes(x = group, y = mean, group = index,
                            ymin = mean-se, ymax = mean+se),
                        colour = "grey50",width=.25)+
-      geom_boxplot(outlier.shape = NA,
+      geom_boxplot(aes(fill=group),
+        outlier.shape = NA,
                    width = 0.5,
                    color = "white")+
       geom_jitter(data=data_poi,size=3,alpha=0.5,
@@ -876,7 +933,7 @@
 
 
     if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment2Order(data.alpha,y.ratio,data_poi)
+    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
 
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
@@ -901,6 +958,22 @@
         y3.use<-y4.use
       }
 
+      data.seg$y1[tt]<-y1.use
+      data.seg$y2[tt]<-y2.use
+      data.seg$y3[tt]<-y3.use
+      data.seg$y4[tt]<-y4.use
+
+    }
+
+    for (tt in 1:nrow(data.seg)) {
+      x1<-data.seg$order1[tt]
+      x2<-data.seg$order2[tt]
+
+      y1.use<-data.seg$y1[tt]
+      y2.use<-data.seg$y2[tt]
+      y3.use<-data.seg$y3[tt]
+      y4.use<-data.seg$y4[tt]
+
       label.use=data.seg$sig[tt]
 
       p<-p+
@@ -908,11 +981,16 @@
                  x = x1, y = y1.use, ymin = y1.use, ymax = y1.use)+
         annotate("pointrange", color="grey50",size=errorbar.point.size,
                  x = x2, y = y2.use, ymin = y2.use, ymax = y2.use)+
-
-        annotate("segment",color="grey50", x = x1, y = y1.use, xend = x1, yend = y3.use)+
-        annotate("segment",color="grey50", x = x2, y = y2.use, xend = x2, yend = y3.use)+
-        annotate("segment",color="grey50", x = x1, y = y3.use, xend = x2, yend = y3.use)+
-        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio/2,label=label.use)
+        annotate("segment",color="grey50",
+                 x = x1, y = y1.use,
+                 xend = x1, yend = y3.use)+
+        annotate("segment",color="grey50",
+                 x = x2, y = y2.use,
+                 xend = x2, yend = y3.use)+
+        annotate("segment",color="grey50",
+                 x = x1, y = y3.use,
+                 xend = x2, yend = y3.use)+
+        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio*2/3,label=label.use)
 
       if (errorbar.line.add) p<-p+annotate("segment", color="grey50",x = x1-0.05, y = y1.use, xend = x1+0.05, yend = y1.use)+
         annotate("segment",color="grey50", x = x2-0.05, y = y2.use, xend = x2+0.05, yend = y2.use)
@@ -926,11 +1004,11 @@
 
 
    if (yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="italic", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="italic", size=12))
 
     p<-p+
@@ -957,9 +1035,9 @@
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
 
-
-      p<-ggplot(data=data_poi)
+      p<-ggplot(data=data_poi,aes(x=group, y=value))
       if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
                                     aes(x=group, y=mean, group=index))
       p<-p+geom_errorbar(data = data_err,
@@ -976,7 +1054,9 @@
       geom_point(data=data_poi,
                  aes(x=group, y=value, group=index,color=group)) +
       geom_text(data = sig_label_new,vjust=-0.5,
-                aes(x = group,y = mean+se,label = alpha),
+                aes(x = group,
+                    y = value,  ## mean+se
+                    label = alpha),
                 size = 5,color = "black",family = "serif")
 
     p<-p+scale_discrete_manual(values=colors,
@@ -989,14 +1069,14 @@
                                 subtitle=subtitile,
                                 title = paste(method,": p = ",
                                               keep.decmi(data.alpha$p.value),sep=""))+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
             title = element_text(face = "bold.italic",family = "serif", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,
                                  subtitle=subtitile,
                                  title = paste(method,": p = ",
                                                keep.decmi(data.alpha$p.value),sep=""))+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
             title = element_text(face = "bold.italic",family = "serif", size=12))
 
     p<-p+
@@ -1025,7 +1105,10 @@
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
-      p<-ggplot(data=data_poi)
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
+
+      p<-ggplot(data=data_poi,aes(x=group, y=value))
       if (geom.line) p<-p+geom_line(data= data_err,size=geom.line.size,colour = "black",
                   aes(x=group, y=mean, group=index))
       p<-p+geom_errorbar(data = data_err,
@@ -1042,7 +1125,9 @@
         geom_point(data=data_poi,
                    aes(x=group, y=value, group=index,color=group)) +
         geom_text(data = sig_label_new,vjust=-0.5,
-                  aes(x = group,y = mean+se,label = alpha),
+                  aes(x = group,
+                      y = value, #### mean+se
+                      label = alpha),
                   size = 5,color = "black",family = "serif")
 
       p<-p+scale_discrete_manual(values=colors,
@@ -1054,14 +1139,14 @@
                                   subtitle=subtitile,
                                   title = paste(method,": p = ",
                                                 keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
                                    subtitle=subtitile,
                                    title = paste(method,": p = ",
                                                  keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
@@ -1093,13 +1178,70 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
-    ylim(NA,max(data_poi$value)*ylim.fold)
-  ggsave(paste(export_path,"/Parameter (",index,")_boxplot.pdf",sep = ""),p)
+  ylim.fold
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  ggsave(paste(export_path,"/Parameter (",index,")_boxplot.pdf",sep = ""),
+         width = 3,height = 3,
+         p)
   cat("Parametric properities boxplot has been exported. Please check it.","\n")
 
   return(p)
+
+}
+
+
+
+"calcSegment3Order" <- function(data.alpha,y.ratio,data_poi) {
+  data.er<-subset(data.alpha, select = c(index,group1,group2,max1,max2,sig,order,error))
+  data.er$order1<-match(data.er$group1,unique(data_poi$group))
+  data.er$order2<-match(data.er$group2,unique(data_poi$group))
+
+  data.er$y1<-data.er$max1
+  data.er$y2<-data.er$max2
+  data.er$y3<-data.er$y1+y.ratio
+  data.er$y4<-data.er$y2+y.ratio
+
+  data.er$y1<-data.er$y1+y.ratio
+  data.er$y2<-data.er$y2+y.ratio
+  data.er$y3<-data.er$y3+y.ratio
+  data.er$y4<-data.er$y4+y.ratio
+
+  for (tt in 1:nrow(data.er)) {
+    x1<-data.er$order1[tt]
+    x2<-data.er$order2[tt]
+
+    y1.use<-data.er$y1[tt]
+    y2.use<-data.er$y2[tt]
+    y3.use<-data.er$y3[tt]
+    y4.use<-data.er$y4[tt]
+
+    if (y2.use>y3.use) {
+      y3.use<-y2.use+y.ratio
+    }
+
+    if (y1.use>y4.use) {
+      y4.use<-y1.use+y.ratio
+    }
+
+    if (y3.use>y4.use) {
+      y3.use<-y3.use
+    } else {
+      y3.use<-y4.use
+    }
+
+    data.er$y1[tt]<-y1.use
+    data.er$y2[tt]<-y2.use
+    data.er$y3[tt]<-y3.use
+    data.er$y4[tt]<-y4.use
+
+  }
+
+  order<-unique(data.er$order)
+  for (index in order[2:length(order)]) {
+    data.er[which(data.er$order==index),]$y1<-max(data.er[which(data.er$order==(index-1)),]$y3)+y.ratio
+    data.er[which(data.er$order==index),]$y3<-data.er[which(data.er$order==index),]$y1+y.ratio
+  }
+  return(data.er)
 
 }
 
@@ -1118,6 +1260,8 @@
 
   select.index<-microchatParamobj$all.index
   pp<-list()
+  height.sel<-length(ncol_layout(length(select.index)))*3
+  width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
   #t=select.index[2]
   for (t in select.index) {
     microchatParamStatobj<-calcMicrochatParamStat(microchatParamobj,
@@ -1147,7 +1291,9 @@
   library(patchwork)
   pm<-wrap_plots(pp)
   print(pm)
-  ggsave(paste(export_path,"/Muti-parameter","_boxplot.pdf",sep = ""),pm)
+  ggsave(paste(export_path,"/Muti-parameter","_boxplot.pdf",sep = ""),
+         width = width.sel,height = height.sel,
+         pm)
   message("Muti-parametric properities boxplot has been exported. Please check it.")
 
   return(pm)
@@ -1321,6 +1467,8 @@
   if (!is.null(paramfile.select)) flie=paste(export_path,"/(",paramfile.select,")parameters_statistic_",method,".csv", sep = "")
   if (is.null(paramfile.select)) flie=paste(export_path,"/","parameters_statistic_",method,".csv", sep = "")
   write.csv(param_tab,file = flie,row.names = FALSE)
+  class(param_tab) <- c("microchat","data.frame")
+  return(param_tab)
 }
 
 
@@ -1370,7 +1518,7 @@
                                         ylim.fold=1.1,
                                         xlabname=NULL,
                                         yaxis.italic=TRUE,
-                                        errorbar.pos.adj=FALSE,
+                                        errorbar.pos.adj=TRUE,
                                         errorbar.line.add=FALSE,
                                         seg=TRUE,
                                         add.spline=TRUE,
@@ -1379,7 +1527,6 @@
                                         color_group=colorCustom(5,pal = "gygn"),
                                         color_backgroud="grey90",
                                         export_path="microbial diversity analysis") {
-
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatParamStatobj)[1]!="microchat") {
@@ -1402,8 +1549,8 @@
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
   gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
-  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
   subtitile<-paste(liner,quad,sep = " ")
 }
 
@@ -1442,7 +1589,7 @@
 
 
     if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment2Order(data.alpha,y.ratio,data_poi)
+    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
 
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
@@ -1467,6 +1614,22 @@
         y3.use<-y4.use
       }
 
+      data.seg$y1[tt]<-y1.use
+      data.seg$y2[tt]<-y2.use
+      data.seg$y3[tt]<-y3.use
+      data.seg$y4[tt]<-y4.use
+
+    }
+
+    for (tt in 1:nrow(data.seg)) {
+      x1<-data.seg$order1[tt]
+      x2<-data.seg$order2[tt]
+
+      y1.use<-data.seg$y1[tt]
+      y2.use<-data.seg$y2[tt]
+      y3.use<-data.seg$y3[tt]
+      y4.use<-data.seg$y4[tt]
+
       label.use=data.seg$sig[tt]
 
       p<-p+
@@ -1478,7 +1641,7 @@
         annotate("segment",color="grey50", x = x1, y = y1.use, xend = x1, yend = y3.use)+
         annotate("segment",color="grey50", x = x2, y = y2.use, xend = x2, yend = y3.use)+
         annotate("segment",color="grey50", x = x1, y = y3.use, xend = x2, yend = y3.use)+
-        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio/2,label=label.use)
+        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio*2/3,label=label.use)
 
       if (errorbar.line.add) p<-p+annotate("segment", color="grey50",x = x1-0.05, y = y1.use, xend = x1+0.05, yend = y1.use)+
         annotate("segment",color="grey50", x = x2-0.05, y = y2.use, xend = x2+0.05, yend = y2.use)
@@ -1492,11 +1655,11 @@
 
 
     if (yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="bold.italic", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="bold.italic", size=12))
 
     p<-p+
@@ -1523,6 +1686,8 @@
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
       p<-ggplot() +
         geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
@@ -1546,14 +1711,14 @@
                                   subtitle=subtitile,
                                   title = paste(method,": p = ",
                                                 keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
                                    subtitle=subtitile,
                                    title = paste(method,": p = ",
                                                  keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
@@ -1582,6 +1747,8 @@
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
       p<-ggplot() +geom_errorbar(data = data_err,
                                  aes(x = group, y = mean, group = index,
                                      ymin = mean-se, ymax = mean+se),
@@ -1603,14 +1770,14 @@
                                   subtitle=subtitile,
                                   title = paste(method,": p = ",
                                                 keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
                                    subtitle=subtitile,
                                    title = paste(method,": p = ",
                                                  keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       p<-p+
@@ -1642,9 +1809,10 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
-    ylim(NA,max(data_poi$value)*ylim.fold)
-  ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),p)
+  ylim.fold
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),
+         width = 3,height = 3,p)
   cat("Parametric properities barplot has been exported. Please check it.","\n")
 
   return(p)
@@ -1656,7 +1824,7 @@
                                          ylim.fold=1.1,
                                          xlabname=NULL,
                                          yaxis.italic=TRUE,
-                                         errorbar.pos.adj=FALSE,
+                                         errorbar.pos.adj=TRUE,
                                          errorbar.line.add=FALSE,
                                          seg=TRUE,
                                          add.spline=FALSE,
@@ -1687,8 +1855,8 @@
   opc.data<-microchatParamStatobj$opc.data
   o.data<-opc.data[which(opc.data$index==index),]
   gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-3])," effect: ",o.data[gnum-3],sep = "")
-  quad<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
+  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
   subtitile<-paste(liner,quad,sep = " ")}
 
   colors<-color_group
@@ -1724,7 +1892,7 @@
 
 
     if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment2Order(data.alpha,y.ratio,data_poi)
+    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
 
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
@@ -1749,8 +1917,23 @@
         y3.use<-y4.use
       }
 
-      label.use=data.seg$sig[tt]
+      data.seg$y1[tt]<-y1.use
+      data.seg$y2[tt]<-y2.use
+      data.seg$y3[tt]<-y3.use
+      data.seg$y4[tt]<-y4.use
 
+    }
+
+    for (tt in 1:nrow(data.seg)) {
+      x1<-data.seg$order1[tt]
+      x2<-data.seg$order2[tt]
+
+      y1.use<-data.seg$y1[tt]
+      y2.use<-data.seg$y2[tt]
+      y3.use<-data.seg$y3[tt]
+      y4.use<-data.seg$y4[tt]
+
+      label.use=data.seg$sig[tt]
       p<-p+
         annotate("pointrange", color="grey50",size=errorbar.point.size,
                  x = x1, y = y1.use, ymin = y1.use, ymax = y1.use)+
@@ -1760,7 +1943,7 @@
         annotate("segment",color="grey50", x = x1, y = y1.use, xend = x1, yend = y3.use)+
         annotate("segment",color="grey50", x = x2, y = y2.use, xend = x2, yend = y3.use)+
         annotate("segment",color="grey50", x = x1, y = y3.use, xend = x2, yend = y3.use)+
-        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio/2,label=label.use)
+        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio*2/3,label=label.use)
 
       if (errorbar.line.add) p<-p+annotate("segment", color="grey50",x = x1-0.05, y = y1.use, xend = x1+0.05, yend = y1.use)+
         annotate("segment",color="grey50", x = x2-0.05, y = y2.use, xend = x2+0.05, yend = y2.use)
@@ -1774,11 +1957,11 @@
 
 
     if (yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="bold.italic", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,title = method)+
-      theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
             title = element_text(family = "serif",face="bold.italic", size=12))
 
     p<-p+
@@ -1806,6 +1989,8 @@
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
       p<-ggplot()+
         geom_line(data= data_err,size=0.5,colour = "grey50",aes(x=group, y=mean, group=index)) +
         geom_errorbar(data = data_err,
@@ -1826,14 +2011,14 @@
                                   subtitle=subtitile,
                                   title = paste(method,": p = ",
                                                 keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
                                    subtitle=subtitile,
                                    title = paste(method,": p = ",
                                                  keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
 
@@ -1864,6 +2049,8 @@
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
       p<-ggplot() +geom_line(data= data_err,size=0.5,colour = "grey50",
                              aes(x=group, y=mean, group=index))+
         geom_errorbar(data = data_err,
@@ -1882,14 +2069,14 @@
                                   subtitle=subtitile,
                                   title = paste(method,": p = ",
                                                 keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold.italic",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
                                    subtitle=subtitile,
                                    title = paste(method,": p = ",
                                                  keep.decmi(data.alpha$p.value),sep=""))+
-        theme(axis.title.y = element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
 
@@ -1922,9 +2109,10 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)+
-    ylim(NA,max(data_poi$value)*ylim.fold)
-  ggsave(paste(export_path,"/Parameter (",index,")_lineplot.pdf",sep = ""),p)
+  ylim.fold
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  ggsave(paste(export_path,"/Parameter (",index,")_lineplot.pdf",sep = ""),
+         width = 3,height = 3,p)
   cat("Parametric properities lineplot has been exported. Please check it.","\n")
 
   return(p)
@@ -1946,6 +2134,8 @@
 
   select.index<-microchatParamobj$all.index
   pp<-list()
+  height.sel<-length(ncol_layout(length(select.index)))*3
+  width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
   for (t in select.index) {
     microchatParamStatobj<-calcMicrochatParamStat(microchatParamobj,
                                                   select.index=t,
@@ -1972,7 +2162,8 @@
   library(patchwork)
   pm<-wrap_plots(pp)
   print(pm)
-  ggsave(paste(export_path,"/Muti-parameter","_barplot.pdf",sep = ""),pm)
+  ggsave(paste(export_path,"/Muti-parameter","_barplot.pdf",sep = ""),
+         width = width.sel,height = height.sel,pm)
   message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
@@ -2082,6 +2273,14 @@
 
 
 "calcMicrochat2Param" <- function(params) {
+  if (class(params)[1]=="microchat") {
+    params<-params[,1:(ncol(params)-4)]%>%data.frame()
+    rownames(params)<-params$index
+    params<-params[,-which(colnames(params)=="index")]
+  } else {
+      params<-params
+      }
+
   params.n<-data.frame()
   times<-0
   for (i in 1:ncol(params)) {
@@ -2118,32 +2317,30 @@
                   aes(x = variable, y = mean,
                       group = group, ymin = mean-se, ymax = mean+se),
                   colour = "grey50",width=.25)+
-    geom_bar(aes(fill=group),color="black",
+    geom_bar(aes(fill=group),color="white",
              stat = "identity",
              alpha=1,
              position = "dodge",
-             width = 0.9,color = NA)+
+             width = 0.9)+
     geom_text(aes(x=variable,y=params.n$mean+params.n$se,label=letter),
               stat = "identity",
               vjust=-0.5,
               position = position_dodge(0.9),
               color="black",family="serif")+
-    ylim(NA,max(params.n$mean)*1.31)+
+    ylim(NA,max(params.n$mean)*1.1)+
     scale_fill_manual(values = color_bar,name="Group")+
     labs(y="Parameters")+
-    theme(legend.position = "right",aspect.ratio = 1,
-          axis.line.y.left  = element_line(),
-          axis.text.y.right = element_blank(),
-          axis.ticks.y.right = element_blank(),
-          plot.margin = element_blank(),
-          plot.background = element_blank(),
+    theme(legend.position = "right",
+          aspect.ratio = 1,
+          axis.line.y.left  = element_line(arrow = arrow(length = unit(0.1, "inches"),
+                                                         ends = "last", type = "open")),
           panel.background = element_blank(),
           axis.title.x = element_blank(),
           axis.text.x = element_text(angle = label.x.angle,vjust = 1,hjust = 1),
           text = element_text(family = "serif",face = "bold"))
   return(p)
 }
-"plotMicrochatParamBoxplot2" <- function(params.n,color_bar,label.x.angle=45) {
+"plotMicrochatParamBoxplot2" <- function(params.n,color_bar,label.x.angle=45,mytheme=NULL) {
   if (length(color_bar)!=length(unique(params.n$group))) stop("Please provide colours number equal to the groups number!!!")
   pp<-list()
   for (index in unique(params.n$variable)) {
@@ -2155,11 +2352,11 @@
                     aes(x = group, y = mean,
                         group = group, ymin = mean-se, ymax = mean+se),
                     colour = "grey50",width=.25)+
-      geom_bar(aes(fill=group),color="black",
+      geom_bar(aes(fill=group),color="white",
                stat = "identity",
                alpha=1,
                #position = "dodge",
-               width = 0.9,color = NA)+
+               width = 0.9)+
       geom_text(aes(x=group,y=mean+se,label=letter),
                 #stat = "identity",
                 vjust=-0.5,
@@ -2173,6 +2370,7 @@
             axis.title.x = element_blank(),
             axis.text.x = element_text(angle = label.x.angle,vjust = 1,hjust = 1),
             text = element_text(family = "serif",face = "bold"))
+    if (!is.null(mytheme)) p<-p+mytheme
     pp[[index]]<-p
 
   }
