@@ -35,7 +35,11 @@ published research, you can cite Ming-Lang Tsai's previous published papers usin
     ***Frontiers in Microbiology***. 2022, 13:1–18. doi: [10.3389/fmicb.2022.917051](https://doi.org/10.3389/fmicb.2022.917051).
 7. Hu, Y.J., **Cai, M.L.**, et al. A Study on How Methionine Restriction Decreases the Body’s Hepatic and Lipid Deposition in Rice Field Eel (Monopterus albus).
     ***International Journal of Molecular Sciences***. 2021, 22(24):13379. doi: [10.3390/ijms222413379](https://doi.org/10.3390/ijms222413379).
+<<<<<<< HEAD
 8. Hu, Y.J., **Cai, M.L.**, et al. Methionine-Mediated Regulation of Intestinal Structure and Lipid Transport in the Rice Field Eel (Monopterus albus).
+=======
+8. 9. Hu, Y.J., **Cai, M.L.**, et al. Methionine-Mediated Regulation of Intestinal Structure and Lipid Transport in the Rice Field Eel (Monopterus albus).
+>>>>>>> 19220c83bd9554c7f61673a557414561cc7e41f3
     ***Aquaculture Nutrition***. 2022, 2022(1). doi: [10.1155/2022/2293484](https://doi.org/10.1155/2022/2293484).
 9. Jin, B.H., **Cai, M.L.**, et al. Microbial-Environmental Interactions Reveal the Evaluation of Fermentation Time on the Nutrient Properties of Soybean Meal.
     ***Israeli Journal of Aquaculture - Bamidgeh***. 2022, 74 (November):1–18. doi: [10.46989/001c.55599](https://doi.org/10.46989/001c.55599).
@@ -45,5 +49,8 @@ published research, you can cite Ming-Lang Tsai's previous published papers usin
     ***Aquaculture Reports***. 2022, 27:101388. doi: [10.1016/j.aqrep.2022.101388](https://doi.org/10.1016/j.aqrep.2022.101388).
 12. Zhang, H.J., Dai, J.H., **Cai, M.L.**, et al. Effects of dietary replacement of fishmeal by cottonseed meal on the growth performance, immune and antioxidant responses, and muscle quality of juvenile crayfish Procambarus clarkii. 
     ***Aquaculture Reports***. 2023, 31(4):101639. doi: [10.1016/j.aqrep.2023.101639](https://doi.org/10.1016/j.aqrep.2023.101639).
+<<<<<<< HEAD
 13. Hu, Y.J., Zhang, J.Z., **Cai, M.L.**, et al. Methionine-Mediated Regulation of Intestinal Lipid Transportation Induced by High-Fat Diet in Rice Field Eel (Monopterus Albus).
     ***Aquaculture Nutrition***. 2023, 2023. doi: [10.1155/2023/5533414](https://doi.org/10.1155/2023/5533414).
+=======
+>>>>>>> 19220c83bd9554c7f61673a557414561cc7e41f3
