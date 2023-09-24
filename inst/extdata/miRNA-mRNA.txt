@@ -1,0 +1,1325 @@
+Read Sequence:bantam (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: bantam vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 145.000000  Q:2 to 22  R:481 to 501 Align Len (20) (70.00%) (85.00%)
+
+   Query:    3' ttAGTCGAAAGTGTTACTAGAGt 5'
+                  ||| :|||| :| ||||:|| 
+   Ref:      5' ttTCA-TTTTC-TATTGATTTCa 3'
+
+   Energy:  -14.080000 kCal/Mol
+
+Scores for this hit:
+>bantam	F13D11	145.00	-14.08	2 22	481 501	20	70.00%	85.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>bantam	F13D11	145.00	-14.08	145.00	-14.08	1	23	1458	 481
+Complete
+
+Read Sequence:bantam-3p (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: bantam-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 141.000000  Q:2 to 22  R:480 to 501 Align Len (20) (70.00%) (80.00%)
+
+   Query:    3' tttAGTCGAAAGTTTTACTAGAGt 5'
+                   ||| :||||  | ||||:|| 
+   Ref:      5' gttTCA-TTTTC-TATTGATTTCa 3'
+
+   Energy:  -14.080000 kCal/Mol
+
+Scores for this hit:
+>bantam-3p	F13D11	141.00	-14.08	2 22	480 501	20	70.00%	80.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>bantam-3p	F13D11	141.00	-14.08	141.00	-14.08	2	24	1458	 480
+Complete
+
+Read Sequence:bantam-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: bantam-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:let-7 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: let-7 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 171.000000  Q:2 to 21  R:1188 to 1211 Align Len (21) (76.19%) (85.71%)
+
+   Query:    3' atGATATGTT--GGATGATGGAGt 5'
+                  ||:||:||  ||| ||||||| 
+   Ref:      5' acCTGTATAATGCCTTCTACCTCc 3'
+
+   Energy:  -22.459999 kCal/Mol
+
+Scores for this hit:
+>let-7	F13D11	171.00	-22.46	2 21	1188 1211	21	76.19%	85.71%
+
+
+   Forward:	Score: 164.000000  Q:2 to 21  R:252 to 273 Align Len (19) (68.42%) (84.21%)
+
+   Query:    3' atGATATGTTGGATGATGGAGt 5'
+                  ||:| : ||:| ||||||| 
+   Ref:      5' ctCTGTCTCACTTTCTACCTCc 3'
+
+   Energy:  -17.320000 kCal/Mol
+
+Scores for this hit:
+>let-7	F13D11	164.00	-17.32	2 21	252 273	19	68.42%	84.21%
+
+
+   Forward:	Score: 161.000000  Q:2 to 18  R:1233 to 1254 Align Len (16) (75.00%) (87.50%)
+
+   Query:    3' atgatATGTTGGATGATGGAGt 5'
+                     ||| |::| ||||||| 
+   Ref:      5' ttaatTACCATTTTCTACCTCa 3'
+
+   Energy:  -16.770000 kCal/Mol
+
+Scores for this hit:
+>let-7	F13D11	161.00	-16.77	2 18	1233 1254	16	75.00%	87.50%
+
+
+   Forward:	Score: 147.000000  Q:2 to 21  R:1265 to 1287 Align Len (20) (80.00%) (85.00%)
+
+   Query:    3' atGATATGTTGG-ATGATGGAGt 5'
+                  :||||||||| | | ||||| 
+   Ref:      5' taTTATACAACCGTTCCACCTCa 3'
+
+   Energy:  -25.959999 kCal/Mol
+
+Scores for this hit:
+>let-7	F13D11	147.00	-25.96	2 21	1265 1287	20	80.00%	85.00%
+
+
+   Forward:	Score: 144.000000  Q:2 to 13  R:920 to 941 Align Len (11) (81.82%) (81.82%)
+
+   Query:    3' atgatatgttGGATGATGGAGt 5'
+                          | | ||||||| 
+   Ref:      5' ctcgcactttCATTCTACCTCa 3'
+
+   Energy:  -15.740000 kCal/Mol
+
+Scores for this hit:
+>let-7	F13D11	144.00	-15.74	2 13	920 941	11	81.82%	81.82%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>let-7	F13D11	787.00	-98.25	171.00	-25.96	4	22	1458	 1188 252 1233 1265 920
+Complete
+
+Read Sequence:let-7-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: let-7-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 140.000000  Q:2 to 15  R:369 to 389 Align Len (13) (84.62%) (92.31%)
+
+   Query:    3' cctttcaaTCGTTCAACATGTc 5'
+                        ||||| |||||:| 
+   Ref:      5' tatctagaAGCAA-TTGTATAc 3'
+
+   Energy:  -10.690000 kCal/Mol
+
+Scores for this hit:
+>let-7-3p	F13D11	140.00	-10.69	2 15	369 389	13	84.62%	92.31%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>let-7-3p	F13D11	140.00	-10.69	140.00	-10.69	5	22	1458	 369
+Complete
+
+Read Sequence:miR-1 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-1 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-100 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-100 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-1000-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-1000-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-10-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-10-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 141.000000  Q:2 to 21  R:963 to 984 Align Len (20) (70.00%) (80.00%)
+
+   Query:    3' ttTG-GAGAGATCTTGGCTTAAa 5'
+                  || :||||  || :|||||| 
+   Ref:      5' atACATTCTC-CGATTCGAATTc 3'
+
+   Energy:  -14.330000 kCal/Mol
+
+Scores for this hit:
+>miR-10-3p	F13D11	141.00	-14.33	2 21	963 984	20	70.00%	80.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-10-3p	F13D11	141.00	-14.33	141.00	-14.33	9	22	1458	 963
+Complete
+
+Read Sequence:miR-10-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-10-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-1175-3p (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-1175-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-1175-5p (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-1175-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-124 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-124 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-125-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-125-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-12-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-12-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-133-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-133-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-133-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-133-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-137 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-137 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 141.000000  Q:3 to 20  R:360 to 384 Align Len (21) (76.19%) (76.19%)
+
+   Query:    3' tgCAC-ATAAGAG---TTCGTTAtt 5'
+                  ||| |||| ||   |||||||  
+   Ref:      5' gcGTGTTATTATCTAGAAGCAATtg 3'
+
+   Energy:  -17.030001 kCal/Mol
+
+Scores for this hit:
+>miR-137	F13D11	141.00	-17.03	3 20	360 384	21	76.19%	76.19%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-137	F13D11	141.00	-17.03	141.00	-17.03	18	21	1458	 360
+Complete
+
+Read Sequence:miR-13b (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-13b vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-13b-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-13b-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-1-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-1-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-184 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-184 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 147.000000  Q:2 to 20  R:678 to 698 Align Len (18) (66.67%) (83.33%)
+
+   Query:    3' ggGAATAGTCAAGAGGCAGGt 5'
+                  :|||| |  |:||||||: 
+   Ref:      5' gtTTTATAACGTTTCCGTCTt 3'
+
+   Energy:  -18.240000 kCal/Mol
+
+Scores for this hit:
+>miR-184	F13D11	147.00	-18.24	2 20	678 698	18	66.67%	83.33%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-184	F13D11	147.00	-18.24	147.00	-18.24	22	21	1458	 678
+Complete
+
+Read Sequence:miR-184-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-184-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 148.000000  Q:2 to 21  R:677 to 698 Align Len (19) (63.16%) (84.21%)
+
+   Query:    3' cgGGAATAGTCAAGAGGCAGGt 5'
+                  ::|||| |  |:||||||: 
+   Ref:      5' ggTTTTATAACGTTTCCGTCTt 3'
+
+   Energy:  -18.500000 kCal/Mol
+
+Scores for this hit:
+>miR-184-3p	F13D11	148.00	-18.50	2 21	677 698	19	63.16%	84.21%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-184-3p	F13D11	148.00	-18.50	148.00	-18.50	23	22	1458	 677
+Complete
+
+Read Sequence:miR-190-5p (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-190-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-193-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-193-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 150.000000  Q:2 to 16  R:145 to 167 Align Len (15) (80.00%) (80.00%)
+
+   Query:    3' gaaccctGAATCGT-CCGGTCAt 5'
+                       || | || ||||||| 
+   Ref:      5' cacttttCTAATCATGGCCAGTt 3'
+
+   Energy:  -16.209999 kCal/Mol
+
+Scores for this hit:
+>miR-193-3p	F13D11	150.00	-16.21	2 16	145 167	15	80.00%	80.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-193-3p	F13D11	150.00	-16.21	150.00	-16.21	25	22	1458	 145
+Complete
+
+Read Sequence:miR-235-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-235-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-252-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-252-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2568a-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2568a-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-263a-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-263a-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-273 (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-273 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-275 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-275 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 155.000000  Q:3 to 20  R:1115 to 1135 Align Len (17) (82.35%) (88.24%)
+
+   Query:    3' gcGCGATGTAGTCCATGGAct 5'
+                  |||||| |:| ||||||  
+   Ref:      5' tcCGCTACCTTATGTACCTca 3'
+
+   Energy:  -19.400000 kCal/Mol
+
+Scores for this hit:
+>miR-275	F13D11	155.00	-19.40	3 20	1115 1135	17	82.35%	88.24%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-275	F13D11	155.00	-19.40	155.00	-19.40	31	21	1458	 1115
+Complete
+
+Read Sequence:miR-275-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-275-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 155.000000  Q:3 to 20  R:1113 to 1135 Align Len (17) (82.35%) (88.24%)
+
+   Query:    3' gcgcGCGATGTAGTCCATGGAct 5'
+                    |||||| |:| ||||||  
+   Ref:      5' tgtcCGCTACCTTATGTACCTca 3'
+
+   Energy:  -20.889999 kCal/Mol
+
+Scores for this hit:
+>miR-275-3p	F13D11	155.00	-20.89	3 20	1113 1135	17	82.35%	88.24%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-275-3p	F13D11	155.00	-20.89	155.00	-20.89	32	23	1458	 1113
+Complete
+
+Read Sequence:miR-2765 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2765 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 163.000000  Q:2 to 22  R:126 to 147 Align Len (20) (75.00%) (80.00%)
+
+   Query:    3' cgGTTGCCACCACCTCAATGGTt 5'
+                  |||:| | | || ||||||| 
+   Ref:      5' atCAATGTTCG-GGCGTTACCAc 3'
+
+   Energy:  -18.930000 kCal/Mol
+
+Scores for this hit:
+>miR-2765	F13D11	163.00	-18.93	2 22	126 147	20	75.00%	80.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-2765	F13D11	163.00	-18.93	163.00	-18.93	33	23	1458	 126
+Complete
+
+Read Sequence:miR-276-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-276-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-276a-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-276a-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2779 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2779 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 156.000000  Q:2 to 21  R:716 to 737 Align Len (19) (68.42%) (89.47%)
+
+   Query:    3' acCAGGAAGCTTGGCCTATGCt 5'
+                  ||::||:|||  |||||:| 
+   Ref:      5' ccGTTTTTTGAAAAGGATATGc 3'
+
+   Energy:  -21.790001 kCal/Mol
+
+Scores for this hit:
+>miR-2779	F13D11	156.00	-21.79	2 21	716 737	19	68.42%	89.47%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-2779	F13D11	156.00	-21.79	156.00	-21.79	36	22	1458	 716
+Complete
+
+Read Sequence:miR-2788-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2788-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-279 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-279 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-279b-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-279b-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2812 (18 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2812 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-281-2-5p (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-281-2-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-282 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-282 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-283-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-283-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2837 (19 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2837 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-285 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-285 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-285-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-285-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-29-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-29-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2944c-3p (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2944c-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-29b (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-29b vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2a (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2a vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-2a-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-2a-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-305-3p (19 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-305-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-305-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-305-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-306a-5p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-306a-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 148.000000  Q:3 to 18  R:393 to 414 Align Len (16) (81.25%) (93.75%)
+
+   Query:    3' cgtcTCA-GTGTATCATGGAct 5'
+                    ||| ||::||||||||  
+   Ref:      5' tctcAGTACATGTAGTACCTcc 3'
+
+   Energy:  -18.889999 kCal/Mol
+
+Scores for this hit:
+>miR-306a-5p	F13D11	148.00	-18.89	3 18	393 414	16	81.25%	93.75%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-306a-5p	F13D11	148.00	-18.89	148.00	-18.89	54	21	1458	 393
+Complete
+
+Read Sequence:miR-307-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-307-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-307a-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-307a-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-315 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-315 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-316 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-316 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-317 (25 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-317 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-317-3p (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-317-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-33-5p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-33-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-34-5p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-34-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-3722 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-3722 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-375 (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-375 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-375-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-375-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-3791-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-3791-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-3853-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-3853-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 142.000000  Q:2 to 20  R:605 to 628 Align Len (19) (73.68%) (89.47%)
+
+   Query:    3' attcGTAT-AAGACGTTTTTATTg 5'
+                    |||: |||| ||:|:|||| 
+   Ref:      5' gtttCATGTTTCTCCAGAGATAAc 3'
+
+   Energy:  -17.860001 kCal/Mol
+
+Scores for this hit:
+>miR-3853-3p	F13D11	142.00	-17.86	2 20	605 628	19	73.68%	89.47%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-3853-3p	F13D11	142.00	-17.86	142.00	-17.86	67	23	1458	 605
+Complete
+
+Read Sequence:miR-3878-5p (18 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-3878-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-3897-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-3897-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 145.000000  Q:2 to 18  R:1136 to 1156 Align Len (16) (62.50%) (93.75%)
+
+   Query:    3' ggagGAGGGAGGTGGTGGTGa 5'
+                    ||| :|:::|||:||| 
+   Ref:      5' ttgaCTCATTTTGCCATCACc 3'
+
+   Energy:  -20.610001 kCal/Mol
+
+Scores for this hit:
+>miR-3897-3p	F13D11	145.00	-20.61	2 18	1136 1156	16	62.50%	93.75%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-3897-3p	F13D11	145.00	-20.61	145.00	-20.61	69	21	1458	 1136
+Complete
+
+Read Sequence:miR-48-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-48-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 153.000000  Q:2 to 22  R:921 to 941 Align Len (20) (70.00%) (80.00%)
+
+   Query:    3' agCGTAGATGACTCGGATGGAGt 5'
+                  ||| || :| | :||||||| 
+   Ref:      5' tcGCA-CT-TTCATTCTACCTCa 3'
+
+   Energy:  -22.510000 kCal/Mol
+
+Scores for this hit:
+>miR-48-5p	F13D11	153.00	-22.51	2 22	921 941	20	70.00%	80.00%
+
+
+   Forward:	Score: 148.000000  Q:2 to 21  R:252 to 273 Align Len (20) (65.00%) (80.00%)
+
+   Query:    3' agcGTAGA-TGACTCGGATGGAGt 5'
+                   ::||| |||   :||||||| 
+   Ref:      5' ctcTGTCTCACT--TTCTACCTCc 3'
+
+   Energy:  -17.049999 kCal/Mol
+
+Scores for this hit:
+>miR-48-5p	F13D11	148.00	-17.05	2 21	252 273	20	65.00%	80.00%
+
+
+   Forward:	Score: 147.000000  Q:2 to 21  R:1188 to 1211 Align Len (20) (60.00%) (75.00%)
+
+   Query:    3' agcGTAGATGAC-TCGGATGGAGt 5'
+                   ::| || ||   :||||||| 
+   Ref:      5' accTGTATAATGCCTTCTACCTCc 3'
+
+   Energy:  -16.760000 kCal/Mol
+
+Scores for this hit:
+>miR-48-5p	F13D11	147.00	-16.76	2 21	1188 1211	20	60.00%	75.00%
+
+
+   Forward:	Score: 142.000000  Q:2 to 21  R:902 to 923 Align Len (19) (68.42%) (78.95%)
+
+   Query:    3' agcGTAGATGACTCGGATGGAGt 5'
+                   |||:| |  || |||:||| 
+   Ref:      5' tcaCATTTTC-CAGACTATCTCg 3'
+
+   Energy:  -16.959999 kCal/Mol
+
+Scores for this hit:
+>miR-48-5p	F13D11	142.00	-16.96	2 21	902 923	19	68.42%	78.95%
+
+
+   Forward:	Score: 141.000000  Q:2 to 10  R:1232 to 1254 Align Len (8) (87.50%) (100.00%)
+
+   Query:    3' agcgtagatgactcGGATGGAGt 5'
+                              :||||||| 
+   Ref:      5' gttaattaccatttTCTACCTCa 3'
+
+   Energy:  -17.080000 kCal/Mol
+
+Scores for this hit:
+>miR-48-5p	F13D11	141.00	-17.08	2 10	1232 1254	8	87.50%	100.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-48-5p	F13D11	731.00	-90.36	153.00	-22.51	70	23	1458	 921 252 1188 902 1232
+Complete
+
+Read Sequence:miR-4942-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-4942-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-58-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-58-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-6056 (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-6056 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-61-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-61-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-6494 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-6494 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-7 (24 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-7 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-71 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-71 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 166.000000  Q:2 to 22  R:538 to 558 Align Len (20) (75.00%) (85.00%)
+
+   Query:    3' gtAGAGTGATGGGTACAGAAAGt 5'
+                  |:| |||:  |||||||||| 
+   Ref:      5' gcTTTAACTG--CATGTCTTTCa 3'
+
+   Energy:  -20.590000 kCal/Mol
+
+Scores for this hit:
+>miR-71	F13D11	166.00	-20.59	2 22	538 558	20	75.00%	85.00%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-71	F13D11	166.00	-20.59	166.00	-20.59	77	23	1458	 538
+Complete
+
+Read Sequence:miR-71-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-71-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-7-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-7-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-745 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-745 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-745-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-745-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-750 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-750 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-750-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-750-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-79 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-79 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-79-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-79-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 146.000000  Q:2 to 21  R:523 to 544 Align Len (19) (68.42%) (68.42%)
+
+   Query:    3' tctGAAACCATTAGATCGAAATa 5'
+                   ||||    ||  ||||||| 
+   Ref:      5' cctCTTTCCACAT-AAGCTTTAa 3'
+
+   Energy:  -7.870000 kCal/Mol
+
+Scores for this hit:
+>miR-79-3p	F13D11	146.00	-7.87	2 21	523 544	19	68.42%	68.42%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-79-3p	F13D11	146.00	-7.87	146.00	-7.87	85	23	1458	 523
+Complete
+
+Read Sequence:miR-81a (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-81a vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 141.000000  Q:2 to 19  R:481 to 501 Align Len (18) (66.67%) (83.33%)
+
+   Query:    3' gtAG-AAAGTGTTACTAGAGt 5'
+                  || |||: :| ||||:|| 
+   Ref:      5' ttTCATTTTCTATTGATTTCa 3'
+
+   Energy:  -13.940000 kCal/Mol
+
+Scores for this hit:
+>miR-81a	F13D11	141.00	-13.94	2 19	481 501	18	66.67%	83.33%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-81a	F13D11	141.00	-13.94	141.00	-13.94	86	20	1458	 481
+Complete
+
+Read Sequence:miR-83 (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-83 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-83-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-83-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-8-3p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-8-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-8-5p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-8-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-87 (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-87 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-87-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-87-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-92a (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-92a vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-92b-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-92b-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-965 (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-965 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-965-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-965-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-981 (19 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-981 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-981-3p (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-981-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-993 (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-993 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-993-3p (18 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-993-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-995-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-995-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-996 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-996 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-998 (21 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-998 vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-998-3p (20 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-998-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-9a-5p (23 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-9a-5p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Score for this Scan:
+No Hits Found above Threshold
+Complete
+
+Read Sequence:miR-9b-3p (22 nt)
+Read Sequence:F13D11 (1458 nt)
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Performing Scan: miR-9b-3p vs F13D11
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   Forward:	Score: 146.000000  Q:2 to 21  R:524 to 544 Align Len (19) (68.42%) (68.42%)
+
+   Query:    3' acGAAACCATTAGATCGAAATa 5'
+                  ||||    ||  ||||||| 
+   Ref:      5' ctCTTTCCACAT-AAGCTTTAa 3'
+
+   Energy:  -7.440000 kCal/Mol
+
+Scores for this hit:
+>miR-9b-3p	F13D11	146.00	-7.44	2 21	524 544	19	68.42%	68.42%
+
+Score for this Scan:
+Seq1,Seq2,Tot Score,Tot Energy,Max Score,Max Energy,Strand,Len1,Len2,Positions
+>>miR-9b-3p	F13D11	146.00	-7.44	146.00	-7.44	106	22	1458	 524
+Complete
+
+Scan Complete
+

@@ -9,6 +9,7 @@
                               aspect.ratio=0.8,
                               color_background=NULL,
                               color_border=NULL,
+                              mytheme=NULL,
                               export_path="microbial composition") {
   data_type=match.arg(data_type)
   sample_type=match.arg(sample_type)
@@ -29,6 +30,7 @@
     if (sample_type=="allsamples") genus_top<-microchatcomobj$wide_allsample_abs
     if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_abs
     split_otu3<-microchatcomobj$long_group_abs
+    ytitle<-'Absolute Abundance'
   }
 
   if (data_type=="relative") {
@@ -36,6 +38,7 @@
     if (sample_type=="groups") genus_top<-microchatcomobj$wide_group_rel*100
     microchatcomobj$long_group_rel$value<-microchatcomobj$long_group_rel$value*100
     split_otu3<-microchatcomobj$long_group_rel
+    ytitle<-'Relative Abundance(%)'
   }
 
   if (!chicklet) {
@@ -65,7 +68,7 @@
       }
 
       p1<-p1+
-        labs(x = '', y = 'Relative Abundance(%)') +
+        labs(x = '', y = ytitle) +
         theme(aspect.ratio = aspect.ratio,
               axis.ticks.length = unit(0.2,"lines"),
               axis.ticks = element_line(color='black'),
@@ -113,7 +116,7 @@
 
       }
       p1<-p1+
-        labs(x = '', y = 'Relative Abundance(%)') +
+        labs(x = '', y = ytitle) +
         theme(aspect.ratio = aspect.ratio,
               axis.ticks.length = unit(0.2,"lines"),
               axis.ticks = element_line(color='black'),
@@ -154,7 +157,7 @@
       }
 
       p1<-p1+
-        labs(x = '', y = 'Relative Abundance(%)') +
+        labs(x = '', y = ytitle) +
         theme(aspect.ratio = aspect.ratio,
               axis.ticks.length = unit(0.2,"lines"),
               axis.ticks = element_line(color='black'),
@@ -199,7 +202,7 @@
 
       }
       p1<-p1+
-        labs(x = '', y = 'Relative Abundance(%)') +
+        labs(x = '', y = ytitle) +
         theme(aspect.ratio = aspect.ratio,
               axis.ticks.length = unit(0.2,"lines"),
               axis.ticks = element_line(color='black'),
@@ -235,7 +238,8 @@
     names(xlabname)<-orignam
     p1<-p1+ scale_x_discrete(labels = xlabname)
   }
-  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot (",chicklet,").pdf",sep = ""),p1)
+  if (is.null(mytheme)) p1<-p1 else p1<-p1+mytheme
+  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot (",chicklet,").pdf",sep = ""),p1,bg="white")
   cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot"," has been exported to ",export_path,sep = "","\n")
 
   return(p1)
@@ -1773,6 +1777,7 @@ par(family="serif")
                                    compare.color=color_group,
                                    gradient.num=20,
                                    sig.text.size=3,
+                                   xlabname=xlabname,
                                    sig.text.color="black",
                                    ko2.text.size=4,
                                    ko2.text.color="black",

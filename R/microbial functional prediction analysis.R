@@ -999,7 +999,7 @@
 
   diff.mean1$KO2 <- factor(diff.mean1$KO2,levels = rev(unique(diff.mean1$KO2)))
   diff.mean1$p.value <- signif(diff.mean1$p.value,3)
-  diff.mean1$p.value <- as.character(diff.mean1$p.value)
+  diff.mean1$p.value <- as.numeric(diff.mean1$p.value)
   diff.mean1$var<-factor(diff.mean1$var,levels =rev(diff.mean1$var))
 
   diff.mean1[,"sig"]<-ifelse(diff.mean1$p.value<0.001,"***",

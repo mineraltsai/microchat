@@ -64,8 +64,22 @@
     }
   }
 
+  sepec.var<-c("GENERALIST","NON SIGNIFICANT","SPECIALIST")
   spe.gen.prop<-sapply(spec_gen, function(x) {
     prop<-(table(x$sign)/nrow(x))%>%t()%>%data.frame()
+    if(nrow(prop)==2) {
+      diff.row<-setdiff(c(1,2,3),match(unique(prop$Var2),sepec.var))
+      diff.role<-sepec.var[diff.row]
+      propx<-rbind(prop,prop[1,])
+      propx[match(unique(prop$Var2),sepec.var),]<-prop
+      propx.diff<-c("A",diff.role,0)
+      propx$Var2<-factor(propx$Var2,levels = sepec.var)
+      propx[diff.row,]<-propx.diff
+      propx$Var2[diff.row]<-diff.role
+      prop<-propx
+    } else if (nrow(prop)==1) {
+      stop("Only one niche role could be detected!!!")
+    }
     prop$Freq<-sprintf("%0.2f",round(prop$Freq*100,2))
     prop$Freq<-paste(prop$Freq,"%",sep = "")
   })%>%data.frame()

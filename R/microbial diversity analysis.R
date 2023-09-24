@@ -31,9 +31,13 @@
   if (length(which(colSums(submchat$otu_table)==0)) ==0) submchat$otu_table<-submchat$otu_table
   otu<-submchat$otu_table
   tree<-submchat$tree
-  alphadiv<-microchatalpha(otu, tree, base = 2)
-
-  colnames(alphadiv)<-c("Richness", "Shannon", "Simpson", "Pielou", "Chao1", "ACE", "Coverage", "Pd" )
+  if (!is.null(tree)) {
+    alphadiv<-microchatalpha(otu, tree, base = 2)
+    colnames(alphadiv)<-c("Richness", "Shannon", "Simpson", "Pielou", "Chao1", "ACE", "Coverage", "Pd" )
+  } else {
+    alphadiv<-microchatalpha(otu, tree, base = 2)
+    colnames(alphadiv)<-c("Richness", "Shannon", "Simpson", "Pielou", "Chao1", "ACE", "Coverage" )
+}
   alpha.table<-tibble::rownames_to_column(alphadiv,var = "sample")
   alpha.table$group<-substr(alpha.table$sample,start = 1,stop = 2)
   alpha.table<-subset(alpha.table, select = c(which(colnames(alpha.table)=="group"),

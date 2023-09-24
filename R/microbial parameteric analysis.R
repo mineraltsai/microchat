@@ -1253,7 +1253,7 @@
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
                                             method="anova",
-                                            seg=TRUE,
+                                            seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
@@ -2127,7 +2127,7 @@
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
                                             method="anova",
-                                            seg=TRUE,
+                                            seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
