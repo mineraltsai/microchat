@@ -861,6 +861,7 @@
                                     errorbar.line.add=FALSE,
                                     seg=TRUE,
                                     add.spline=TRUE,
+                                    panel.border=TRUE,
                                     errorbar.point.size=0.1,
                                     y.point.adj=NULL,
                                     color_group=colorCustom(5,pal = "gygn"),
@@ -885,12 +886,15 @@
   sig_label_new<-microchatParamStatobj$sig
 
   if (method %in% c("anova","kruskal.test")) {
-  opc.data<-microchatParamStatobj$opc.data
-  o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
-  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
-  subtitile<-paste(liner,quad,sep = " ")
+  opc.data <- microchatParamStatobj$opc.data
+  o.data <- opc.data[which(opc.data$index == index), ]
+  gnum <- ncol(o.data)
+  gnum/2
+  liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ",
+                 o.data[gnum/2 + 2], sep = "")
+  quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
+                o.data[gnum/2 +  3], sep = "")
+  subtitile <- paste(liner, quad, sep = " ")
   }
 
   colors<-color_group
@@ -932,8 +936,10 @@
       geom_point(aes(group=index,color=group))
 
 
-    if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
+    if (!seg) data.seg <- calcSegmentOrder(data.alpha, y.ratio,
+                                           data_poi)
+    if (seg) data.seg <-calcorderx(data.alpha, y.ratio,
+                                   data_poi)
 
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
@@ -1180,6 +1186,9 @@
   }
   ylim.fold
   p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  if (panel.border) p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
+  )
   ggsave(paste(export_path,"/Parameter (",index,")_boxplot.pdf",sep = ""),
          width = 3,height = 3,
          p)
@@ -1189,6 +1198,497 @@
 
 }
 
+"calcorderx"<-function (data.alpha, y.ratio, data_poi)
+{
+  data.seg <- data.alpha
+  data.seg <- subset(data.seg, select = c(index, group1, group2,
+                                          p.value, sig, yvalue1, yvalue2, order, error))
+
+  data.interset<-list()
+  for (tt in 1:nrow(data.seg)) {
+    data.interset[[tt]]<-c(match(data.seg$group1[tt],unique(data_poi$group)):match(data.seg$group2[tt],unique(data_poi$group)))
+  }
+
+  data.seg$yvalue1[1]<-data.seg$yvalue1[1]+y.ratio
+  data.seg$yvalue2[1]<-data.seg$yvalue2[1]+y.ratio
+
+  if (nrow(data.seg)>=2) {
+    for (k in 2:nrow(data.seg)) {
+      if ( (data.seg$group1[k] %in% data.seg$group1[1:(k-1)]) | (data.seg$group1[k] %in% data.seg$group2[1:(k-1)])) {
+        rownum1<- match(data.seg$group1[k], data.seg$group1[1:(k-1)])
+        rownum2<- match(data.seg$group1[k], data.seg$group2[1:(k-1)])
+
+        if (!is.na(rownum1)) {
+          if (!is.na(rownum2)) {
+            if (rownum1>rownum2) data.seg$yvalue1[k]<-data.seg$yvalue1[rownum1]+y.ratio * 2
+            if (rownum1<rownum2) data.seg$yvalue1[k]<-data.seg$yvalue2[rownum2]+y.ratio * 2
+          } else {
+            data.seg$yvalue1[k]<-data.seg$yvalue1[rownum1]+y.ratio * 2
+          }
+        } else {
+          if (!is.na(rownum2)) {
+            data.seg$yvalue1[k]<-data.seg$yvalue2[rownum2]+y.ratio * 2
+          } else {
+            data.seg$yvalue1[k]<-data.seg$yvalue1[k]
+          }
+        }
+
+      }
+
+      if ((data.seg$group2[k] %in% data.seg$group1[1:(k-1)]) | (data.seg$group2[k] %in% data.seg$group2[1:(k-1)])) {
+        rownum3<- match(data.seg$group2[k], data.seg$group1[1:(k-1)])
+        rownum4<- match(data.seg$group2[k], data.seg$group2[1:(k-1)])
+
+        if (!is.na(rownum3)) {
+          if (!is.na(rownum4)) {
+            if (rownum3>rownum4) data.seg$yvalue2[k]<-data.seg$yvalue1[rownum3]+y.ratio * 2
+            if (rownum3<rownum4) data.seg$yvalue2[k]<-data.seg$yvalue2[rownum4]+y.ratio * 2
+          } else {
+            data.seg$yvalue2[k]<-data.seg$yvalue1[rownum3]+y.ratio * 2
+          }
+        } else {
+          if (!is.na(rownum4)) {
+            data.seg$yvalue2[k]<-data.seg$yvalue2[rownum4]+y.ratio * 2
+          } else {
+            data.seg$yvalue2[k]<-data.seg$yvalue2[k]
+          }
+        }
+
+      }
+
+    }
+
+    data.seg$order1 <- match(data.seg$group1, unique(data_poi$group))
+    data.seg$order2 <- match(data.seg$group2, unique(data_poi$group))
+    data.seg$y1 <- data.seg$yvalue1
+    data.seg$y2 <- data.seg$yvalue2
+    data.seg$y3 <- data.seg$y1 + y.ratio
+    data.seg$y4 <- data.seg$y2 + y.ratio
+
+    for (kk in 1:nrow(data.seg)) {
+      if (data.seg$y3[kk] < data.seg$y4[kk]) {
+        data.seg$y3[kk] <- data.seg$y4[kk]
+      }
+      else {
+        data.seg$y3[kk] <- data.seg$y3[kk]
+        data.seg$y4[kk] <- data.seg$y3[kk]
+      }
+    }
+
+    data.intersetx<-list()
+    for (tt in 1:nrow(data.seg)) {
+      data.intersetx[[tt]]<-c(data.seg$order1[tt],data.seg$order2[tt])
+      names(data.intersetx[[tt]])<-c(data.seg$group1[tt],data.seg$group2[tt])
+    }
+
+    ###判断左边还是右边会与其他comparison相交
+    for (k in 2:nrow(data.seg)) {
+      for (t in 1:(k-1)) {
+        matchlen<-intersect(data.interset[[k]], data.interset[[t]])%>%length()
+
+        if (matchlen>=2) {
+          data.seg$y3[k]<- data.seg$y3[k-1]+y.ratio * 2
+          data.seg$y4[k]<- data.seg$y4[k-1]+y.ratio * 2
+        }
+
+        order.n<-match(intersect(data.intersetx[[k]], data.interset[[t]]),data.intersetx[[k]])
+        if (length(order.n)>0) {
+          order.ns<-data.intersetx[[k]][order.n]%>%names()
+          if (data.seg$group1[k]==order.ns) data.seg$y1[k]<-data.seg$y3[t]+y.ratio
+          if (data.seg$group2[k]==order.ns) data.seg$y2[k]<-data.seg$y3[t]+y.ratio
+        }
+
+      }
+    }
+  } else {
+    data.seg$order1 <- match(data.seg$group1, unique(data_poi$group))
+    data.seg$order2 <- match(data.seg$group2, unique(data_poi$group))
+    data.seg$y1 <- data.seg$yvalue1
+    data.seg$y2 <- data.seg$yvalue2
+    data.seg$y3 <- data.seg$y1 + y.ratio
+    data.seg$y4 <- data.seg$y2 + y.ratio
+  }
+
+
+  return(data.seg)
+}
+"plotParametr"<-function(params,
+                         color_taxa=NULL,
+                         color_group=NULL,
+                         bubble.color.taxa=TRUE,
+                         bubble.max.size=9,
+                         bubble.shape=19,
+                         bubble.alpha=1,
+                         aspect.ratio=0.8,
+                         color_background=NULL,
+                         color_border=NULL,
+                         export_path="microbial composition") {
+  export_path<-paste0(export_path,"/bubble plot")
+
+  dir.create(export_path, recursive = TRUE)
+
+  taxa_num<-ncol(params)
+  genus_top<-t(params)%>%data.frame()
+
+  if (bubble.color.taxa) {
+    cat("\n","color taxa according to the params 'color_taxa'")
+    genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
+    genus_topxx<-reshape2::melt(genus_topxx)
+
+    color_taxa<-c(color_taxa[1:taxa_num])
+    names(color_taxa)<-unique(genus_topxx$tax)
+
+    p1<-ggplot(data=genus_topxx, mapping=aes(x=variable,y=tax,color=tax))+
+      geom_point(stat= "identity",aes(size=value),
+                 shape=bubble.shape,
+                 alpha=bubble.alpha,show.legend = TRUE)+
+      scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
+      scale_color_manual(values=color_taxa)+
+      theme(aspect.ratio = aspect.ratio,
+            axis.ticks.length = unit(0.2,"lines"),
+            axis.ticks = element_line(color='black'),
+            panel.background = element_rect(fill = "grey90"),
+            #axis.line = element_line(colour = "black"),
+            axis.title.x=element_blank(),
+            axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+            axis.text.y=element_text(colour='black',size=10,family = "serif"),
+            axis.text.x=element_text(colour = "black",size = 10,
+                                     angle = 0,hjust = 0.5,vjust =0.5,family = "serif"))
+  } else {
+    cat("\n","color taxa according to the params 'color_group'")
+
+    genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
+    genus_topxx<-reshape2::melt(genus_topxx)
+
+    samplename<-unique(genus_topxx$variable)
+    groupname<-substr(samplename,start = 1, stop = 2)%>%unique()
+
+    color_group<-color_group[1:length(groupname)]
+    names(color_group)<-groupname
+
+    color_group1<-color_group%>%data.frame()
+    color_sample<-randomcolor(length(samplename))
+
+    ###color samples according to groups
+    for (ttks in 1:nrow(color_group1)) {
+      color_sample[which(substr(samplename,start = 1, stop = 2)==rownames(color_group1)[ttks])]<-color_group1[ttks,]
+    }
+    names(color_sample)<-samplename
+
+    p1<-ggplot(data=genus_topxx, mapping=aes(x=variable,y=tax,color=factor(variable)))+
+      geom_point(stat= "identity",aes(size=value),
+                 shape=bubble.shape,
+                 alpha=bubble.alpha,show.legend = TRUE)+
+      scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
+      scale_color_manual(values=color_sample)+
+      theme(aspect.ratio = aspect.ratio,
+            axis.ticks.length = unit(0.2,"lines"),
+            axis.ticks = element_line(color='black'),
+            panel.background = element_rect(fill = "grey90"),
+            #axis.line = element_line(colour = "black"),
+            legend.position = "none",
+            axis.title.x=element_blank(),
+            axis.title.y=element_blank(),
+            axis.text.y=element_text(colour='black',size=10,family = "serif"),
+            axis.text.x=element_text(colour = "black",size = 10,
+                                     angle = 0,hjust = 0.5,vjust =0.5,family = "serif"))
+  }
+
+  if (!is.null(color_background)) {
+    p1<-p1+
+      theme(panel.background=element_rect(fill = color_background))
+  }
+  if (is.null(color_border)) {
+    p1<-p1
+  } else {
+    p1<-p1+theme(panel.border = element_rect(fill=NA,colour = color_border))
+  }
+  p1<-p1+theme(aspect.ratio = ncol(params)/nrow(params))
+  ggsave(paste(export_path,"/","bubble plot",".pdf",sep = ""),
+         width = nrow(params)/2,
+         height = ncol(params)/2,
+         p1)
+  return(p1)
+}
+
+plotMicrochatParamHeatmap<-function(microchatParamobj,
+                                    rescale=FALSE,
+                                    standardlization=c("0-1","scale","center","normal"),
+                                    ###0-1 standardlization
+                                    sample_type=c("allsamples","groups"),
+                                    color_taxa=NULL,
+                                    color_group=NULL,
+                                    color.heatmap=NULL,  ###two colors at least
+                                    heatmap.add.line=TRUE,
+                                    heatmap.top.class=5,
+                                    heatmap.sample.angle=90,
+                                    heatmap.taxa.angle=0,
+                                    export_path="microbial composition") {
+  sample_type=match.arg(sample_type)
+  standardlization=match.arg(standardlization)
+
+  export_path<-paste(export_path,"/microbial composition",sep = "")
+  dir.create(export_path, recursive = TRUE)
+
+
+  if (heatmap.top.class>(ncol(microchatParamobj$param_table)-2)) heatmap.top.class<-as.integer((ncol(microchatParamobj$param_table)-2)/2) else heatmap.top.class
+  if (!rescale) {
+    if (sample_type=="allsamples") {
+      genus_top<-microchatParamobj$param_table
+      genus_top<-genus_top[,2:ncol(genus_top)]
+      library(tibble)
+      genus_top<-tibble::column_to_rownames(genus_top,var="sample")
+      genus_top<-t(genus_top)%>%data.frame()
+    }
+    if (sample_type=="groups") {
+      genus_top<-microchatParamobj$param_table
+      genus_top<-genus_top[,c(1,3:ncol(genus_top))]
+      genus_top<-genus_top %>%
+        group_by(group) %>%
+        summarise_all(sum)
+      genus_top<-tibble::column_to_rownames(genus_top,var="group")
+      genus_top<-t(genus_top)%>%data.frame()
+    }
+  } else {
+    if (sample_type=="allsamples") {
+      if (standardlization=="0-1") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,2:ncol(genus_top)]
+        library(tibble)
+        genus_top<-tibble::column_to_rownames(genus_top,var="sample")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<- scale1dt(genus_top)
+      }
+      if (standardlization=="normal") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,2:ncol(genus_top)]
+        library(tibble)
+        genus_top<-tibble::column_to_rownames(genus_top,var="sample")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<-scale4dt(genus_top)
+      }
+      if (standardlization=="scale") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,2:ncol(genus_top)]
+        library(tibble)
+        genus_top<-tibble::column_to_rownames(genus_top,var="sample")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<- scale2dt(genus_top)
+      }
+      if (standardlization=="center") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,2:ncol(genus_top)]
+        library(tibble)
+        genus_top<-tibble::column_to_rownames(genus_top,var="sample")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<- scale3dt(genus_top)
+      }
+    }
+    if (sample_type=="groups") {
+
+      if (standardlization=="0-1") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,c(1,3:ncol(genus_top))]
+        genus_top<-genus_top %>%
+          group_by(group) %>%
+          summarise_all(sum)
+        genus_top<-tibble::column_to_rownames(genus_top,var="group")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<-scale1dt(genus_top)
+      }
+
+      if (standardlization=="normal") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,c(1,3:ncol(genus_top))]
+        genus_top<-genus_top %>%
+          group_by(group) %>%
+          summarise_all(sum)
+        genus_top<-tibble::column_to_rownames(genus_top,var="group")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<-scale4dt(genus_top)
+      }
+
+
+      if (standardlization=="scale") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,c(1,3:ncol(genus_top))]
+        genus_top<-genus_top %>%
+          group_by(group) %>%
+          summarise_all(sum)
+        genus_top<-tibble::column_to_rownames(genus_top,var="group")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<-scale2dt(genus_top)
+      }
+      if (standardlization=="center") {
+        genus_top<-microchatParamobj$param_table
+        genus_top<-genus_top[,c(1,3:ncol(genus_top))]
+        genus_top<-genus_top %>%
+          group_by(group) %>%
+          summarise_all(sum)
+        genus_top<-tibble::column_to_rownames(genus_top,var="group")
+        genus_top<-t(genus_top)%>%data.frame()
+        genus_top<-scale3dt(genus_top)
+      }
+    }
+  }
+
+  net<-genus_top%>%as.matrix()
+
+  samplename<-colnames(net)
+  groupname<-substr(samplename,start = 1, stop = 2)%>%unique()
+
+  ###color groups
+  if (is.null(color_group)) {
+    color_group<-randomcolor(length(groupname))
+  } else {
+    if (length(color_group)<length(groupname)) {
+      stop("There are no enough colors to fill all groups !!!")
+    } else {
+      color_group<-color_group[1:length(groupname)]
+    }
+  }
+
+  names(color_group)<-groupname
+
+  color_group1<-color_group%>%data.frame()
+  color_sample<-randomcolor(length(samplename))
+
+  ###color samples according to groups
+  for (ttks in 1:nrow(color_group1)) {
+    color_sample[which(substr(samplename,start = 1, stop = 2)==rownames(color_group1)[ttks])]<-color_group1[ttks,]
+  }
+  names(color_sample)<-samplename
+
+  ###color taxa
+  taxa_name<-rownames(net)
+  if (is.null(color_taxa)) {
+    color_taxa<-randomcolor(length(taxa_name))
+  } else {
+    if (length(color_taxa)<length(taxa_name)) {
+      stop("There are no enough colors to fill all taxa !!!")
+    } else {
+      color_taxa<-color_taxa[1:length(taxa_name)]
+    }
+  }
+  names(color_taxa)<-taxa_name
+
+  ###color heatmap blocks
+  if (is.null(color.heatmap)) {
+    color.heatmap.use = grDevices::colorRampPalette((
+      RColorBrewer::brewer.pal(n = 9,name = "GnBu")
+    ))(100)
+  } else {
+    if (length(color.heatmap)<2) {
+      stop("There are no enough colors to fill heatmap blocks !!!")
+    } else {
+      color.heatmap.use = grDevices::colorRampPalette((
+        color.heatmap
+      ))(100)
+    }
+  }
+
+  df1 <- data.frame(group = colnames(net))
+  rownames(df1) <- colnames(net)
+  color.use1 = color_sample
+
+  col_annotation <- ComplexHeatmap::HeatmapAnnotation(df = df1, col = list(group = color.use1),
+                                                      which = "column", show_legend = TRUE, show_annotation_name = FALSE,
+                                                      simple_anno_size = grid::unit(0.2, "cm"),
+                                                      annotation_legend_param=list(title_gp = grid::gpar(fontsize = 8,
+                                                                                                         fontfamily="serif",
+                                                                                                         fontface = "plain"),
+                                                                                   title_position = "leftcenter-rot",
+                                                                                   border = NA,
+                                                                                   legend_height = unit(20, "mm"),
+                                                                                   labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
+                                                                                   grid_width = unit(2, "mm")))
+
+  df2 <- data.frame(group = rownames(net))
+  rownames(df2) <- rownames(net)
+  color.use2 = color_taxa
+
+  row_annotation <- ComplexHeatmap::HeatmapAnnotation(df = df2, col = list(group = color.use2),
+                                                      which = "row", show_legend = TRUE, show_annotation_name = FALSE,
+                                                      simple_anno_size = grid::unit(0.2, "cm"),
+                                                      annotation_legend_param=list(title_gp = grid::gpar(fontsize = 8,
+                                                                                                         fontfamily="serif",
+                                                                                                         fontface = "plain"),
+                                                                                   title_position = "leftcenter-rot",
+                                                                                   border = NA,
+                                                                                   legend_height = unit(20, "mm"),
+                                                                                   labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
+                                                                                   grid_width = unit(2, "mm")))
+
+  if (heatmap.add.line) {
+    ha1 = ComplexHeatmap::rowAnnotation(
+      Strength = ComplexHeatmap::anno_barplot(rowSums(abs(net)),
+                                              border = FALSE, gp = grid::gpar(
+                                                fill = color.use2, col = color.use2)),
+      foo = ComplexHeatmap::anno_lines(rowSums(abs(net)),
+                                       gp = grid::gpar(col = "red"),
+                                       add_points = TRUE,smooth = TRUE, axis = FALSE,
+                                       extend = 0.2,border = FALSE,
+                                       pt_gp = grid::gpar(fill = color.use2,col = color.use2),
+                                       height = unit(1, "cm")),
+      show_annotation_name = FALSE)
+    ha2 = ComplexHeatmap::HeatmapAnnotation(
+      #pt = anno_points(colSums(abs(net[1:heatmap.top.class,])), gp = gpar(fill = color.use1,col = color.use1),height = unit(1, "cm")),
+      foo = ComplexHeatmap::anno_lines(colSums(abs(net[1:heatmap.top.class,])),
+                                       gp = grid::gpar(col = "red"),
+                                       add_points = TRUE,smooth = TRUE, axis = FALSE,
+                                       extend = 0.2,border = FALSE,
+                                       pt_gp = grid::gpar(fill = color.use1,col = color.use1),
+                                       height = unit(1, "cm")),
+      Strength = ComplexHeatmap::anno_barplot(colSums(abs(net)),
+                                              border = FALSE, gp = grid::gpar(
+                                                fill = color.use1, col = color.use1)),
+      show_annotation_name = FALSE)
+  } else {
+    ha1 = ComplexHeatmap::rowAnnotation(
+      Strength = ComplexHeatmap::anno_barplot(rowSums(abs(net)),
+                                              border = FALSE, gp = grid::gpar(
+                                                fill = color.use2, col = color.use2)),
+      show_annotation_name = FALSE)
+    ha2 = ComplexHeatmap::HeatmapAnnotation(
+      Strength = ComplexHeatmap::anno_barplot(colSums(abs(net)),
+                                              border = FALSE, gp = grid::gpar(
+                                                fill = color.use1, col = color.use1)),
+      show_annotation_name = FALSE)
+
+  }
+
+
+  p1<-ComplexHeatmap::Heatmap(net,
+                              col = color.heatmap.use,
+                              na_col = "white",
+                              name = paste("Value",sep = ""),
+                              bottom_annotation = col_annotation,
+                              left_annotation = row_annotation,
+                              top_annotation = ha2,
+                              right_annotation = ha1,
+                              cluster_rows = FALSE,
+                              cluster_columns = FALSE,
+                              row_names_side = "left",
+                              row_names_rot = heatmap.taxa.angle,
+                              row_names_gp = grid::gpar(fontsize = 6,
+                                                        fontfamily="serif"),
+                              column_names_gp = grid::gpar(fontsize = 6,
+                                                           fontfamily="serif"),
+                              column_names_rot = heatmap.sample.angle,
+                              heatmap_legend_param = list(nrow=3,
+                                                          title_gp = grid::gpar(fontsize = 8,
+                                                                                fontfamily="serif",
+                                                                                fontface = "plain"),
+                                                          title_position = "leftcenter-rot",
+                                                          border = NA,
+                                                          legend_height = unit(20, "mm"),
+                                                          labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
+                                                          grid_width = unit(2, "mm")))
+
+
+  message("\n","The heatmap need to be saved manually.")
+  return(p1)
+}
 
 
 "calcSegment3Order" <- function(data.alpha,y.ratio,data_poi) {
@@ -1252,13 +1752,17 @@
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
+                                            panel.border=TRUE,
                                             method="anova",
                                             seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
+                                            color_backgroud="grey90",
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
 
   select.index<-microchatParamobj$all.index
+  paramfile.select<-microchatParamobj$paramfile.select
+  export_path<-paste0(export_path,"/",paramfile.select)
   pp<-list()
   height.sel<-length(ncol_layout(length(select.index)))*3
   width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
@@ -1282,8 +1786,9 @@
                                  y.point.adj=0.1,
                                  seg=seg,
                                  add.spline=FALSE,
+                                 panel.border=panel.border,
                                  color_group=color_group,
-                                 color_backgroud="grey90",
+                                 color_backgroud=color_backgroud,
                                  export_path=export_path)
     pp[[t]]<-p
   }
@@ -1292,7 +1797,7 @@
   pm<-wrap_plots(pp)
   print(pm)
   ggsave(paste(export_path,"/Muti-parameter","_boxplot.pdf",sep = ""),
-         width = width.sel,height = height.sel,
+         width = width.sel*4/3,height = height.sel*4/3,
          pm)
   message("Muti-parametric properities boxplot has been exported. Please check it.")
 
@@ -1503,6 +2008,7 @@
 
     plotMicrochatParamMutiBoxplot(microchatParamobj,
                                   xlabname=xlabname,
+                                  geom.line=geom.line,
                                   yaxis.italic=yaxis.italic,
                                   strictmod=strictmod,
                                   method=method,
@@ -1522,6 +2028,7 @@
                                         errorbar.line.add=FALSE,
                                         seg=TRUE,
                                         add.spline=TRUE,
+                                        panel.border=TRUE,
                                         errorbar.point.size=0.1,
                                         y.point.adj=NULL,
                                         color_group=colorCustom(5,pal = "gygn"),
@@ -1546,12 +2053,15 @@
   sig_label_new<-microchatParamStatobj$sig
 
   if (method %in% c("anova","kruskal.test")) {
-  opc.data<-microchatParamStatobj$opc.data
-  o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
-  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
-  subtitile<-paste(liner,quad,sep = " ")
+    opc.data <- microchatParamStatobj$opc.data
+    o.data <- opc.data[which(opc.data$index == index), ]
+    gnum <- ncol(o.data)
+    gnum/2
+    liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ",
+                   o.data[gnum/2 + 2], sep = "")
+    quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
+                  o.data[gnum/2 +  3], sep = "")
+    subtitile <- paste(liner, quad, sep = " ")
 }
 
   colors<-color_group
@@ -1587,10 +2097,10 @@
                stat = "identity",position = "dodge",
                width = 0.7,colour = "white")
 
-
-    if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
-
+    if (!seg) data.seg <- calcSegmentOrder(data.alpha, y.ratio,
+                                           data_poi)
+    if (seg) data.seg <-calcorderx(data.alpha, y.ratio,
+                                   data_poi)
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
       x2<-data.seg$order2[tt]
@@ -1811,6 +2321,9 @@
   }
   ylim.fold
   p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  if (panel.border) p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
+  )
   ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),
          width = 3,height = 3,p)
   cat("Parametric properities barplot has been exported. Please check it.","\n")
@@ -1827,6 +2340,7 @@
                                          errorbar.pos.adj=TRUE,
                                          errorbar.line.add=FALSE,
                                          seg=TRUE,
+                                         panel.border=TRUE,
                                          add.spline=FALSE,
                                          errorbar.point.size=0.1,
                                          y.point.adj=NULL,
@@ -1852,12 +2366,16 @@
   method<-microchatParamStatobj$method
   sig_label_new<-microchatParamStatobj$sig
   if (method %in% c("anova","kruskal.test")) {
-  opc.data<-microchatParamStatobj$opc.data
-  o.data<-opc.data[which(opc.data$index==index),]
-  gnum<-ncol(o.data)
-  liner<-paste(colnames(o.data[gnum-2])," effect: ",o.data[gnum-2],sep = "")
-  quad<-paste(colnames(o.data[gnum-1])," effect: ",o.data[gnum-1],sep = "")
-  subtitile<-paste(liner,quad,sep = " ")}
+    opc.data <- microchatParamStatobj$opc.data
+    o.data <- opc.data[which(opc.data$index == index), ]
+    gnum <- ncol(o.data)
+    gnum/2
+    liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ",
+                   o.data[gnum/2 + 2], sep = "")
+    quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
+                  o.data[gnum/2 +  3], sep = "")
+    subtitile <- paste(liner, quad, sep = " ")
+  }
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
@@ -1891,9 +2409,10 @@
                     colour = "grey50",width=.25)
 
 
-    if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-    if (seg) data.seg<-calcSegment3Order(data.alpha,y.ratio,data_poi)
-
+    if (!seg) data.seg <- calcSegmentOrder(data.alpha, y.ratio,
+                                           data_poi)
+    if (seg) data.seg <-calcorderx(data.alpha, y.ratio,
+                                   data_poi)
     for (tt in 1:nrow(data.seg)) {
       x1<-data.seg$order1[tt]
       x2<-data.seg$order2[tt]
@@ -2111,6 +2630,9 @@
   }
   ylim.fold
   p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  if (panel.border) p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
+  )
   ggsave(paste(export_path,"/Parameter (",index,")_lineplot.pdf",sep = ""),
          width = 3,height = 3,p)
   cat("Parametric properities lineplot has been exported. Please check it.","\n")
@@ -2119,20 +2641,392 @@
 
 }
 
+"plotMicrochatParamMuti2Barplot"<-function(microchatParamobj,
+                                         ylim.fold=1.1,
+                                         xlabname=NULL,
+                                         yaxis.italic=TRUE,
+                                         strictmod=TRUE,
+                                         panel.border=TRUE,
+                                         method="anova",
+                                         bar.border.size=1,
+                                         seg=FALSE,
+                                         comparison=my_comparisons,
+                                         color_group=colorCustom(5,pal = "ywbu"),
+                                         color_backgroud="grey90",
+                                         export_path="ss21/microbial parameteric analysis/liver_gene") {
 
+  select.index<-microchatParamobj$all.index
+  paramfile.select<-microchatParamobj$paramfile.select
+  export_path<-paste0(export_path,"/",paramfile.select)
+  pp<-list()
+  height.sel<-length(ncol_layout(length(select.index)))*3
+  width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
+  for (t in select.index) {
+    microchatParamStatobj<-calcMicrochatParamStat(microchatParamobj,
+                                                  select.index=t,
+                                                  strictmod=strictmod,
+                                                  method=method,
+                                                  comparison=comparison,
+                                                  export_path=export_path)
+
+    p<-plotMicrochatParam2Barplot(microchatParamStatobj,
+                                  ylim.fold=ylim.fold,
+                                  xlabname=xlabname,
+                                  yaxis.italic=yaxis.italic,
+                                  errorbar.line.add=TRUE,
+                                  errorbar.point.size=0.1,
+                                  y.point.adj=0.1,
+                                  panel.border=panel.border,
+                                  bar.border.size=bar.border.size,
+                                  seg=seg,
+                                  add.spline=FALSE,
+                                  color_group=color_group,
+                                  color_backgroud=color_backgroud,
+                                  export_path=export_path)
+    pp[[t]]<-p
+  }
+
+  library(patchwork)
+  pm<-wrap_plots(pp)
+  print(pm)
+  ggsave(paste(export_path,"/Muti-parameter","_hollow_barplot.pdf",sep = ""),
+         width = width.sel*4/3,height = height.sel*4/3,pm)
+  message("Muti-parametric properities barplot has been exported. Please check it.")
+
+  return(pm)
+}
+
+"plotMicrochatParam2Barplot"<-function(microchatParamStatobj,
+                                     ylim.fold=1.1,
+                                     xlabname=NULL,
+                                     yaxis.italic=TRUE,
+                                     errorbar.pos.adj=TRUE,
+                                     errorbar.line.add=FALSE,
+                                     panel.border=TRUE,
+                                     seg=TRUE,
+                                     add.spline=TRUE,
+                                     errorbar.point.size=0.1,
+                                     bar.border.size=1,
+                                     y.point.adj=NULL,
+                                     color_group=colorCustom(5,pal = "gygn"),
+                                     color_backgroud="grey90",
+                                     export_path="microbial diversity analysis") {
+  dir.create(export_path, recursive = TRUE)
+
+  if (class(microchatParamStatobj)[1]!="microchat") {
+    stop("\n","Please convert the data into a 'microchat' object")
+  }
+
+  data_poi<-microchatParamStatobj$data_poi
+  data_err<-microchatParamStatobj$data_err
+  data.alpha<-microchatParamStatobj$param.stats
+  index<-microchatParamStatobj$index
+  if (is.null(y.point.adj)) {
+    y.ratio<-microchatParamStatobj$y.ratio
+  } else {
+    y.ratio<-microchatParamStatobj$y.ratio*(1+y.point.adj)
+  }
+  method<-microchatParamStatobj$method
+  sig_label_new<-microchatParamStatobj$sig
+
+  if (method %in% c("anova","kruskal.test")) {
+    opc.data <- microchatParamStatobj$opc.data
+    o.data <- opc.data[which(opc.data$index == index), ]
+    gnum <- ncol(o.data)
+    gnum/2
+    liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ",
+                   o.data[gnum/2 + 2], sep = "")
+    quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
+                  o.data[gnum/2 +  3], sep = "")
+    subtitile <- paste(liner, quad, sep = " ")
+  }
+
+  colors<-color_group
+  names(colors)<-unique(data_poi$group)
+
+
+  if (method %in% c("t.test","wilcox.test")) {
+    if (errorbar.pos.adj)
+      for (kk in 1:nrow(data.alpha)) {
+        if (data.alpha[kk,]$yvalue1>data.alpha[kk,]$max1){
+          data.alpha[kk,]$yvalue1<-data.alpha[kk,]$yvalue1
+
+        } else {
+          data.alpha[kk,]$yvalue1<-data.alpha[kk,]$max1
+        }
+
+
+        if (data.alpha[kk,]$yvalue2>data.alpha[kk,]$max2){
+          data.alpha[kk,]$yvalue2<-data.alpha[kk,]$yvalue2
+
+        } else {
+          data.alpha[kk,]$yvalue2<-data.alpha[kk,]$max2
+        }
+      }
+
+
+    p<-ggplot(data=data_poi,
+              aes(x = group,y = value,fill = group)) +
+      geom_errorbar(data = data_err,
+                    aes(x = group, y = mean, group = index, ymin = mean-se, ymax = mean+se),
+                    colour = "grey50",width=.25)+
+      geom_bar(data = data_err,aes(x = group,y = mean,color = group),
+               size=bar.border.size,
+               stat = "identity",position = "dodge",fill=NA,
+               width = 0.7)
+
+    if (!seg) data.seg <- calcSegmentOrder(data.alpha, y.ratio,
+                                           data_poi)
+    if (seg) data.seg <-calcorderx(data.alpha, y.ratio,
+                                   data_poi)
+    for (tt in 1:nrow(data.seg)) {
+      x1<-data.seg$order1[tt]
+      x2<-data.seg$order2[tt]
+
+      y1.use<-data.seg$y1[tt]
+      y2.use<-data.seg$y2[tt]
+      y3.use<-data.seg$y3[tt]
+      y4.use<-data.seg$y4[tt]
+
+      if (y2.use>y3.use) {
+        y3.use<-y2.use+y.ratio
+      }
+
+      if (y1.use>y4.use) {
+        y4.use<-y1.use+y.ratio
+      }
+
+      if (y3.use>y4.use) {
+        y3.use<-y3.use
+      } else {
+        y3.use<-y4.use
+      }
+
+      data.seg$y1[tt]<-y1.use
+      data.seg$y2[tt]<-y2.use
+      data.seg$y3[tt]<-y3.use
+      data.seg$y4[tt]<-y4.use
+
+    }
+
+    for (tt in 1:nrow(data.seg)) {
+      x1<-data.seg$order1[tt]
+      x2<-data.seg$order2[tt]
+
+      y1.use<-data.seg$y1[tt]
+      y2.use<-data.seg$y2[tt]
+      y3.use<-data.seg$y3[tt]
+      y4.use<-data.seg$y4[tt]
+
+      label.use=data.seg$sig[tt]
+
+      p<-p+
+        annotate("pointrange", color="grey50",size=errorbar.point.size,
+                 x = x1, y = y1.use, ymin = y1.use, ymax = y1.use)+
+        annotate("pointrange", color="grey50",size=errorbar.point.size,
+                 x = x2, y = y2.use, ymin = y2.use, ymax = y2.use)+
+
+        annotate("segment",color="grey50", x = x1, y = y1.use, xend = x1, yend = y3.use)+
+        annotate("segment",color="grey50", x = x2, y = y2.use, xend = x2, yend = y3.use)+
+        annotate("segment",color="grey50", x = x1, y = y3.use, xend = x2, yend = y3.use)+
+        annotate("text",family="serif",x = (x1+x2)/2, y = y3.use+y.ratio*2/3,label=label.use)
+
+      if (errorbar.line.add) p<-p+annotate("segment", color="grey50",x = x1-0.05, y = y1.use, xend = x1+0.05, yend = y1.use)+
+        annotate("segment",color="grey50", x = x2-0.05, y = y2.use, xend = x2+0.05, yend = y2.use)
+
+    }
+
+    p<-p+scale_discrete_manual(values=colors,
+                               aesthetics = "colour")+
+      scale_discrete_manual(values=colors,
+                            aesthetics = "fill")
+
+
+    if (yaxis.italic) p<-p+labs(y=index,title = method)+
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
+            title = element_text(family = "serif",face="bold.italic", size=12))
+
+    if (!yaxis.italic) p<-p+labs(y=index,title = method)+
+      theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+            title = element_text(family = "serif",face="bold.italic", size=12))
+
+    p<-p+
+      theme(#panel.border = element_blank(),
+        axis.ticks.length = unit(0.2,"lines"),
+        axis.ticks = element_line(color='black'),
+        panel.background = element_rect(fill = color_backgroud),
+        #axis.line = element_line(colour = "black"),
+        axis.title.x=element_blank(),
+        #axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+        axis.text.y=element_text(colour='black',size=10,family = "serif"),
+        axis.text.x=element_text(colour = "black",size = 10,
+                                 angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
+        #strip.background =  element_blank(),
+        legend.position = "none",aspect.ratio = 1)
+
+
+  }
+
+  if (method %in% c("anova","kruskal.test")){
+    data.alpha$p.value<-data.alpha[,2]
+    if (method=="anova") {
+      gorder<-unique(data_poi$group)%>%as.character()
+      sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
+      p<-ggplot() +
+        geom_errorbar(data = data_err,
+                      aes(x = group, y = mean, group = index,
+                          ymin = mean-se, ymax = mean+se),
+                      colour = "grey50",width=.25)+
+        geom_bar(data = data_err,aes(x = group,y = mean,color = group),
+                 stat = "identity",position = "dodge",fill=NA,
+                 size=bar.border.size,
+                 width = 0.7) +
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
+                  size = 5,color = "black",family = "serif")
+
+
+      p<-p+scale_discrete_manual(values=colors,
+                                 aesthetics = "colour")+
+        scale_discrete_manual(values=colors,
+                              aesthetics = "fill")
+
+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
+      p<-p+
+        theme(#panel.border = element_blank(),
+          axis.ticks.length = unit(0.2,"lines"),
+          axis.ticks = element_line(color='black'),
+          panel.background = element_rect(fill = color_backgroud),
+          #axis.line = element_line(colour = "black"),
+          axis.title.x=element_blank(),
+          #axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+          axis.text.y=element_text(colour='black',size=10,family = "serif"),
+          axis.text.x=element_text(colour = "black",size = 10,
+                                   angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
+          #strip.background =  element_blank(),
+          legend.position = "none",aspect.ratio = 1)
+
+
+
+      if (add.spline) p<-p+
+        ggalt::geom_xspline(data= sig_label_new,size=0.5,color="grey50",
+                            aes(x=group, y=mean, group=index),spline_shape = 1)
+    }
+
+    if (method=="kruskal.test") {
+      gorder<-unique(data_poi$group)%>%as.character()
+      sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      data_errx<-subset(data_err, select=c(group,se))
+      if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
+      if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
+
+      p<-ggplot() +geom_errorbar(data = data_err,
+                                 aes(x = group, y = mean, group = index,
+                                     ymin = mean-se, ymax = mean+se),
+                                 colour = "grey50",width=.25)+
+        geom_bar(data = data_err,aes(x = group,y = mean,color = group),
+                 stat = "identity",position = "dodge",fill=NA,
+                 size=bar.border.size,
+                 width = 0.7) +
+        geom_text(data = sig_label_new,vjust=-0.5,
+                  aes(x = group,y = mean+se,label = alpha),
+                  size = 5,color = "black",family = "serif")
+
+      p<-p+scale_discrete_manual(values=colors,
+                                 aesthetics = "colour")+
+        scale_discrete_manual(values=colors,
+                              aesthetics = "fill")
+
+      if (yaxis.italic) p<-p+labs(y=index,
+                                  subtitle=subtitile,
+                                  title = paste(method,": p = ",
+                                                keep.decmi(data.alpha$p.value),sep=""))+
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
+      if (!yaxis.italic) p<-p+labs(y=index,
+                                   subtitle=subtitile,
+                                   title = paste(method,": p = ",
+                                                 keep.decmi(data.alpha$p.value),sep=""))+
+        theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
+              title = element_text(face = "bold.italic",family = "serif", size=12))
+
+      p<-p+
+        theme(#panel.border = element_blank(),
+          axis.ticks.length = unit(0.2,"lines"),
+          axis.ticks = element_line(color='black'),
+          panel.background = element_rect(fill = color_backgroud),
+          #axis.line = element_line(colour = "black"),
+          axis.title.x=element_blank(),
+          #axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
+          axis.text.y=element_text(colour='black',size=10,family = "serif"),
+          axis.text.x=element_text(colour = "black",size = 10,
+                                   angle = 0,hjust = 0.5,vjust =0.5,family = "serif"),
+          #strip.background =  element_blank(),
+          legend.position = "none",aspect.ratio = 1)
+
+
+      if (add.spline) p<-p+
+        ggalt::geom_xspline(data= sig_label_new,size=0.5,color="grey50",
+                            aes(x=group, y=mean),spline_shape = 1)
+    }
+
+  }
+
+  ####change x-axis label
+  if (!is.null(xlabname)) {
+    orignam<-microchatParamStatobj$data_err$group%>%unique()
+    if (length(orignam)!=length(xlabname)) stop("The number of xlabname cannot meet the requirement!!!")
+    names(xlabname)<-orignam
+    p<-p+ scale_x_discrete(labels = xlabname)
+  }
+  ylim.fold
+  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
+  if (panel.border) p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
+  )
+  ggsave(paste(export_path,"/Parameter (",index,")_hollow_barplot.pdf",sep = ""),
+         width = 3,height = 3,p)
+  cat("Parametric properities barplot has been exported. Please check it.","\n")
+
+  return(p)
+
+}
 
 "plotMicrochatParamMutiBarplot" <- function(microchatParamobj,
                                             ylim.fold=1.1,
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
+                                            panel.border=TRUE,
                                             method="anova",
                                             seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
+                                            color_backgroud="grey90",
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
 
   select.index<-microchatParamobj$all.index
+  paramfile.select<-microchatParamobj$paramfile.select
+  export_path<-paste0(export_path,"/",paramfile.select)
   pp<-list()
   height.sel<-length(ncol_layout(length(select.index)))*3
   width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
@@ -2153,8 +3047,9 @@
                                  y.point.adj=0.1,
                                  seg=seg,
                                  add.spline=FALSE,
+                                 panel.border=panel.border,
                                  color_group=color_group,
-                                 color_backgroud="grey90",
+                                 color_backgroud=color_backgroud,
                                  export_path=export_path)
     pp[[t]]<-p
   }
@@ -2163,7 +3058,7 @@
   pm<-wrap_plots(pp)
   print(pm)
   ggsave(paste(export_path,"/Muti-parameter","_barplot.pdf",sep = ""),
-         width = width.sel,height = height.sel,pm)
+         width = width.sel*4/3,height = height.sel*4/3,pm)
   message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)

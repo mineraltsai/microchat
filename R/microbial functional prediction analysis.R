@@ -731,13 +731,36 @@
   Tax4FunReferenceData <- microchat::importTax4FunReferenceData(folderReferenceDatax)
   commonOTUs <- intersect(Tax4FunReferenceData$SilvaIDs$V1,
                           row.names(Tax4FunInput$otuTable))
-  indexInput <- match(commonOTUs, row.names(Tax4FunInput$otuTable))
-  indexSILVAToKEGG <- match(commonOTUs, Tax4FunReferenceData$SilvaIDs$V1)
-  subsetOTUTables <- as.matrix(Tax4FunInput$otuTable[indexInput,
-  ])
-  subsetSILVAToKEGG <- Tax4FunReferenceData$SilvaToKEGGMappingMat[indexSILVAToKEGG,
-  ]
+
+  if (length(commonOTUs)==0) {
+    wc<-str_split_fixed(row.names(Tax4FunInput$otuTable),";",5)[,1:4]%>%data.frame()
+    wc$name<-paste(wc$X1,wc$X2,wc$X3,wc$X4,sep = ";")
+
+    wc_<-str_split_fixed(Tax4FunReferenceData$SilvaIDs$V1,";",5)[,1:4]%>%data.frame()
+    wc_$name<-paste(wc_$X1,wc_$X2,wc_$X3,wc_$X4,sep = ";")
+
+    commonOTUs <- intersect(wc_$name, wc$name)
+    indexInput <- match(commonOTUs,  wc$name)
+    indexSILVAToKEGG <- match(commonOTUs,  wc_$name)
+
+    subsetOTUTables <- as.matrix(Tax4FunInput$otuTable[indexInput,
+    ])
+    rownames(subsetOTUTables)<-Tax4FunReferenceData$SilvaIDs$V1[indexSILVAToKEGG]
+    subsetSILVAToKEGG <- Tax4FunReferenceData$SilvaToKEGGMappingMat[indexSILVAToKEGG,
+    ]
+
+  } else {
+    indexInput <- match(commonOTUs, row.names(Tax4FunInput$otuTable))
+    indexSILVAToKEGG <- match(commonOTUs, Tax4FunReferenceData$SilvaIDs$V1)
+
+    subsetOTUTables <- as.matrix(Tax4FunInput$otuTable[indexInput,
+    ])
+    subsetSILVAToKEGG <- Tax4FunReferenceData$SilvaToKEGGMappingMat[indexSILVAToKEGG,
+    ]
+  }
+
   subsetSILVAToKEGG <- as.data.frame(as.matrix(subsetSILVAToKEGG))
+
   if (fctProfiling) {
     FctCat <- Tax4FunReferenceData$KEGGKOInformation
     if (refProfile == "UProC") {
@@ -2339,3 +2362,350 @@
          mp)
 
 }
+
+
+"plotTtest_ExtendBar" <- function(microchatTaxFunDiff,
+                                  abundance.order=FALSE,
+                                  abundance.order.rev=FALSE,
+                                  abundance.regulation.order=FALSE,
+                                  ko2.bar.gradient=TRUE,
+                                  ko2.bar.gradient.rev=FALSE,
+                                  ko1.color=colorCustom(10,pal = "xiena"),
+                                  add.bar.color=color_group,
+                                  compare.color=color_group,
+                                  gradient.num=20,
+                                  sig.text.size=3,
+                                  xlabname=xlabname,
+                                  sig.text.color="black",
+                                  ko2.text.size=4,
+                                  ko2.text.color="black",
+                                  add.bar.text.size=3,
+                                  add.bar.text.color="white",
+                                  layout.rt=c(1,4,4,4,1.5),
+                                  ko1.bar.alpha=1,
+                                  ko2.bar.alpha=1,
+                                  ko1.text.size=4,
+                                  ko1.text.color="black",
+                                  errorbar.shape=21, ### 22 23
+                                  diffbar.border.color = "black") {
+  comparison_sel<-microchatTaxFunDiff$comparison
+
+  if (abundance.order) {
+
+    diff.mean<-microchatTaxFunDiff$diff.mean
+    diff.mean1<-microchatTaxFunDiff$diff.mean1
+    upreg<-diff.mean$var[which(diff.mean$estimate>0)]
+    dwreg<-diff.mean$var[which(diff.mean$estimate<=0)]
+
+    if (!abundance.regulation.order) {
+      if (!abundance.order.rev){
+        abun.bar<-microchatTaxFunDiff$abun.bar%>%arrange(Mean)
+        abun.bar1<-microchatTaxFunDiff$abun.bar1%>%arrange(Mean)
+      } else {
+        abun.bar<-microchatTaxFunDiff$abun.bar%>%arrange(desc(Mean))
+        abun.bar1<-microchatTaxFunDiff$abun.bar1%>%arrange(desc(Mean))
+      }
+      abun.bar$variable<-factor(abun.bar$variable,levels = unique(abun.bar$variable))
+      diff.mean$var<-factor(diff.mean$var,levels = unique(abun.bar$variable))
+      abun.bar1$variable<-factor(abun.bar1$variable,levels = unique(abun.bar$variable))
+      diff.mean1$var<-factor(diff.mean1$var,levels = unique(abun.bar$variable))
+    } else {
+      if (!abundance.order.rev){
+        abun.bar<-rbind(
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% dwreg),])%>%arrange(Mean)
+        abun.bar1<-rbind(
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% dwreg),])%>%arrange(Mean)
+
+        abun.bar$variable<-factor(abun.bar$variable,levels = c(upreg,dwreg))
+        diff.mean$var<-factor(diff.mean$var,levels = c(upreg,dwreg))
+        abun.bar1$variable<-factor(abun.bar1$variable,levels = c(upreg,dwreg))
+        diff.mean1$var<-factor(diff.mean1$var,levels = c(upreg,dwreg))
+      } else {
+        abun.bar<-rbind(
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar[which(microchatTaxFunDiff$abun.bar$variable %in% dwreg),])%>%arrange(desc(Mean))
+        abun.bar1<-rbind(
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% upreg),],
+          microchatTaxFunDiff$abun.bar1[which(microchatTaxFunDiff$abun.bar1$variable %in% dwreg),])%>%arrange(desc(Mean))
+        abun.bar$variable<-factor(abun.bar$variable,levels = c(dwreg,upreg))
+        diff.mean$var<-factor(diff.mean$var,levels = c(dwreg,upreg))
+        abun.bar1$variable<-factor(abun.bar1$variable,levels = c(dwreg,upreg))
+        diff.mean1$var<-factor(diff.mean1$var,levels = c(dwreg,upreg))
+      }
+    }
+
+  } else {
+    abun.bar<-microchatTaxFunDiff$abun.bar
+    abun.bar1<-microchatTaxFunDiff$abun.bar1
+    diff.mean<-microchatTaxFunDiff$diff.mean
+    diff.mean1<-microchatTaxFunDiff$diff.mean1
+  }
+
+  df<-microchatTaxFunDiff$df
+  sampledata<-microchatTaxFunDiff$sampledata
+  comparison=microchatTaxFunDiff$comparison
+  abun<-microchatTaxFunDiff$otu_table
+
+  tt<-str_split_fixed(comparison,'-',2)%>%as.character()
+  color.all<-compare.color
+  allg<-unique(substr(colnames(abun),start = 1,stop = 2))
+  if (length(color.all)<length(allg)) stop("Please provide more group colors, which is ",length(allg),".")
+  color.use<-color.all[match(tt,allg)]
+
+  gp.use <- if (!is.null(xlabname)) xlabname[match(tt, allg)] else tt
+  cbbPalette <- color.use
+  names(cbbPalette)<-tt
+
+  p1 <- ggplot(abun.bar,aes(variable,Mean,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable),label=NULL) +
+    scale_fill_manual(values=cbbPalette,
+                      labels=gp.use,
+                      limits = (unique(abun.bar$Group)))+
+    coord_flip() +
+    xlab("") +
+    ylab("Mean proportion (%)") +
+    theme(panel.background = element_rect(fill = 'transparent'),
+          panel.grid = element_blank(),
+          text = element_text(family = "serif"),
+          axis.ticks.length.y = unit(0,"lines"),
+          axis.ticks.y  = element_line(size=0),
+          axis.line  = element_line(colour = "black"),
+          axis.title.y=element_text(colour='black', size=8,face = "bold"),
+          axis.title.x=element_text(colour='black', size=12,face = "bold"),
+          axis.text=element_text(colour='black',size=10,face = "bold"),
+          legend.title=element_blank(),
+          legend.background = element_blank(),
+          legend.text=element_text(size=8,face = "bold",colour = "black",
+                                   family = "serif",
+                                   margin = margin(r = 20)),
+          legend.position = c(-0.5,-0.025),
+          legend.direction = "horizontal",
+          legend.key = element_rect(colour = "white"),
+          legend.key.width = unit(0.8,"cm"),
+          legend.key.height = unit(0.5,"cm"))
+
+  for (i in 1:(nrow(diff.mean) - 1)) {
+    p1 <- p1 + annotate('rect', xmin = i+0.5, xmax = i+1.5, ymin = -Inf, ymax = Inf,
+                        fill = ifelse(i %% 2 == 0, 'white', 'gray95'))
+  }
+
+
+  p1 <- p1 +
+    geom_bar(stat = "identity",position = "dodge",width = 0.7,colour = diffbar.border.color)
+
+
+  if (length(add.bar.color)<length(unique(abun.bar$KO2))) stop("Please provide more colors for coloring KEGG 2 levels, which is ",length(unique(abun.bar$KO2)),".")
+  colorsbar<-add.bar.color[1:length(unique(abun.bar$KO2))]
+
+  abun.barzz<-abun.bar
+  ko2.selected<-c()
+  for (i in unique(abun.barzz$KO1)) {
+    ko.selected<-abun.barzz[which(abun.barzz$KO1==i),]$KO2%>%unique()%>%rev()
+    {
+      ko2.selected<-c(ko2.selected,ko.selected)
+    }
+  }
+  names(colorsbar)<-ko2.selected%>%rev()
+  # need to set `coord_flip = TRUE` if you plan to use `coord_flip()`
+  if (!ko2.bar.gradient) {
+    ydens <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill()+
+      scale_x_discrete()+
+      coord_flip()+
+      geom_col(data=abun.bar1, aes(x=variable,
+                                   y=1,
+                                   fill=KO2),
+               color=NA,
+               alpha=ko2.bar.alpha, width = 1,
+               size=.2) +
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=2,
+                                    label=variable),size=add.bar.text.size,
+                color=add.bar.text.color,
+                family="serif",check_overlap = FALSE,
+                hjust = 1)+
+      geom_text(data=abun.bar1, aes(x=variable,
+                                    y=0,
+                                    label=KO4),size=ko2.text.size,
+                color=ko2.text.color,
+                family="serif",check_overlap = FALSE,
+                hjust = 0)+
+      scale_fill_manual(values = colorsbar)+
+      labs(title="KO2   KO3")
+  } else {
+    ydens<-cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill() + scale_x_discrete() +
+      coord_flip() +scale_fill_manual(values = colorsbar)
+    abun.barx<-abun.bar1
+    if (!ko2.bar.gradient.rev) {
+      abun.barx$alpha<-0
+      abun.barx$y<-1
+      abun.bary<-abun.barx
+      for (t in 2:gradient.num) {
+        abun.barx_new<-abun.bary
+        abun.barx_new$alpha<-t/gradient.num
+        abun.barx_new$y<-t
+        abun.barx<-rbind(abun.barx,abun.barx_new)
+      }
+    } else {
+      abun.barx$alpha<-1
+      abun.barx$y<-1
+      abun.bary<-abun.barx
+      for (t in 2:gradient.num) {
+        abun.barx_new<-abun.bary
+        abun.barx_new$alpha<-1-t/gradient.num
+        abun.barx_new$y<-t
+        abun.barx<-rbind(abun.barx,abun.barx_new)
+      }
+    }
+
+    ydens<-  ydens+ geom_tile(data = abun.barx, aes(x = variable,
+                                                    y = y, fill = KO2,alpha=alpha),color = NA,
+                              width = 1, size = 0.2)+
+      scale_alpha_continuous(range = c(max(abun.barx$alpha),0))+
+      ## ko3
+      geom_text(data = abun.bar1,family="serif",
+                aes(x = variable, y = Inf, label = variable), size = add.bar.text.size,
+                color = add.bar.text.color, check_overlap = FALSE,
+                hjust = 1) +
+      ## ko2
+      geom_text(data = abun.bar1, aes(x = variable,
+                                      y = -Inf, label = KO4), size = ko2.text.size, color = ko2.text.color,
+                check_overlap = FALSE, hjust = 0,family="serif")  + labs(title = "KO2   KO3")
+    if (!ko2.bar.gradient)  ydens<-ydens+ scale_alpha_continuous(range = c(max(abun.barx$alpha)/3,0)) else ydens<-ydens+ scale_alpha_continuous(range = c(0,max(abun.barx$alpha)/3))
+
+  }
+
+  diff.mean2<-diff.mean1
+  diff.mean2$Group[which(diff.mean2$sig=="ns")]<-"ns"
+  cbbPalettex<-c(cbbPalette,"white")
+  names(cbbPalettex)<-c(names(cbbPalette),"ns")
+  p2 <- ggplot(diff.mean2,aes(x=var,y=estimate,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable)) +
+    coord_flip() +
+    theme(panel.background = element_rect(fill = 'transparent'),
+          panel.grid = element_blank(),
+          text = element_text(family = "serif"),
+          axis.ticks.length = unit(0.4,"lines"),
+          axis.ticks = element_line(color='black'),
+          axis.line = element_line(colour = "black"),
+          axis.title.x=element_text(colour='black', size=12,face = "bold"),
+          axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.text.y = element_blank(),
+          legend.position = "none",
+          axis.line.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          plot.title = element_text(size = 15,face = "bold",colour = "black",hjust = 0.5)) +
+
+    xlab("") +
+    ylab("Difference in mean proportions (%)") +
+    labs(title="95% confidence intervals")
+
+
+  for (i in 1:(nrow(diff.mean2) - 1))
+    p2 <- p2 + annotate('rect', xmin = i+0.5, xmax = i+1.5, ymin = -Inf, ymax = Inf,
+                        fill = ifelse(i %% 2 == 0, 'white', 'gray95'))
+
+  p2 <- p2 +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high),show.legend = FALSE,
+                  position = position_dodge(0.8), width = 0.5, size = 0.5) +
+    geom_point(shape = errorbar.shape,size = 3) +
+    scale_fill_manual(values=cbbPalettex) +
+    geom_hline(aes(yintercept = 0), linetype = 'dashed', color = 'black')
+
+
+
+  diff.mean1$p.value<-diff.mean1$p.value%>%as.numeric()
+  diff.mean1$p.value<-sprintf("%0.3f",round(diff.mean1$p.value,3))
+
+  p3 <- ggplot(diff.mean1,aes(var,estimate,fill = Group)) +
+    scale_x_discrete(limits = levels(abun.bar$variable)) +
+    geom_text(aes(y = 0,x = var),label = paste(diff.mean1$p.value,diff.mean1$sig,sep = ""),
+              family="serif",color=sig.text.color,show.legend = FALSE,
+              hjust = 0,fontface = "bold",inherit.aes = FALSE,size = sig.text.size) +
+    geom_text(aes(x = nrow(diff.mean1)/2 +0.5,y = 0.85),
+              label = "P-value (corrected)",show.legend = FALSE,
+              family="serif",srt = 270,fontface = "bold",size = 5) +
+    coord_flip() +
+    ylim(c(0,1)) +
+    theme(panel.background = element_blank(),
+          text = element_text(family = "serif"),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          axis.title = element_blank())
+
+
+  ## merge plots
+  library(patchwork)
+  ko1.color<-ko1.color[1:length(unique(abun.bar1$KO1))]
+  names(ko1.color)<-unique(abun.bar1$KO1)%>%rev()
+
+  ko1.text<-table(abun.bar1$KO1)
+  ko1.text<-ko1.text[match(names(ko1.color),names(ko1.text))]
+  ko1.text<-rev(ko1.text)
+  ko1.text<-ko1.text%>%data.frame()
+  if (nrow(ko1.text)==1) {
+    ko1.text$Freq<-ko1.text$.
+    ko1.text$freq<-ko1.text$Freq
+
+    ko1.text$half<-ko1.text$Freq/2
+    ko1.text$ycoord<-ko1.text$freq-ko1.text$half
+
+    abun.bar1$KO5<-""
+    ypos<-ko1.text$ycoord
+    abun.bar1$KO5[ypos]<-rownames(ko1.text)%>%as.character()
+  } else {
+    ko1.text$freq<-ko1.text$Freq%>%cumsum()
+    ko1.text$half<-ko1.text$Freq/2
+    ko1.text$ycoord<-ko1.text$freq-ko1.text$half
+
+    abun.bar1$KO5<-""
+    for (i in 1:nrow(ko1.text)) {
+      ypos<-ko1.text$ycoord[i]
+      abun.bar1$KO5[ypos]<-ko1.text$Var1[i]%>%as.character()
+    }
+  }
+
+  #str_split_fixed("Human Diseases"," ",n=2)
+  abun.bar1$KO5[which(abun.bar1$KO5=="Human Diseases")]<-"HD"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Genetic Information Processing")]<-"GIP"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Environmental Information Processing")]<-"EIP"
+  abun.bar1$KO5[which(abun.bar1$KO5=="Cellular Processes")]<-"CellPro"
+
+  p4 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+    ggnewscale::new_scale_fill()+
+    scale_x_discrete()+
+    coord_flip()+
+    geom_col(data=abun.bar1, aes(x=variable,
+                                 y=1,
+                                 fill=KO1),
+             alpha=ko1.bar.alpha,
+             width = 1,show.legend = FALSE,
+             size=.2) +
+    scale_fill_manual(values = ko1.color)
+
+  whatsn<-abun.bar1$KO5[which(abun.bar1$KO5!="")]
+  whats<-(nrow(abun.bar1)/2)-(which(abun.bar1$KO5!="")/2)
+  for (i in 1:length(whats)) {
+    p4<-p4+annotate(geom = "text",
+                    family="serif",
+                    srt = 90,
+                    size=ko1.text.size,
+                    color=ko1.text.color,
+                    x = whats[i]+0.5,
+                    y = 1,
+                    label = whatsn[i])
+  }
+
+  p<-p4+ydens+p1 + p2 + p3 + plot_layout(widths = c(layout.rt[1],
+                                                    layout.rt[2],
+                                                    layout.rt[3],
+                                                    layout.rt[4],
+                                                    layout.rt[5]),byrow=TRUE)
+  return(p)
+}
+

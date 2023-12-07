@@ -210,13 +210,21 @@ if (as.numeric(matchnum) == as.numeric(allnum)) {
   z<-(data-mean(data))/sd(data)
   return(list(x=x,y=y,z=z))
 }
+"scale4dt"<-function(data) {
+  mat.use<-as.matrix(data)
+  for (ttk in 1:nrow(mat.use)) {
+    mat.use[ttk,]<-normalize(mat.use[ttk,])$x
+  }
+  return(mat.use)
+}
 
 "colorCustom"  <- function(num,pal=c("pkgn","ywbu","gygn",
-                                     "classic",
+                                     "classic","favor",
                                      "cyto_pie","xiena",
                                      "set1","set2","set3")) {
 
   pal<-match.arg(pal)
+  if (pal=="favor") colors<-c("#8f850b","#faf4b4","#bde7ff","#dcd9c3","#e9f5fc")
   if (pal=="xiena") colors<-c("#FFC300", "#FF878A" ,"#005C54" ,"#F3F1E4","#AEBD28")
   if (pal=="gygn") colors<-c("#FEBD05", "#889A23" ,"#A69BBA" ,"#0F9DDD", "#887FFE", "#4DB491", "#D4782B",
                              "#3786D4", "#FFC4AB", "#FADD7E", "#8FDDEA", "#83C875", "#DFAB1A", "#31963E",

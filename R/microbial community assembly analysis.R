@@ -120,11 +120,11 @@
   return(spec_gen.all)
 }
 
-"plotMicrochatAssemblyNiche" <- function(spec_gen,nrow=1,
-                                    specified.thres=NULL,
-                                    sel.shape=c(21,19,23),
-                                    color_type=c("red","white","blue"),
-                                    export_path="cs2/microbial assembly analysis") {
+"plotMicrochatAssemblyNiche"<-function(spec_gen,nrow=1,
+                                       specified.thres=NULL,
+                                       sel.shape=c(21,19,23),
+                                       color_type=c("red","white","blue"),
+                                       export_path="cs2/microbial assembly analysis") {
   export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Ecological niche width",sep = ""), recursive = TRUE)
@@ -141,13 +141,12 @@
 
     ### high threshold identified by kw.test with the form of mean+std
     spec_gen.t$ntype<-0
-    spec_gen.t[which(spec_gen.t$niche>=high.thres[tt]),]$ntype<-"high"
-    spec_gen.t[which(spec_gen.t$niche<1.5),]$ntype<-"low"
-    spec_gen.t[which(spec_gen.t$niche>=1.5 & spec_gen.t$niche<high.thres[tt]),]$ntype<-"none"
+    spec_gen.t$ntype<-ifelse(spec_gen.t$niche>=high.thres[tt],"high",
+                             ifelse(spec_gen.t$niche<1.5,"low","none"))
 
 
-    names(color_type)<-c("high","none","low")
-    niche.od<-c("high","none","low")
+    names(color_type)<-c("SPECIALIST","NON SIGNIFICANT","GENERALIST")
+    niche.od<-c("SPECIALIST","NON SIGNIFICANT","GENERALIST")
     aaa<-table(spec_gen.t$ntype)
     aaa<-aaa[match(names(aaa),niche.od)]
     bbb<-paste(sprintf("%0.2f",round(aaa/sum(aaa)*100,2)),"%",sep = "")
@@ -156,15 +155,15 @@
 
     spe.num<-which(spec_gen.t$sign=="SPECIALIST")%>%length()
     gen.num<-which(spec_gen.t$sign=="GENERALIST")%>%length()
-    p<-ggplot(spec_gen.t,aes(mean,niche,color=ntype))+
+    p<-ggplot(spec_gen.t,aes(mean,niche,color=sign))+
       geom_point(aes(shape=sign))+
       scale_shape_manual(values = sel.shape)+
       scale_color_manual(values = color_type)+
       geom_hline(yintercept=1.5,color=color_type[1],linetype="dashed")+
       geom_hline(yintercept=high.thres[tt],color=color_type[3],linetype="dashed")+
-      annotate(geom="text",label=paste("Generalist: ",aaa[1]," (",bbb[1],")","\n","Upper CI: ",gen.num," (",sel.prop[1,2],")",sep = ""),
+      annotate(geom="text",label=paste("Generalist: ",gen.num," (",sel.prop[1,2],")",sep = ""),
                x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=high.thres[tt]+0.3,family="serif",color=color_type[1])+
-      annotate(geom="text",label=paste("Specialist: ",aaa[3]," (",bbb[3],")","\n","Lower CI: ",spe.num," (",sel.prop[3,2],")",sep = ""),
+      annotate(geom="text",label=paste("Specialist: ",spe.num," (",sel.prop[3,2],")",sep = ""),
                x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=1.2,family="serif",color=color_type[3])+
       labs(x="Mean abundance",y="Niche breadth (B)",title = sel.g)+
       theme(panel.background = element_rect(color = "grey50"),
@@ -178,9 +177,9 @@
       cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
     }
     pp[[tt]]<-p
-    }
+  }
 
-    mp<-patchwork::wrap_plots(pp,nrow=nrow)
+  mp<-patchwork::wrap_plots(pp,nrow=nrow)
   print(mp)
   if (is.integer(length(pp)/nrow)) colnum<-as.integer(length(pp)/nrow)+1 else colnum<-as.integer(length(pp)/nrow)
   if (!is.null(export_path)) {
@@ -193,7 +192,8 @@
     cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
   }
 
-    message("Hollow Circle--Specialist Circle--Non-significant Square--Generalist")
+  message("Hollow Circle--Specialist Circle--Non-significant Square--Generalist")
+  return(mp)
 }
 
 "plotMicrochatNicheWidth" <- function(spec_gen,
@@ -258,7 +258,7 @@
     cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
   }
 
-
+  return(p)
 }
 
 "fun.outlier" <- function(x,time.iqr=1.5) {

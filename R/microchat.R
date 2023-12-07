@@ -296,7 +296,7 @@
   #kkk<-groupOTU.phylo(tree, group_infoxx)
   ###1.remove pollution: Chloroplast & Mitochondria
   if (filter_pollution) {
-    taxon_table <- taxon_table[which( taxon_table$Family != "f__Mitochondria" & taxon_table$Order != "o__Chloroplast"),]
+    taxon_table <- taxon_table[which( taxon_table$Family != "f__Mitochondria" & taxon_table$Order != "o__Chloroplast" & taxon_table$Class != "c__Chloroplast"),]
   } else {
     taxon_table <- taxon_table
   }

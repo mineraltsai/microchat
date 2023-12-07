@@ -877,8 +877,14 @@
   # make factor levels
   genus_top10$Taxo <- forcats::fct_inorder(rownames(genus_top10))
   genus_topxx<-subset(genus_top10,select = -c(rowsum,Taxo))
-  genus_topxx<-genus_topxx/colSums(genus_topxx)
+  #genus_topxx<-genus_topxx/colSums(genus_topxx)
 
+  genus_topxxy<-lapply(1:ncol(genus_topxx),function(x){
+    (genus_topxx[,x])/(colSums(genus_topxx)[x])
+  })%>%as.data.frame()
+  colnames(genus_topxxy)<-colnames(genus_topxx)
+  rownames(genus_topxxy)<-rownames(genus_topxx)
+  genus_topxx<-genus_topxxy
 
   temp <- pivot_longer(data = genus_top10,
                        cols = -c(Taxo, rowsum),
@@ -1751,7 +1757,7 @@ par(family="serif")
   diff.mean1$p.value <- signif(diff.mean1$p.value,3)
   diff.mean1$p.value <- as.character(diff.mean1$p.value)
   diff.mean1$var<-factor(diff.mean1$var,levels =rev(diff.mean1$var))
-
+  diff.mean1$p.value <-   diff.mean1$p.value %>% as.numeric()
   diff.mean1[,"sig"]<-ifelse(diff.mean1$p.value<0.001,"***",
                              ifelse(diff.mean1$p.value<0.01,"**",
                                     ifelse(diff.mean1$p.value<0.05,"*","ns") ))

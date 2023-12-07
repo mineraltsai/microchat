@@ -1503,25 +1503,22 @@ if (file.save) {
                  color.circos.alpha=NULL,
                  export_path ='network/circos') {
 
-  #####------add color
   export_path<-paste(export_path,"/microbial network analysis/circos",sep = "")
   dir.create(export_path, recursive = TRUE)
-    repnum<-(nrow(rmnet_cg$node_table) /length(color.circos))%>%as.integer()+1
-
-    color.use<-rep(color.circos,repnum)
-    if (!is.null(color.circos.alpha)) {
-      color.use<-adjustcolor(color.use,alpha.f = color.circos.alpha )
-    }
-
-
+  repnum<-(nrow(rmnet_cg$node_table)/length(color.circos))%>%as.integer()+1
+  color.use<-rep(color.circos,repnum)
 
   rgb<-col2rgb(color.use)%>%t()%>%data.frame()
   colnames(rgb)<-c("rgb1",'rgb2','rgb3')
-  rgb<-unite(rgb,'RGB',sep = ",")
-  rgb$silver<-paste("silver",1:nrow(rgb),sep = "")
-  rgb$silver<-paste(rgb$silver,"=",sep = " ")
-  silver<-unite(rgb,'col',silver,RGB,sep = " ")
+  if (!is.null(color.circos.alpha)) rgb$alpha<- color.circos.alpha else rgb$alpha<- 1
 
+  rgb$rr<-paste0(rgb$rgb1,",",rgb$rgb2,",",rgb$rgb3,",",rgb$alpha)
+  rgb$RGB<-rgb$rr
+
+  rgb$silverx<-paste("silver",1:nrow(rgb),sep = "")
+  rgb$silverx<-paste(rgb$silverx,"=",sep = " ")
+  silver<-unite(rgb,'col',silverx,RGB,sep = " ")
+  silver<-silver$col%>%data.frame()
   write.table(silver, paste(export_path,'/circos_colors.hsv.conf.txt',sep = ""), row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
 
   cat("\n","Random colours matching the count of species in the current circos map have been exported to",export_path,"\n")
