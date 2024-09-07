@@ -138,7 +138,7 @@
   if (file.save) ggsave(paste(export_path,"/lefse cladogram (with legend)",".pdf",sep = ""),p_legend)
   if (file.save) ggsave(paste(export_path,"/lefse cladogram (without legend)",".pdf",sep = ""),p_nolegend)
 
-  cat("\n","Lefse cladogram of differential analysis has been exported. Please check it.","\n")
+  #cat("\n","Lefse cladogram of differential analysis has been exported. Please check it.","\n")
 
   return(list(p_nolegend=p_nolegend,p_legend=p_legend))
 }
@@ -191,7 +191,7 @@
 
     file2=paste(export_path, "/lefse (",control,"-",kk,")",".txt",sep = "" )
     write.table(res$res,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-    cat("lefse analysis results have been exported to ","/",export_path,"",sep = "")
+    #cat("lefse analysis results have been exported to ","/",export_path,"",sep = "")
 
     p<-plotMicrochatLefse(res,
                           layout=layout,
@@ -202,7 +202,7 @@
 
     ggsave(paste(export_path,"/lefse_nolegend (",control,"-",kk,")",".pdf",sep = ""),p$p_nolegend)
     ggsave(paste(export_path,"/lefse_legend (",control,"-",kk,")",".pdf",sep = ""),p$p_legend)
-    cat("Pairwise lefse cladogram have been exported to","/",export_path,"",sep = "")
+    #cat("Pairwise lefse cladogram have been exported to","/",export_path,"",sep = "")
   }
 }
 
@@ -293,7 +293,7 @@
   result<-result%>%tibble::rownames_to_column(var = "name")
   file2=paste(export_path,"/Differential analysis results (limma-- ",select_comparisonxx,") .txt",sep = "")
   if (file.save) write.table(result,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","Differential analysis results based on edgeR and limma (",select_comparisonxx,") has been exported to ","/",export_path,"",sep = "","\n")
+  #cat("\n","Differential analysis results based on edgeR and limma (",select_comparisonxx,") has been exported to ","/",export_path,"",sep = "","\n")
 
   microchatLimmaobj<-list(result,
                           select_comparison,
@@ -793,7 +793,7 @@
          width = 21/3,
          height = 21*p2$theme$aspect.ratio/3,
          p2)
-  cat("Single volcano has been exported to","/",export_path,"",sep = "")
+  #cat("Single volcano has been exported to","/",export_path,"",sep = "")
 
   #DEG$control<-control
   #DEG$treat<-treat
@@ -803,7 +803,7 @@
   file2=paste(export_path, "/single_volcano_",paste(control,treat,sep = "-"),"_pvalue(",pvalue_thres,")_fc(",sprintf("%0.2f",foldchange_thres),")_onlydiffdata.txt",sep = "" )
   write.table(DEG[which(DEG$change!="NOT"),],file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
 
-  cat("\n","Differential analysis results has been exported to“",export_path,"",sep = "")
+  #cat("\n","Differential analysis results has been exported to“",export_path,"",sep = "")
 
   return(list(data=DEG,plot=p2,microchatLimmaobj=microchatLimmaobj,sigcolor=sigcolor,treat=treat,control=control,sig_condtion=label,pvalue_thres=pvalue_thres,foldchange_thres=foldchange_thres,diff.data=DEG[which(DEG$change!="NOT"),]))
 }
@@ -1202,7 +1202,7 @@
 
   file2=paste(export_path,"/Muti-differential analysis results (limma-- ",comparison,") .txt",sep = "")
   if (file.save) write.table(cpma,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","Muti-differential analysis results based on edgeR and limma (",select_comparison,") has been exported to ","/",export_path,"",sep = "","\n")
+  #cat("\n","Muti-differential analysis results based on edgeR and limma (",select_comparison,") has been exported to ","/",export_path,"",sep = "","\n")
 
   microchatComplexLimmaobj<-list(data=cpma,
                                  select_comparison1=select_comparison1,
@@ -1373,7 +1373,7 @@
 
 
   ggsave(paste(export_path,"/Muti-volcano (",control,"-",treat1,"-",treat2,").pdf",sep = ""),p2)
-  cat("Muti-volcano plot has been exported to","/",export_path,"",sep = "")
+  #cat("Muti-volcano plot has been exported to","/",export_path,"",sep = "")
   return(p2)
 
 }
@@ -3293,7 +3293,7 @@ summarySE_inter<-function (usedata = NULL, measurevar, groupvars = NULL, na.rm =
   export_pathx<-paste(export_path,"/data_microbiome/microbial differential analysis",sep = "")
   ggsave(paste(export_pathx,"/","AllDiffOTU_in_GlobalTree.pdf",sep = ""),p,
          width = 21,height = 21/2,units = "cm")
-  cat("please seek ",paste(export_pathx,"/","AllDiffOTU_in_GlobalTree.pdf",sep = ""))
+  #cat("please seek ",paste(export_pathx,"/","AllDiffOTU_in_GlobalTree.pdf",sep = ""))
   return(p)
 }
 
@@ -3501,7 +3501,7 @@ summarySE_inter<-function (usedata = NULL, measurevar, groupvars = NULL, na.rm =
   export_pathx<-paste(export_path,"/data_microbiome/microbial differential analysis",sep = "")
   ggsave(paste(export_pathx,"/","AllDiffOTU_Tree.pdf",sep = ""),p,
          width = 21,height = 21/2,units = "cm")
-  cat("please seek ",paste(export_pathx,"/","AllDiffOTU_Tree.pdf",sep = ""))
+  #cat("please seek ",paste(export_pathx,"/","AllDiffOTU_Tree.pdf",sep = ""))
   return(list(plot=p,data=ttreex,color=color_groupx))
 }
 
@@ -3520,7 +3520,7 @@ summarySE_inter<-function (usedata = NULL, measurevar, groupvars = NULL, na.rm =
   export_pathx<-paste(export_path,"/data_microbiome/microbial differential analysis",sep = "")
   ggsave(paste(export_pathx,"/","SpecificDiffOTU_Tree.pdf",sep = ""),p,
          width = 21,height = 21/2,units = "cm")
-  cat("please seek ",paste(export_pathx,"/","SpecificDiffOTU_Tree.pdf",sep = ""))
+  #cat("please seek ",paste(export_pathx,"/","SpecificDiffOTU_Tree.pdf",sep = ""))
   return(p)
 }
 

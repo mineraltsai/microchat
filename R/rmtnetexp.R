@@ -74,10 +74,10 @@
 
   }
 
-  if (display_filter)   cat("\n","Filtered")
-  if (!display_filter)   cat("\n","Not filtered")
+  if (display_filter)   #cat("\n","Filtered")
+  if (!display_filter)   #cat("\n","Not filtered")
   cat("\n","\n","Visualize ",num," plots"," with ",rows," rows and ",cols," columns","\n","\n")
-  cat("\n","parameters：","num (plot number)，rows (rows of layout)，cols (columns of layout)","\n")
+  #cat("\n","parameters：","num (plot number)，rows (rows of layout)，cols (columns of layout)","\n")
 
 }
 
@@ -191,8 +191,8 @@
   group_num<-length(g)
 
   if(group_num>length(colors)) {
-    message("\n","Please provide more colors","\n")
-    cat("\n","Colors provided cannot meet the requirement, hence replicate all colors","\n")
+    #message("\n","Please provide more colors","\n")
+    #cat("\n","Colors provided cannot meet the requirement, hence replicate all colors","\n")
     color1<-rep(colors,4)
     colors<-color1[1:group_num]
   } else {
@@ -694,8 +694,7 @@
     }
   }
 
-  cat("\n","Barplot from all network modules has been exported to",export_path,
-      "，which will be used for observing functional redundancy.","\n")
+  #cat("\n","Barplot from all network modules has been exported to",export_path,"，which will be used for observing functional redundancy.","\n")
 
 }
 
@@ -713,8 +712,8 @@
   phy_num<-length(taxon$Phylum%>%unique())
 
   if(phy_num>length(color)) {
-    message("\n","Please provide more colors","\n")
-    cat("\n","Colors provided cannot meet the requirement, hence replicate all colors","\n")
+    #message("\n","Please provide more colors","\n")
+    #cat("\n","Colors provided cannot meet the requirement, hence replicate all colors","\n")
     color1<-rep(color,4)
     color<-color1[1:phy_num]
     names(color)<-taxon$Phylum%>%unique()
@@ -784,7 +783,7 @@
 
   }
 
-  cat("\n","Pie plot used for making band plot and filling network from cytoscape have been exported to ",export_path,"\n")
+  #cat("\n","Pie plot used for making band plot and filling network from cytoscape have been exported to ",export_path,"\n")
 }
 
 
@@ -1065,7 +1064,7 @@
                                                             labels_gp = grid::gpar(fontsize = 8,fontfamily="serif"),
                                                             grid_width = unit(2, "mm")))
   }
-  message("\n","The heatmap need to be saved manually.")
+  #message("\n","The heatmap need to be saved manually.")
   return(p1)
 }
 
@@ -1929,7 +1928,7 @@
   if (length(saah)>15) nrows=5
   xp<-patchwork::wrap_plots(sp,nrow = nrows)
 
-  if (show.message) message("\nThe plot needs to be saved mannually!!!")
+  if (show.message) #message("\nThe plot needs to be saved mannually!!!")
   return(xp)
 }
 
@@ -2217,9 +2216,8 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
   rownames(ddaxt)<-1:nrow(ddaxt)
 
-  cat("\n","Totally ",nrow(ddaxt)," module pairs were preserved after removing the inter-clusters shared module, accounted for ",
-      paste(round(nrow(ddaxt)/ddaxt.dat$pairs_sum*100,2),"%.",sep = ""),sep = "")
-  cat("\n","All preserved module pairs have been exported to"," '",export_path,"'.",sep = "")
+  cat("\n","Totally ",nrow(ddaxt)," module pairs were preserved after removing the inter-clusters shared module, accounted for ",paste(round(nrow(ddaxt)/ddaxt.dat$pairs_sum*100,2),"%.",sep = ""),sep = "")
+  #cat("\n","All preserved module pairs have been exported to"," '",export_path,"'.",sep = "")
 
   return(ddaxt)
 
@@ -2678,7 +2676,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
   ggsave(paste(export_path2,"/module preserve.pdf",sep = ""),xp)
   ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),xp)
   }
-  cat("\n","Modules preserved between networks have been highlighted and exported to ",export_path2,sep = "","\n")
+  #cat("\n","Modules preserved between networks have been highlighted and exported to ",export_path2,sep = "","\n")
   return(xp)
 }
 
@@ -2865,7 +2863,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
     network.raw<-cormatrix2[colSums(abs(cormatrix2))>0,colSums(abs(cormatrix2))>0]
     sp.ra2<-sp.ra[colSums(abs(cormatrix2))>0]
-    if (isTRUE(unique(row.names(network.raw)==names(sp.ra2)))) cat("\nEvergthing is OK !!!","\n") else message("\nSome problems seem to happen !!!") #check if matched
+    if (isTRUE(unique(row.names(network.raw)==names(sp.ra2)))) #cat("\nEvergthing is OK !!!","\n") else #message("\nSome problems seem to happen !!!") #check if matched
 
     Weighted.simu<-rmsimu(netRaw=network.raw,
                           rm.p.list=seq(0.05,1,by=0.05),
@@ -2936,7 +2934,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
     network.raw<-cormatrix2[colSums(abs(cormatrix2))>0,colSums(abs(cormatrix2))>0]
     sp.ra2<-sp.ra[colSums(abs(cormatrix2))>0]
-    if (isTRUE(unique(row.names(network.raw)==names(sp.ra2)))) cat("\nEvergthing is OK !!!","\n") else message("\nSome problems seem to happen !!!") #check if matched
+    if (isTRUE(unique(row.names(network.raw)==names(sp.ra2)))) #cat("\nEvergthing is OK !!!","\n") else #message("\nSome problems seem to happen !!!") #check if matched
 
     node.attrix<-node.attri[which(node.attri$group==i),]
    if (is.null(otu.sel)) {
@@ -3093,7 +3091,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
                                                      color_group=color_group,
                                                      export_path=newfile)
 
-  cat("\nPlots have been exported to ",newfile,"\n",sep = "")
+  #cat("\nPlots have been exported to ",newfile,"\n",sep = "")
 }
 
 "plotRMTnetTargrm" <- function(target.data,
@@ -3189,7 +3187,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
                                                      color_group=color_group,
                                                      export_path=newfile)
 
-  cat("\nPlots have been exported to ",newfile,"\n",sep = "")
+  #cat("\nPlots have been exported to ",newfile,"\n",sep = "")
 }
 
 "plotRMTnetStablity" <- function(randrm.data, type="weighted",
@@ -3504,7 +3502,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
     node.vulx<-info.centrality.network(g2, net=network.efficiency(g2), verbose=F)
     cat("\n",gname,": ",max(node.vul), " --Max node vulnerability (Smaller value stands for higher robustness, namely higher stability.)",sep = "")
     cat("\n",gname,": ",node.vulx," --Network vulnerability (Sum of node vulnerability)",sep = "")
-    cat("\n","----------------------------------------------------------------")
+    #cat("\n","----------------------------------------------------------------")
     {
       dd<-rbind(dd,max(node.vul))
       ee<-rbind(ee,max(node.vulx))

@@ -44,7 +44,7 @@
                                               which(colnames(alpha.table)!="group")))
 
   write.table(alpha.table,file = paste(export_path,"/alpha diversity.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("--------------------------------------------------------------------------------------")
+  ##cat("--------------------------------------------------------------------------------------")
 
   alpha.table$group<-factor(alpha.table$group,levels = unique(alpha.table$group))
 
@@ -58,7 +58,7 @@
     }
   }
 
-  cat("--------------------------------------------------------------------------------------")
+  #cat("--------------------------------------------------------------------------------------")
   ###Homogeneity of variance
   variance.data<-subset(alpha.table,select = -c(sample))
   vttest<-data.frame()
@@ -120,9 +120,9 @@
   }
 
   write.table(summ_fcbv.all,file = paste(export_path,"/alpha diversity.stat.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  message("\n","The alpha diversity was used for statistical analysis. You could check it.","\n")
+  #message("\n","The alpha diversity was used for statistical analysis. You could check it.","\n")
 
-  message("\n","The alpha diversity has been statistically analyzed. You could check it.","\n")
+  #message("\n","The alpha diversity has been statistically analyzed. You could check it.","\n")
 
   microchatAlphadivobj<-list(alpha.table,nptest,vttest,summ_fcbv.all,all.index,all.group)
 
@@ -581,7 +581,7 @@
   }
 
   #write.table(data_err,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  message("\n","The alpha diversity has been statistically analyzed. You could check it.","\n")
+  #message("\n","The alpha diversity has been statistically analyzed. You could check it.","\n")
 
   microchatAlphadivStatobj<-list(data.alpha,data_poi,data_err,index,method,y.ratio,sig_label_new,all.group)
 
@@ -885,7 +885,7 @@
          width = 21/3,
          height = 21*p$theme$aspect.ratio/3,
          p)
-  cat("\n","Alpha diversity barplot has been exported. Please check it.","\n")
+  #cat("\n","Alpha diversity barplot has been exported. Please check it.","\n")
   return(p)
 }
 
@@ -898,8 +898,8 @@
   export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Beta diversity/data_PCoA",sep = "")
   dir.create(export_path, recursive = TRUE)
 
-  message(" bray distance based on abudance table，jaccard distance based on community structure.")
-  message(" distance: bray, jaccard, wei_unifrac or unwei_unifrac")
+  #message(" bray distance based on abudance table，jaccard distance based on community structure.")
+  #message(" distance: bray, jaccard, wei_unifrac or unwei_unifrac")
 
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
@@ -969,19 +969,19 @@
 
   file2=paste(export_path,"/beta_div (",ordination,"-",distance,")_beta_scores.txt",sep = "")
   write.table(scores,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on Permanova (",ordination,"-",distance,") ",",has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on Permanova (",ordination,"-",distance,") ",",has been exported to","/",export_path,"",sep = "","\n")
 
   file2=paste(export_path,"/beta_div (",ordination,"-",distance,")_beta_exp.txt",sep = "")
   write.table(eig,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on Permanova_proportion ",",has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on Permanova_proportion ",",has been exported to","/",export_path,"",sep = "","\n")
 
   file2=paste(export_path,"/beta_div(",ordination,"-",distance,")_eig.txt",sep = "")
   write.table(pcoa_exp,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on Permanova_eig ",",has been exported to ","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on Permanova_eig ",",has been exported to ","/",export_path,"",sep = "","\n")
 
   file2=paste(export_path,"/beta_div(",ordination,"-",distance,")_permanova_stat.txt",sep = "")
   write.table(dune.pairwise.adonis,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity results based on Permanova ",",has been exported to ","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity results based on Permanova ",",has been exported to ","/",export_path,"",sep = "","\n")
 
 
   microchatBetadivobj<-list(scores,
@@ -1223,7 +1223,7 @@
          width = 21/3,
          height = 21*p$theme$aspect.ratio/3,
          p)
-  cat("\n","Beta diversity cluster plot has been exported. Please check it.","\n")
+  #cat("\n","Beta diversity cluster plot has been exported. Please check it.","\n")
   return(p)
 }
 
@@ -1288,7 +1288,7 @@
 
   file2=paste(export_path,"/Permutation tests/anosim/anosim_",distance,".txt",sep = "")
   write.table(anosim_result_two,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on ANOSIM_",distance," has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on ANOSIM_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
   anosim_result_two<-subset(anosim_result_two,select=c(1,2,3,5,6))
   colnames(anosim_result_two)[4]<-"pvalue"
@@ -1331,7 +1331,7 @@
   if (distance == 'jaccard') distance<-"Jaccard"
   file2=paste(export_path,"/Permutation tests/adonis/adonis_",distance,".txt",sep = "")
   write.table(dune.pairwise.adonis,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on Adonis_",distance," has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on Adonis_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
   dune.pairwise.adonis<-subset(dune.pairwise.adonis, select=c(1,distance,4,7,8))
   dune.pairwise.adonis$pvalue<-sprintf('%.3f',round(dune.pairwise.adonis$pvalue,3))
@@ -1399,7 +1399,7 @@
 
   file2=paste(export_path,"/Permutation tests/mrpp/mrpp_",distance,".txt",sep = "")
   write.table(dune.pairwise.xmrpp,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","beta diversity based on MRPP_",distance," has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","beta diversity based on MRPP_",distance," has been exported to","/",export_path,"",sep = "","\n")
 
   return(dune.pairwise.xmrpp)
 }
@@ -1502,9 +1502,9 @@
 
   file3=paste(export_path,"/Permutation tests/Three permutation tests (",distance,").pdf",sep = "")
   ggsave(file3,p)
-  cat("\n","beta diversity based on three different permutation tests under ",distance," has been exported to","/",export_path,"",sep = "","\n")
-  cat("\n","Copywriting (Title): Significance tests of the networked communities between pairwise comparison")
-  cat("\n"," Copywriting (Note): Three different permutation tests were performed (MRPP, ANOSIM and Adonis) on the basis of ",distance," distance",sep = "")
+  #cat("\n","beta diversity based on three different permutation tests under ",distance," has been exported to","/",export_path,"",sep = "","\n")
+  #cat("\n","Copywriting (Title): Significance tests of the networked communities between pairwise comparison")
+  #cat("\n"," Copywriting (Note): Three different permutation tests were performed (MRPP, ANOSIM and Adonis) on the basis of ",distance," distance",sep = "")
   if (plot.data) comm.diff.data <- list(plot=p,data=comm.diff.data)
   return(comm.diff.data)
 }

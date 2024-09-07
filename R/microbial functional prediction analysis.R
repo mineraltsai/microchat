@@ -64,7 +64,7 @@
   id<-group$group%>%unique()
   ggsave(paste(export_path,"/",paste(id[1],id[2],sep = "-"),".pdf",sep = ""),
          pp)
-  cat("图片已保存至相对路径","/",export_path,"","下",sep = "")
+  #cat("图片已保存至相对路径","/",export_path,"","下",sep = "")
   return(list(extendbar=pp,pred_res=funpred))
 }
 
@@ -171,7 +171,7 @@
   groupname<-unique(substr(colnames(tax4fun_gene),start = 1,stop = 2))
   groupname.use<-paste(groupname[1],groupname[2],sep = "_")
 
-  cat("\n",paste("文件位于'",export_path,"/' 下",sep = ""),"\n")
+  #cat("\n",paste("文件位于'",export_path,"/' 下",sep = ""),"\n")
   dir.create(export_path, recursive = TRUE)  #创建目录“plot”用于存放图片
   write.table(cbind(gene, tax4fun_gene),
               paste(export_path,"/fungene.",groupname.use,".txt",sep = ""),
@@ -507,8 +507,7 @@
                                                  layout.rt[3],
                                                  layout.rt[4]),byrow=TRUE)
 
-  cat("\n已输出",
-      paste(unique(substr(unique(group$sample),start = 1,stop = 2))),"基于",method,"的Extended error bar plot (扩展柱状图)")
+  ##cat("\n已输出",paste(unique(substr(unique(group$sample),start = 1,stop = 2))),"基于",method,"的Extended error bar plot (扩展柱状图)")
   return(p)
 
 }
@@ -718,7 +717,7 @@
           legend.box.spacing=unit(0.02,"cm"))
 
   ggsave(paste(export_path,"/funpred_cladogram_",ko1.select,".pdf",sep = ""),p2)
-  cat("\n","functional_prediction_cladogram.pdf已保存至相对路径","/",export_path,"","下","\n","\n",sep = "")
+  #cat("\n","functional_prediction_cladogram.pdf已保存至相对路径","/",export_path,"","下","\n","\n",sep = "")
   return(list(cladogram=p2,pred_res=deres))
 }
 
@@ -1532,9 +1531,8 @@
          width = 21/2,
          height = 21/2*heighty/widthx/4,
          p)
-  cat(heighty)
-  cat("\n已输出",
-      paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
+  #cat(heighty)
+  #cat("\n已输出",paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
   print(p)
   return(p)
 }
@@ -1680,7 +1678,7 @@
     layout.rt[2],
     layout.rt[3]),byrow=TRUE)
 
-  message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
+  #message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
 
   ggsave(paste(export_path,"/(",comparison,") Fungene Extended Errorbar plot (CMYK).pdf",sep = ""),
          colormodel="cmyk",
@@ -1691,8 +1689,7 @@
   ggsave(paste(export_path,"/(",comparison,") Fungene Extended Errorbar plot.tiff",sep = ""),
          width = widthx,height = heighty,p)
 
-  cat("\n已输出",
-      paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
+  #cat("\n已输出",paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
   print(p)
 }
 
@@ -1842,7 +1839,7 @@
 
     xp[[i]]<-ptreat2
   }
-  message("A list object has been exported. Patchwork package is recommended to be used for combined plots.")
+  #message("A list object has been exported. Patchwork package is recommended to be used for combined plots.")
   return(xp)
 }
 
@@ -2265,7 +2262,7 @@
   ggsave(paste(export_path,"/single_volcano_",layout,"_",paste(treat,control,sep = "-"),".pdf",sep = ""),
          width = 6,height = 6,
          p2)
-  cat("Single volcano has been exported to","/",export_path,"",sep = "")
+  #cat("Single volcano has been exported to","/",export_path,"",sep = "")
 
   DEG<-merge(DEG,abun.sel,by="name")
   #DEG$control<-control
@@ -2276,7 +2273,7 @@
   file2=paste(export_path, "/single_volcano_",paste(control,treat,sep = "-"),"_onlydiffdata.txt",sep = "" )
   write.table(DEG[which(DEG$change!="NOT"),],file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
 
-  cat("\n","Differential analysis results has been exported to“",export_path,"",sep = "")
+  #cat("\n","Differential analysis results has been exported to“",export_path,"",sep = "")
 
   return(p2)
 }

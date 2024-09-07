@@ -1574,7 +1574,7 @@
     if (nrow(matnew)==0 | nrow(node_list_new)==0) {
       stop("\n",groupname_new," showed matrix and node list with null data !!!")
       message("Please re-calaculate the threshold of corrleation !!!")
-    }
+    }#
   }
 
 

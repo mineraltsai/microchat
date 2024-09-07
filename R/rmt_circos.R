@@ -1538,14 +1538,14 @@ if (file.save) {
     export_path_new=paste(export_path,'/circosabun/',select_group,"/data/",sep = "")
     circosfile_abun(ddf,taxon,edge_circos,export_path_new)
 
-    cat("\n","Circos plot based on abundance table has been exported to ",export_path_new,"\n")
+    #cat("\n","Circos plot based on abundance table has been exported to ",export_path_new,"\n")
 
 
     dir.create(paste(export_path,'/circoscom/',select_group,"/data",sep = ""), recursive = TRUE)
     export_path_new=paste(export_path,'/circoscom/',select_group,"/data/",sep = "")
     circosfile_compos(ddf,taxon,edge_circos,export_path_new)
 
-    cat("\n","Circos plot based on community structure has been exported to ",export_path_new,"\n")
+    #cat("\n","Circos plot based on community structure has been exported to ",export_path_new,"\n")
 
 
   }
@@ -1575,8 +1575,8 @@ if (file.save) {
   silver<-silver$col%>%data.frame()
   write.table(silver, paste(export_path,'/circos_colors.hsv.conf.txt',sep = ""), row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
 
-  cat("\n","Random colours matching the count of species in the current circos map have been exported to",export_path,"\n")
-  message("\n","This file needs to be copied to /Users/cml/software/circos/tutorials/tutorials/10/1/colors.hsv.conf","\n")
+  #cat("\n","Random colours matching the count of species in the current circos map have been exported to",export_path,"\n")
+  #message("\n","This file needs to be copied to /Users/cml/software/circos/tutorials/tutorials/10/1/colors.hsv.conf","\n")
 
 }
 
@@ -1919,7 +1919,7 @@ if (!is.null(xlabname)) names(groupname)<-xlabname else names(groupname)<-groupn
   print(Topological_roles)
   flie=paste(export_path,"/keynode",".csv", sep = "")
   write.csv(tab1,file = flie,row.names = FALSE)
-  cat("\n","Key nodes topological roles result has been exported to ",export_path,"\n")
+  #cat("\n","Key nodes topological roles result has been exported to ",export_path,"\n")
 
   return(tab2)
 }
@@ -2240,7 +2240,7 @@ rownames(newdata)<-1:nrow(newdata)
 
   flie=paste(export_path,"/Topological_roles",".csv", sep = "")
   write.csv(newdata,file = flie,row.names = FALSE)
-  cat("\n","All co-occurrence netoworks topological roles result have been exported to ",export_path,"下")
+  #cat("\n","All co-occurrence netoworks topological roles result have been exported to ",export_path,"下")
 print(emnet_randnet_com)
   return(newdata)
 }
@@ -2336,7 +2336,7 @@ print(emnet_randnet_com)
   result$ks_transitivity <- as.numeric(result$ks_transitivity)
   result
 
-  cat("\n","ks.test referred to all topological roles have been calculated.","\n")
+  #cat("\n","ks.test referred to all topological roles have been calculated.","\n")
   return(result)
 }
 

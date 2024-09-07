@@ -58,7 +58,7 @@
         color_taxa<-color_value[1:(taxa_num+1)]
         names(color_taxa)<-unique(split_otu3$tax)
 
-        message("use self-selected color")
+        #message("use self-selected color")
         p1<-p1+
           scale_color_manual(name=taxa,values=color_taxa)+
           scale_fill_manual(name=taxa,values=color_taxa)
@@ -103,7 +103,7 @@
         color_taxa<-color_value[1:(taxa_num+1)]
         names(color_taxa)<-unique(genus_topt$tax)
 
-        message("use self-selected color")
+        #message("use self-selected color")
         p1<-p1+
           scale_color_manual(name=taxa,values=color_taxa,
                              aesthetics = "colour")+
@@ -147,7 +147,7 @@
         color_taxa<-color_value[1:(taxa_num+1)]
         names(color_taxa)<-unique(split_otu3$tax)
 
-        message("use self-selected color")
+        #message("use self-selected color")
         p1<-p1+
           scale_color_manual(name=taxa,values=color_taxa)+
           scale_fill_manual(name=taxa,values=color_taxa)
@@ -189,7 +189,7 @@
         color_taxa<-color_value[1:(taxa_num+1)]
         names(color_taxa)<-unique(genus_topt$tax)
 
-        message("use self-selected color")
+        #message("use self-selected color")
         p1<-p1+
           scale_color_manual(name=taxa,values=color_taxa,
                              aesthetics = "colour")+
@@ -269,7 +269,7 @@ if (layout.flow) {
          units = "cm",
          width = 21/3*2,
          height = 21*p1$theme$aspect.ratio/3*2)
-  cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot"," has been exported to ",export_path,sep = "","\n")
+  #cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot"," has been exported to ",export_path,sep = "","\n")
 
   return(p1)
 }
@@ -463,7 +463,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
       color_taxa<-color_value1[1:(taxa_num+1)]
       names(color_taxa)<-unique(split_otu3$tax)
 
-      message("use self-selected color")
+      #message("use self-selected color")
 
       p1<-p1+
         scale_fill_manual(name=taxa,values=color_taxa)
@@ -485,7 +485,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
   ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot",".pdf",sep = ""),pm,
          units = "cm",
          width = 21)
-  cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot"," has been exported to ",export_path,sep = "","\n")
+  #cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot"," has been exported to ",export_path,sep = "","\n")
 
   return(pm)
 }
@@ -589,7 +589,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
       color_value1<-color_group[1:length(unique(split_otu4$variable))]
       names(color_value1)<-unique(split_otu4$variable)
 
-      message("use self-selected color")
+      #message("use self-selected color")
 
       p1<-p1+
         scale_fill_manual(name=selected_taxa,values=color_value1)
@@ -613,7 +613,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
   ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".pdf",sep = ""),pm)
   ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".png",sep = ""),pm)
   ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".tiff",sep = ""),pm)
-  message("Here exports a list of muti plots")
+  #message("Here exports a list of muti plots")
   return(pp)
 }
 
@@ -839,7 +839,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
                                                       grid_width = unit(2, "mm")))
 
 
-  message("\n","The heatmap need to be saved manually.")
+  #message("\n","The heatmap need to be saved manually.")
   return(p1)
 }
 
@@ -943,7 +943,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
 
   p1<-recordPlot()
   circlize::circos.clear()
-  message("\n","The chord plot need to be saved manually.")
+  #message("\n","The chord plot need to be saved manually.")
   return(p1)
 }
 
@@ -991,7 +991,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
   }
 
   if (bubble.color.taxa) {
-    cat("\n","color taxa according to the params 'color_taxa'")
+    #cat("\n","color taxa according to the params 'color_taxa'")
     genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
     genus_topxx<-reshape2::melt(genus_topxx)
 
@@ -1017,7 +1017,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
 
 
   } else {
-    cat("\n","color taxa according to the params 'color_group'")
+    #cat("\n","color taxa according to the params 'color_group'")
 
     genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
     genus_topxx<-reshape2::melt(genus_topxx)
@@ -1088,7 +1088,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
          units = "cm",
          width = 21/3*2,
          height = 21*p1$theme$aspect.ratio/3*2)
-  cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_bubble"," has been exported to ",export_path,sep = "","\n")
+  #cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_bubble"," has been exported to ",export_path,sep = "","\n")
 
   return(p1)
 }
@@ -1146,7 +1146,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
                                    decreasing = TRUE), ]
   if (length(rownames(genus_table)) >= taxa_num+1) taxa_num<-taxa_num
   if (length(rownames(genus_table)) < taxa_num+1) {taxa_num<-length(rownames(genus_table))
-  message("All taxa should be visualized due to the larger selected taxa size.")
+  #message("All taxa should be visualized due to the larger selected taxa size.")
   }
 
   genus_top10 <- genus_table[1:taxa_num, ]
@@ -1186,39 +1186,39 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
 
   split_otu3<-split_merge(genus_top)$split_otu1
   split_otu4<-split_merge(genus_topxx)$split_otu1
-  cat("-----------------------------------------------------------------------")
+  #cat("-----------------------------------------------------------------------")
 
 
   if (file.save) {
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_absabun.txt",sep = "" )
   write.table(genus_top,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
   write.table(genus_topxx,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") relative abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") relative abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_barplot.txt",sep = "" )
   write.table(split_otu1,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
   write.table(split_otu2,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_barplot.txt",sep = "" )
   write.table(split_otu3,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
   write.table(split_otu4,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
-  cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
-  cat("\n","-----------------------------------------------------------------------")
+  #cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
+  #cat("\n","-----------------------------------------------------------------------")
 }
   ###create S3 object
   microchatcomobj <- list(plot_data,
@@ -1316,7 +1316,7 @@ if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
 
   group_bar_color<-group_bar_color[1:groupnum]
 
-  message("\n","The upset plot need to be saved manually.")
+  #message("\n","The upset plot need to be saved manually.")
   query<-query
   plot_single_upset(data_venn2,
                     group_num=groupnum,
@@ -1367,7 +1367,7 @@ par(family="serif")
     scale_x_continuous(expand = expansion(mult = .2))+
     scale_colour_hue()+
     theme(text = element_text(family = "serif"))
-  message("\n","The upset plot need to be saved manually.")
+  #message("\n","The upset plot need to be saved manually.")
   return(pp)
 }
 
@@ -1627,7 +1627,7 @@ par(family="serif")
   flower_table<-data_flower$data_flower
   par(family="serif")
   plot_flower(flower_table,alpha_thres=alpha_thres)
-  message("\n","The upset plot need to be saved manually.")
+  #message("\n","The upset plot need to be saved manually.")
 }
 
 "plot_single_upset" <- function(data,
@@ -1706,7 +1706,7 @@ par(family="serif")
   color.use1<-color_taxa[1:length(unique(phylum_melt1$tax))]
   names(color.use1)<-unique(phylum_melt1$tax)
 
-  message("\n","The upset plot need to be saved manually.")
+  #message("\n","The upset plot need to be saved manually.")
   "plot_bar" <- function(mydata, x, y) {
     p1<-ggplot(phylum_melt, aes(x = variable, y = value, fill = tax)) +
       geom_col(position = 'stack', width = 0.6) +
@@ -2087,9 +2087,9 @@ par(family="serif")
   edge_table<-edge_table[-which(edge_table$OTUID %in% rm.node),]
 
   write.table(edge_table,file = paste(export_path_new,"/Venn_cyto_edge_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","The edge table used for cytoscape Please check it.")
+  #cat("\n","The edge table used for cytoscape Please check it.")
   write.table(node_table,file = paste(export_path_new,"/Venn_cyto_node_table.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  cat("\n","The node table used for cytoscape Please check it.")
+  #cat("\n","The node table used for cytoscape Please check it.")
 }
 
 
@@ -2136,7 +2136,7 @@ par(family="serif")
 
     taxon_table<-taxon_table2
 
-    cat("\n","Taxa belonging to '",fulltaxon,"' have (has) been kept in microchat object.",sep=" ")
+    #cat("\n","Taxa belonging to '",fulltaxon,"' have (has) been kept in microchat object.",sep=" ")
   }
   return(list(taxon_table=taxon_table,fulltaxon=fulltaxon))
 }
@@ -2715,8 +2715,8 @@ par(family="serif")
                                                     layout.rt[4],
                                                     layout.rt[5]),byrow=TRUE)
 
-  message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
-  message("'ggplotify::as.ggplot' could be used for tranforming patchwork object into ggplot object !!!")
+  #message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
+  #message("'ggplotify::as.ggplot' could be used for tranforming patchwork object into ggplot object !!!")
 
   ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (CMYK).pdf",sep = ""),
          colormodel="cmyk",
@@ -2726,8 +2726,7 @@ par(family="serif")
          width = widthx,height = heighty,p)
   ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot.tiff",sep = ""),
          bg="white",width = widthx,height = heighty,p)
-  cat("\n已输出",
-      paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
+  #cat("\n已输出",paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
   print(p)
   return(p)
 }
@@ -2806,7 +2805,7 @@ par(family="serif")
 
     xp[[i]]<-ptreat2
   }
-  message("A list object has been exported. Patchwork package is recommended to be used for combined plots.")
+  #message("A list object has been exported. Patchwork package is recommended to be used for combined plots.")
   return(xp)
 }
 

@@ -44,7 +44,7 @@
     }
   }
 
-  cat("--------------------------------------------------------------------------------------\n")
+  #cat("--------------------------------------------------------------------------------------\n")
   ###Homogeneity of variance
   variance.data<-subset(param_table,select = -c(sample))
   vttest<-data.frame()
@@ -66,7 +66,7 @@
 
   ###output statistics table
   all.index<-colnames(param_table)[3:length(colnames(param_table))]
-  cat("\n Please use one of '",all.index,"' in the plot function !!!\n")
+  #cat("\n Please use one of '",all.index,"' in the plot function !!!\n")
 
   summ_fcbv.all<-data.frame()
   for (index in all.index) {
@@ -106,9 +106,9 @@
   }
 
   write.table(summ_fcbv.all,file = paste(export_path,"/parameters.stat.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  message("\n","The param_table was used for statistical analysis. You could check it.","\n")
+  ##message("\n","The param_table was used for statistical analysis. You could check it.","\n")
 
-  message("\n","The param_table has been statistically analyzed. You could check it.","\n")
+  ##message("\n","The param_table has been statistically analyzed. You could check it.","\n")
 
   microchatParamobj<-list(param_table,nptest,vttest,summ_fcbv.all,all.index,paramfile.select)
 
@@ -571,7 +571,7 @@
 
 
   #write.table(data.alpha,file = paste(export_path,"/alpha diversity.stat.diff.txt",sep = ""),row.names = FALSE,quote = FALSE, sep = "\t")
-  message("The parameteric properities has been statistically analyzed. You could check it.")
+  ##message("The parameteric properities has been statistically analyzed. You could check it.")
 
   microchatParamStatobj<-list(data.alpha,data_poi,data_err,index,method,y.ratio,sig_label_new,opc.data)
 
@@ -1286,10 +1286,10 @@
       data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
 
       if (data_err_test$a>=0) {
-        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+        ##message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
       } else {
-        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
-        message("Namely, fitted curve for broken-line model is showing  !!!")
+        ##message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        ##message("Namely, fitted curve for broken-line model is showing  !!!")
 
         slope<-c()
         for (t in 1:(nrow(data_err_test$asd)-1)) {
@@ -1442,8 +1442,8 @@
          width = 21/3,
          height = 21*p$theme$aspect.ratio/3,
          p)
-  cat("Parametric properities boxplot has been exported. Please check it.","\n")
-  cat("----------------------------------------------------------------------","\n")
+  #cat("Parametric properities boxplot has been exported. Please check it.","\n")
+  #cat("----------------------------------------------------------------------","\n")
   return(p)
 }
 
@@ -1580,7 +1580,7 @@
   genus_top<-t(params)%>%data.frame()
 
   if (bubble.color.taxa) {
-    cat("\n","color taxa according to the params 'color_taxa'")
+    #cat("\n","color taxa according to the params 'color_taxa'")
     genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
     genus_topxx<-reshape2::melt(genus_topxx)
 
@@ -1604,7 +1604,7 @@
             axis.text.x=element_text(colour = "black",size = 10,
                                      angle = 0,hjust = 0.5,vjust =0.5,family = "serif"))
   } else {
-    cat("\n","color taxa according to the params 'color_group'")
+    #cat("\n","color taxa according to the params 'color_group'")
 
     genus_topxx<-tibble::rownames_to_column(genus_top,var = "tax")
     genus_topxx<-reshape2::melt(genus_topxx)
@@ -1933,7 +1933,7 @@
                                                           grid_width = unit(2, "mm")))
 
 
-  message("\n","The heatmap need to be saved manually.")
+  ##message("\n","The heatmap need to be saved manually.")
   return(p1)
 }
 
@@ -2058,7 +2058,7 @@
          units = "cm",
          width = 7*ncol,height = 7*nrows,
          pm)
-  message("Muti-parametric properities boxplot has been exported. Please check it.")
+  #message("Muti-parametric properities boxplot has been exported. Please check it.")
 
   return(pm)
 }
@@ -2700,10 +2700,10 @@
       data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
 
       if (data_err_test$a>=0) {
-        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+        #message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
       } else {
-        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
-        message("Namely, fitted curve for broken-line model is showing  !!!")
+        #message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        #message("Namely, fitted curve for broken-line model is showing  !!!")
 
         slope<-c()
         for (t in 1:(nrow(data_err_test$asd)-1)) {
@@ -2860,8 +2860,8 @@
          width = 21/3,
          height = 21*p$theme$aspect.ratio/3,
          p)
-  cat("Parametric properities barplot has been exported. Please check it.","\n")
-  cat("----------------------------------------------------------------------","\n")
+  ##cat("Parametric properities barplot has been exported. Please check it.","\n")
+  ##cat("----------------------------------------------------------------------","\n")
   return(p)
 
 }
@@ -3170,7 +3170,7 @@
   )
   ggsave(paste(export_path,"/Parameter (",index,")_lineplot.pdf",sep = ""),
          width = 3,height = 3,p)
-  cat("Parametric properities lineplot has been exported. Please check it.","\n")
+  ##cat("Parametric properities lineplot has been exported. Please check it.","\n")
 
   return(p)
 
@@ -3240,7 +3240,7 @@
          units = "cm",
          width = 7*ncol,height = 7*nrows,
          pm)
-  message("Muti-parametric properities barplot has been exported. Please check it.")
+  #message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
 }
@@ -3669,10 +3669,10 @@
       data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
 
       if (data_err_test$a>=0) {
-        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+        #message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
       } else {
-        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
-        message("Namely, fitted curve for broken-line model is showing  !!!")
+        #message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        #message("Namely, fitted curve for broken-line model is showing  !!!")
 
         slope<-c()
         for (t in 1:(nrow(data_err_test$asd)-1)) {
@@ -3825,8 +3825,8 @@
          width = 21/3,
          height = 21*p$theme$aspect.ratio/3,
          p)
-  cat("Parametric properities barplot has been exported. Please check it.","\n")
-  cat("----------------------------------------------------------------------","\n")
+  ##cat("Parametric properities barplot has been exported. Please check it.","\n")
+  ##cat("----------------------------------------------------------------------","\n")
   return(p)
 
 }
@@ -3892,7 +3892,7 @@
          units = "cm",
          width = 7*ncol,height = 7*nrows,
          pm)
-  message("Muti-parametric properities barplot has been exported. Please check it.")
+  #message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
 }

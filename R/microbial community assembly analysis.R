@@ -58,9 +58,9 @@
     if (!is.null(export_path)) {
       file2=paste(export_path,"/Ecological niche width/data/",names(spec_gen)[tt],"_niche width & generalist and specialist.txt",sep = "")
       write.table(spec_gen[[tt]],file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-      cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
+      #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
     } else {
-      cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
+      #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
     }
   }
 
@@ -89,9 +89,9 @@
   if (!is.null(export_path)) {
     file2=paste(export_path,"/Ecological niche width/data/Generalist and specialist proportion",".txt",sep = "")
     write.table(spe.gen.prop,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
-    cat("\n","Generalist and specialist proportion ","has been exported to ","/",export_path,"",sep = "","\n")
+    #cat("\n","Generalist and specialist proportion ","has been exported to ","/",export_path,"",sep = "","\n")
   } else {
-    cat("\n","Generalist and specialist proportion ","was not exported to local path","",sep = "","\n")
+    #cat("\n","Generalist and specialist proportion ","was not exported to local path","",sep = "","\n")
   }
 
   pp<-ggpubr::ggtexttable(spe.gen.prop,rows = NULL)%>%
@@ -114,7 +114,7 @@
   print(pp)
   spec_gen.all<-list(spec_gen=spec_gen,spe.gen.prop=spe.gen.prop,niche.width=niche.wid.x,high.thres=round(niche.outlier.high,0))
   class(spec_gen.all)<-"microchat"
-  cat("\n","Based on the niche breadth (B) distribution of OTUs from all treatment, the prescribed minimum in upper outlier area of niche breadth (B) was ",niche.outlier.high[1],",",sep = "")
+  #cat("\n","Based on the niche breadth (B) distribution of OTUs from all treatment, the prescribed minimum in upper outlier area of niche breadth (B) was ",niche.outlier.high[1],",",sep = "")
   message(" which was rounded up to ", round(niche.outlier.high,0)[1],".")
   message("\n","Remove OTUs whose mean relative abundance < 2*10^-5")
   return(spec_gen.all)
@@ -134,7 +134,7 @@
 
   spec_gen.x<-spec_gen$spec_gen
   spec_gen.prop.x<-spec_gen$spe.gen.prop
-  message("specified.thres could be a vector, whose amount is equal with treatment.")
+  #message("specified.thres could be a vector, whose amount is equal with treatment.")
   if (is.null(specified.thres)) high.thres<-spec_gen$high.thres else high.thres<-specified.thres
   pp<-list()
   for (tt in 1:length(spec_gen.x)) {
@@ -201,9 +201,9 @@
              width = 21/3,
              height = 21*p$theme$aspect.ratio/3,
              p)
-      cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
+      #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
     } else {
-      cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
+      #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
     }
     pp[[tt]]<-p
   }
@@ -230,12 +230,12 @@
            units = "cm",
            width = 7*ncol,height = 7*nrows,
            mp)
-    cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
+    #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
   } else {
-    cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
+    #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
   }
 
-  message("Hollow Circle--Specialist Circle--Non-significant Square--Generalist")
+  #message("Hollow Circle--Specialist Circle--Non-significant Square--Generalist")
   return(mp)
 }
 
@@ -362,9 +362,9 @@
            width = 21/3,
            height = 21*p$theme$aspect.ratio/3,
            p)
-    cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
+    #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
   } else {
-    cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
+    #cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
   }
 
   return(p)
@@ -413,7 +413,7 @@
   p1<-recordPlot()
   circlize::circos.clear()
 
-  message("\n","The chord plot need to be saved manually.")
+  #message("\n","The chord plot need to be saved manually.")
 
   return(p1)
 }
@@ -426,7 +426,7 @@
                                                 color_genus) {
 
   sepc.info<-spec_gen$spec_gen
-  message("specified.thres could be a vector, whose amount is equal with treatment.")
+  #message("specified.thres could be a vector, whose amount is equal with treatment.")
   if (is.null(specified.thres)) high.thres<-spec_gen$high.thres else high.thres<-specified.thres
   sepc.info1<-list()
   sepc.info2<-list()
@@ -475,7 +475,7 @@
     net_visulal_chord(df,grid.color,order.sector)
   }
   pp<-recordPlot()
-  message("Generalists from all treatments was listed in the first row, followed by the specialists listed in the second row!!!")
+  #message("Generalists from all treatments was listed in the first row, followed by the specialists listed in the second row!!!")
   return(pp)
 }
 
@@ -489,7 +489,7 @@
                                                 color_phylum,
                                                 color_genus) {
   sepc.info<-spec_gen$spec_gen
-  message("specified.thres could be a vector, whose amount is equal to treatment.")
+  #message("specified.thres could be a vector, whose amount is equal to treatment.")
   if (is.null(specified.thres)) high.thres<-spec_gen$high.thres else high.thres<-specified.thres
   sepc.info1<-list()
   sepc.info2<-list()
@@ -622,7 +622,7 @@
                                   edge.label.family = "serif")
     title(main = paste0(gname,"--",sel.role))
 
-  message("Genus label that appears once has been hidden.")
+  #message("Genus label that appears once has been hidden.")
   }
   pp<-recordPlot()
   return(pp)
@@ -702,9 +702,9 @@
       write.csv(p, file = paste(filex,"/p.csv",sep = ""))
       write.csv(freq, file = paste(filex,"/freq.csv",sep = ""))
       write.csv(freq.pred, file = paste(filex,"/freq.pred.csv",sep = ""))
-      cat("\n","Neutral community model in ",gname,"  has been exported to ","/",filex,"",sep = "","\n")
+      #cat("\n","Neutral community model in ",gname,"  has been exported to ","/",filex,"",sep = "","\n")
     } else {
-      cat("\n","Neutral community model in ",gname,"  was not exported to local path","",sep = "","\n")
+      #cat("\n","Neutral community model in ",gname,"  was not exported to local path","",sep = "","\n")
     }
   }
 
@@ -896,9 +896,9 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
              height = 7*pp[[tk]]$theme$aspect.ratio,
              pp[[tk]])
 
-      cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  has been exported to ","/",filex,"",sep = "","\n")
+      #cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  has been exported to ","/",filex,"",sep = "","\n")
     } else {
-      cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  was not exported to local path","",sep = "","\n")
+      #cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  was not exported to local path","",sep = "","\n")
     }
 
   }
@@ -925,9 +925,9 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
            width = 7*ncol,height = 7*nrows,
            mp)
 
-    cat("\n","Neutral community model in whole data"," has been exported to ","/",filex,"",sep = "","\n")
+    #cat("\n","Neutral community model in whole data"," has been exported to ","/",filex,"",sep = "","\n")
   } else {
-    cat("\n","Neutral community model "," was not exported to local path","",sep = "","\n")
+    #cat("\n","Neutral community model "," was not exported to local path","",sep = "","\n")
   }
 
   message("R2 represents the overall fit of the neutral community model. A higher R2 indicates a closer approximation to the neutral model, meaning that the construction of the community is more influenced by stochastic processes and less influenced by deterministic processes")
@@ -944,7 +944,7 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
 "calBNTIx" <- function(data = match.phylo.otu,thres=100,nworker=4){
   require(picante)
   require(tidyverse)
-  message("6 samples with 999 (thres) will cost about 100 seconds. 100 (thres) was recommended.")
+  #message("6 samples with 999 (thres) will cost about 100 seconds. 100 (thres) was recommended.")
   set.seed(123)
   beta.mntd.weighted = as.matrix(comdistnt(t(data$data),
                                            cophenetic(data$phy),
@@ -1080,9 +1080,9 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
   if (!is.null(export_path)) {
     write.csv(BNTx, file = paste(filex,"Beta nearest taxon index (βNTI).csv",sep = ""))
     write.csv(dat, file = paste(filex,"βNTI proportion.csv",sep = ""))
-    cat("\n","Beta nearest taxon index (βNTI)"," has been exported to ","/",filex,"",sep = "","\n")
+    #cat("\n","Beta nearest taxon index (βNTI)"," has been exported to ","/",filex,"",sep = "","\n")
   } else {
-    cat("\n","Beta nearest taxon index (βNTI)"," was not exported to local path","",sep = "","\n")
+    #cat("\n","Beta nearest taxon index (βNTI)"," was not exported to local path","",sep = "","\n")
   }
 
   dat$group<-factor(dat$group,levels = unique(BNT$group))
@@ -1187,11 +1187,11 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
   if (!is.null(export_path)) {
     filex<-paste(export_path,"/Beta nearest taxon index (βNTI)/βNTI proportion_",geom,".pdf",sep = "")
     if (geom=="chord") {
-     message("Please save the plot mannully!!!")
+     #message("Please save the plot mannully!!!")
     } else  ggsave(filex, bntp)
-    cat("\n","Beta nearest taxon index (βNTI) proportion","  has been exported to ","/",filex,"",sep = "","\n")
+    #cat("\n","Beta nearest taxon index (βNTI) proportion","  has been exported to ","/",filex,"",sep = "","\n")
   } else {
-    cat("\n","Beta nearest taxon index (βNTI) proportion","  was not exported to local path","",sep = "","\n")
+    #cat("\n","Beta nearest taxon index (βNTI) proportion","  was not exported to local path","",sep = "","\n")
   }
   return(bntp)
 }
@@ -1261,9 +1261,9 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
     write.csv(nst[[2]], file = paste(filex,"Normalized stochasticity ratio (NST).csv",sep = ""))
     write.csv(dat, file = paste(filex,"NST proportion.csv",sep = ""))
     write.csv(nst[[3]], file = paste(filex,"Normalized stochasticity ratio (NST)_ori.csv",sep = ""))
-    cat("\n","Normalized stochasticity ratio (NST)"," has been exported to ","/",filex,"",sep = "","\n")
+    ##cat("\n","Normalized stochasticity ratio (NST)"," has been exported to ","/",filex,"",sep = "","\n")
   } else {
-    cat("\n","Normalized stochasticity ratio (NST)"," was not exported to local path","",sep = "","\n")
+    #cat("\n","Normalized stochasticity ratio (NST)"," was not exported to local path","",sep = "","\n")
   }
 
   dat<-reshape2::melt(dat)
@@ -1372,11 +1372,11 @@ if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
   if (!is.null(export_path)) {
     filex<-paste(export_path,"/Normalized stochasticity ratio (NST)/NST proportion_",geom,".pdf",sep = "")
     if (geom=="chord") {
-      message("Please save the plot mannully!!!")
+      ##message("Please save the plot mannully!!!")
     } else  ggsave(filex, bntp,height = 9,width = 9)
-    cat("\n","Normalized stochasticity ratio (NST) proportion","  has been exported to ","/",filex,"",sep = "","\n")
+    #cat("\n","Normalized stochasticity ratio (NST) proportion","  has been exported to ","/",filex,"",sep = "","\n")
   } else {
-    cat("\n","Normalized stochasticity ratio (NST) proportion","  was not exported to local path","",sep = "","\n")
+    #cat("\n","Normalized stochasticity ratio (NST) proportion","  was not exported to local path","",sep = "","\n")
   }
   return(bntp)
 }

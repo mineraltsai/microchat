@@ -409,7 +409,7 @@
          height = h.sel,
          width =h.sel/hw.rat,
          p1)
-  cat("图片已保存至相对路径","/",export_path,"","下",sep = "")
+  #cat("图片已保存至相对路径","/",export_path,"","下",sep = "")
   print(p1)
   return(p1)
 }

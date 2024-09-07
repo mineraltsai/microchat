@@ -59,7 +59,7 @@
                                       export_path=export_path)
     test<-"with inequal brachlength"
     }
-  cat("\n","Tree plot has been exported to with (",test,") ",export_path,"\n",sep = "")
+  #cat("\n","Tree plot has been exported to with (",test,") ",export_path,"\n",sep = "")
   return(p)
 }
 
@@ -315,7 +315,7 @@
     )
 
   ggsave(paste(export_path,"/",layout,"_tree.pdf",sep = ""),p)
-  cat("Tree plot has been exported to ","/",export_path,"",sep = "")
+  #cat("Tree plot has been exported to ","/",export_path,"",sep = "")
   return(p)
 }
 
@@ -806,7 +806,7 @@
     )
 
   ggsave(paste(export_path,"/",layout,"_tree.pdf",sep = ""),p)
-  cat("Tree plot has been exported to ","/",export_path,"",sep = "")
+  #cat("Tree plot has been exported to ","/",export_path,"",sep = "")
   return(p)
 }
 
@@ -1089,7 +1089,7 @@
     ggsave(paste(export_path,"/single_",phy_name," _tree",'.pdf', sep = ''),
            ptree)
   }
-  cat("Tree plot has been exported to ","/",export_path,"",sep = "")
+  #cat("Tree plot has been exported to ","/",export_path,"",sep = "")
 
   return(pnode)
 }

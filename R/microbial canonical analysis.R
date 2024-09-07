@@ -614,7 +614,7 @@
                                            color = "black",
                                            family="serif",
                                            size = effect.cex)
-
+#
   p.vp <- p.vp + ggplot2::geom_hline(yintercept = 0)
   Fractions <- NULL
   for (i in rownames(Hier.part)) Fractions <- c(Fractions,

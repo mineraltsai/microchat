@@ -32,8 +32,8 @@
 
   if (!filter) otu<-split_otu
 
-  if (!filter) cat("\n","Samples have been filtered","\n")
-  if (filter) cat("\n","Samples have been filtered","\n")
+  if (!filter) #cat("\n","Samples have been filtered","\n")
+  if (filter) #cat("\n","Samples have been filtered","\n")
   return(otu)
 }
 

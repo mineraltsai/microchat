@@ -1511,7 +1511,7 @@
 
                                            pro=3:3)) {
 
-  cat("\n","\n",'method: "pearson", "spearman" or "kendall"')
+  #cat("\n","\n",'method: "pearson", "spearman" or "kendall"')
   datad<-data.frame()
   mantel.result<-data.frame()
   for (k in 1:length(select_col)) {

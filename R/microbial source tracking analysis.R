@@ -1492,8 +1492,8 @@
   if (sink_group!="all") {
     if (plot_type=="barplot") {
       if (repeatiton) {
-        cat("\n","No barplot for this. Please refer to pie plot.","\n")
-        message("\n","No barplot for this. Please refer to pie plot.")
+        #cat("\n","No barplot for this. Please refer to pie plot.","\n")
+        #message("\n","No barplot for this. Please refer to pie plot.")
       } else{
 
         feastdata_bar<-FEAST_output%>%rowMeans()%>%data.frame()
@@ -1552,7 +1552,7 @@
           legend.position = "none",aspect.ratio = 1)
 
         ggsave(paste(export_path,"/sink(",sink_group,")_",single_st$source_group,"_",plot_type,".pdf",sep = ""),p)
-        cat("Plot has been exported to ","/",export_path,"",sep = "")
+        #cat("Plot has been exported to ","/",export_path,"",sep = "")
         return(p)
       }
     }
@@ -1560,8 +1560,8 @@
   if (sink_group =="all") {
     if (plot_type=="barplot") {
       if (repeatiton) {
-        cat("\n","No barplot for this. Please refer to pie plot.","\n")
-        message("\n","No barplot for this. Please refer to pie plot.")
+        #cat("\n","No barplot for this. Please refer to pie plot.","\n")
+        #message("\n","No barplot for this. Please refer to pie plot.")
       } else{
 
         feastdata_bar<-FEAST_output
@@ -1623,7 +1623,7 @@
           legend.position = "none",aspect.ratio = 1)
 
         ggsave(paste(export_path,"/sink(",sink_group,")_",single_st$source_group,"_",plot_type,".pdf",sep = ""),p)
-        cat("Plot has been exported to ","/",export_path,"",sep = "")
+        #cat("Plot has been exported to ","/",export_path,"",sep = "")
         return(p)
       }
     }
