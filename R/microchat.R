@@ -168,6 +168,36 @@
   return(microchatobj)
 }
 
+"transformOTUtable" <- function(otu_table,treat_name,bio_num) {
+
+  cage_num=bio_num
+  asa<-c()
+  for (k in treat_name) {
+    for (i in 1:cage_num) {
+      asa<-c(asa,paste0(k,i))
+    }
+  }
+
+  otu_ddt<-otu_table
+  if (which(otu_ddt$Taxonomy=="")%>%length()>0) {
+    otu_ddt<-otu_ddt[(length(which(otu_ddt$Taxonomy==""))+1):nrow(otu_ddt),]
+  }
+  abun <- otu_ddt[,1:(ncol(otu_ddt)-1)]
+  colnames(abun)<-asa
+  taxon <- otu_ddt[,(ncol(otu_ddt))]%>%as.data.frame()
+  rownames(taxon)<-rownames(abun)
+  tax.class<-c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
+  taxon[,tax.class]<-str_split_fixed(taxon$.,";",length(tax.class))
+  taxon<-taxon[,-1]
+
+  if (substr(taxon$Kingdom,start = 1,stop = 3)[1]=="k__") {
+    taxon<-taxon
+  } else {
+    taxon$Kingdom<-"k__Bacteria"
+  }
+  return(list(abun=abun,taxon=taxon))
+}
+
 "taxonadj" <- function(taxon) {
 
   taxon_table<-taxon
@@ -248,7 +278,11 @@
    tree11<-microchat::groupOTU.phylo(tree.use,group_info)
   data_tree <-tree11%>%as_tibble()
 
-  to_drop <- data_tree[which(data_tree$group == 0),]$label
+  if (0 %in% unique(data_tree$group) && length(unique(data_tree$group)==0)) {
+    to_drop<-NULL
+  } else {
+    to_drop <- data_tree[which(data_tree$group == 0),]$label
+  }
   tree11 <- treeio::drop.tip(tree11, to_drop)
 
 
@@ -509,9 +543,6 @@
 
 }
 
-
-
-
 "subsampleMicrochat" <- function(tidymchatobj,
                                  filter=TRUE,
                                  sample.size=NULL,
@@ -558,11 +589,13 @@
   taxon_table<-tree_filter$taxon
   tree<-tree_filter$tree
 
+  if (!is.null(tree)) tree<-treeio::drop.tip(tree, setdiff(tree$tip.label,rownames(otu_table)))
+
   ###data output
-  data_export_to_file(otu_table,filename="otu_filter_subsample",export_path)
-  data_export_to_file(taxon_table,filename="taxon_filter_subsample",export_path)
-  if (!is.null(tree)) write.tree(tree,file = paste(export_path,"/data/tree.nwk",sep = ""))
-  if (!is.null(param_table)) data_export_to_file(param_table,filename="param_filter_subsample",export_path)
+  data_export_to_file(otu_table,filename="otu_filter_subsample",paste0(export_path,"/data_microbiome"))
+  data_export_to_file(taxon_table,filename="taxon_filter_subsample",paste0(export_path,"/data_microbiome"))
+  if (!is.null(tree)) write.tree(tree,file = paste(export_path,"/data_microbiome/data/tree.nwk",sep = ""))
+  if (!is.null(param_table)) data_export_to_file(param_table,filename="param_filter_subsample",paste0(export_path,"/data_microbiome"))
 
   ###or use this
   #for (j in names(param_table)) {

@@ -158,12 +158,35 @@
 
   hsPhylum3<-rbind(ttt,hsPhylum1)
 
-  hsPhylum2<-unite(hsPhylum1,'colors',sep = " ")
+  hsPhylum4<-hsPhylum1
+  hsPhylum4<-subset(hsPhylum4, select=c(2,5,6,7))
+  hsPhylum4[,4]<-paste0("fill_color=", hsPhylum4[,4])
+
+  hsPhylum2<-unite(hsPhylum4,'colors',sep = " ")
   hskingdom2<-unite(hsPhylum3,'colors',sep = " ")
+
+  hsPhylum4$er<-hsPhylum4$end-hsPhylum4$start
+  hsPhylum4<-hsPhylum4[which(hsPhylum4$er>3),]
+  hsPhylum4<-hsPhylum4[,-5]
+  hsPhylum4$start<-hsPhylum4$start+1
+  hsPhylum4$end<-hsPhylum4$end-1
+
+  ### 坐标轴起始位置
+  hsPhylum5<-hsPhylum4
+  hsPhylum5$end<-hsPhylum5$start+1
+
+  ### 坐标轴终点位置
+  hsPhylum6<-hsPhylum4
+  hsPhylum6$start<-hsPhylum6$end-1
+
+  hsPhylum6<-rbind(hsPhylum5,hsPhylum6)
+  hsPhylum6<-unite(hsPhylum6,'colors',sep = " ")
 
   flie=paste(export_path, "hsphylum2",".txt", sep = "")
   write.table(hsPhylum2,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
 
+  flie=paste(export_path, "hsaxis2",".txt", sep = "")
+  write.table(hsPhylum6,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
 
   flie=paste(export_path, "kingdom",".txt", sep = "")
   write.table(hskingdom2,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
@@ -674,11 +697,35 @@
 
   hsPhylum3<-rbind(ttt,hsPhylum1)
 
-  hsPhylum2<-unite(hsPhylum1,'colors',sep = " ")
+  hsPhylum4<-hsPhylum1
+  hsPhylum4<-subset(hsPhylum4, select=c(2,5,6,7))
+  hsPhylum4[,4]<-paste0("fill_color=", hsPhylum4[,4])
+
+  hsPhylum2<-unite(hsPhylum4,'colors',sep = " ")
   hskingdom2<-unite(hsPhylum3,'colors',sep = " ")
+
+  hsPhylum4$er<-hsPhylum4$end-hsPhylum4$start
+  hsPhylum4<-hsPhylum4[which(hsPhylum4$er>3),]
+  hsPhylum4<-hsPhylum4[,-5]
+  hsPhylum4$start<-hsPhylum4$start+1
+  hsPhylum4$end<-hsPhylum4$end-1
+
+  ### 坐标轴起始位置
+  hsPhylum5<-hsPhylum4
+  hsPhylum5$end<-hsPhylum5$start+1
+
+  ### 坐标轴终点位置
+  hsPhylum6<-hsPhylum4
+  hsPhylum6$start<-hsPhylum6$end-1
+
+  hsPhylum6<-rbind(hsPhylum5,hsPhylum6)
+  hsPhylum6<-unite(hsPhylum6,'colors',sep = " ")
 
   flie=paste(export_path, "hsphylum2",".txt", sep = "")
   write.table(hsPhylum2,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
+
+  flie=paste(export_path, "hsaxis2",".txt", sep = "")
+  write.table(hsPhylum6,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
 
   flie=paste(export_path, "kingdom",".txt", sep = "")
   write.table(hskingdom2,file = flie, row.names = FALSE, col.names=FALSE,sep = '\t', quote = FALSE)
@@ -1091,6 +1138,10 @@
 "rmnet_thres_calc" <- function(abun,
                                filter_num = 1,
                                seed=152510,
+                               nr.thresholds = 51,
+                               unfold.method = "gaussian",
+                               bandwidth = "nrd0",
+                               nr.fit.points = 51,
                                cor.method = "pearson") {
   library(igraph)
   library(dplyr)
@@ -1153,8 +1204,11 @@
   trvalue <- lapply(nor,function(x){
     #Get threshold by RMT
     res <- rm.get.threshold(x,discard.zeros = TRUE,plot.spacing=FALSE,
-                            save.fit = FALSE,
-                            unfold.method = "gaussian")
+                            nr.thresholds = nr.thresholds,
+                            unfold.method = unfold.method,
+                            bandwidth = bandwidth,
+                            nr.fit.points = nr.fit.points,
+                            save.fit = FALSE)
 
     xas<-res$tested.thresholds
     yas<-res$p.ks
@@ -1480,15 +1534,15 @@ if (file.save) {
 
 
 
-    dir.create(paste(export_path,'/circosabun/',select_group,sep = ""), recursive = TRUE)
-    export_path_new=paste(export_path,'/circosabun/',select_group,"/",sep = "")
+    dir.create(paste(export_path,'/circosabun/',select_group,"/data",sep = ""), recursive = TRUE)
+    export_path_new=paste(export_path,'/circosabun/',select_group,"/data/",sep = "")
     circosfile_abun(ddf,taxon,edge_circos,export_path_new)
 
     cat("\n","Circos plot based on abundance table has been exported to ",export_path_new,"\n")
 
 
-    dir.create(paste(export_path,'/circoscom/',select_group,sep = ""), recursive = TRUE)
-    export_path_new=paste(export_path,'/circoscom/',select_group,"/",sep = "")
+    dir.create(paste(export_path,'/circoscom/',select_group,"/data",sep = ""), recursive = TRUE)
+    export_path_new=paste(export_path,'/circoscom/',select_group,"/data/",sep = "")
     circosfile_compos(ddf,taxon,edge_circos,export_path_new)
 
     cat("\n","Circos plot based on community structure has been exported to ",export_path_new,"\n")

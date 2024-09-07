@@ -3,6 +3,7 @@
                               layout = "fan",
                               open.angle=5,
                               pointsize=0.1,
+                              branch.size=0.5,
                               color_taxa=colorCustom(50,pal = "set1"),
                               colors_group = c("#FF0000","#333399","#009933","#00FFFF","#EC00FF","yellow"),
                               random = TRUE,geom.point = FALSE,
@@ -11,7 +12,7 @@
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object !!!")
   }
-  export_path<-paste(export_path,"/microbial tree analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial tree analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   suppressMessages(library(ggtree))
@@ -37,6 +38,7 @@
                  open.angle=open.angle,
                               layout = layout,
                               pointsize=pointsize,
+                 branch.size=branch.size,
                               color_taxa=color_taxa,
                               colors_group = colors_group,
                               random = random,geom.point = geom.point,
@@ -50,6 +52,7 @@
                         open.angle=open.angle,
                                       layout = layout,
                                       pointsize=pointsize,
+                        branch.size=branch.size,
                                       color_taxa=color_taxa,
                                       colors_group = colors_group,
                                       random = random,geom.point = geom.point,
@@ -66,6 +69,7 @@
                         layout="fan",color_taxa=NULL,
                         open.angle,
                         pointsize=0.1,
+                        branch.size=0.5,
                         colors_group=c( "#E61F19","#BE1A20","#949426","#63652C","#936525"),
                         geom.point=TRUE,geom.star=TRUE,geom.tile=TRUE,geom.bar=TRUE,
                         export_path="tree") {
@@ -86,8 +90,6 @@
 
   ttree<-fortify(tree_filter$tree)
   dephylen<-ttree$group%>%unique()%>%length()
-
-
 
   if (dephylen != len_taxa) {
     color_taxa<-color_taxa[!is.na(color_taxa)]
@@ -120,11 +122,6 @@
     treatnum<-treatnum(tree_filter$abun)
     sss<-reshape2::melt( subset(abun_sum,select=c(1:treatnum,id)))
 
-    # abun_sum<-relative_abun(abun_sum,num=abun_cal_sum$num)
-    #abun_sum1<-relative_abun(abun_sum1,num=abun_cal_sum$num)
-
-    #abun_sum<-first_abun_five(abun_sum)
-    #abun_sum1<-first_abun_five(abun_sum1)
     datt<-data.frame(x=abun_cal_sum$abun_sum1$abun,
                      y=abun_cal_sum$abun_sum1$site)
     phyname<-ttree$group%>%unique()
@@ -191,7 +188,7 @@
     names(color_type)<-unique(dattt$y)
   }
 
-  p<-ggtree(tree, size=0.1,layout = layout,open.angle = open.angle,
+  p<-ggtree(tree, size=branch.size,layout = layout,open.angle = open.angle,
             aes(color=group),
             ladderize=TRUE,branch.length = "none")+
     scale_color_manual(values=color_group,
@@ -357,7 +354,11 @@
   tree11<-groupOTU(tree11,group_info)
   data_tree <-fortify(tree11)
 
-  to_drop <- data_tree[which(data_tree$group == 0),]$label
+  if (0 %in% unique(data_tree$group) && length(unique(data_tree$group)==0)) {
+    to_drop<-NULL
+  } else {
+    to_drop <- data_tree[which(data_tree$group == 0),]$label
+  }
   tree11 <- drop.tip(tree11, to_drop)
 
 
@@ -540,6 +541,7 @@
                                layout="fan",
                                color_taxa=NULL,
                                pointsize=0.1,
+                               branch.size=0.5,
                                colors_group=c( "#E61F19","#BE1A20","#949426","#63652C","#936525"),
                                geom.point=TRUE,geom.star=TRUE,geom.tile=TRUE,geom.bar=TRUE,
                                export_path="tree") {
@@ -677,7 +679,7 @@
     names(color_type)<-unique(dattt$y)
   }
 
-  p<-ggtree(tree, size=0.1,layout = layout,open.angle = open.angle,
+  p<-ggtree(tree, size=branch.size,layout = layout,open.angle = open.angle,
             aes(color=group),
             ladderize=TRUE,branch.length = "branch.length")+
     scale_color_manual(values=color_group,
@@ -842,22 +844,31 @@
   group_info<-split(taxon$name,taxon$Phylum)
 
   tree11<-groupOTU(tree11,group_info)
+  #tree11<-tree11%>%as.tibble()
   data_tree <-fortify(tree11)
 
-  to_drop <- data_tree[which(data_tree$group == 0),]$label
+  if (0 %in% unique(data_tree$group) && length(unique(data_tree$group)==0)) {
+    to_drop<-NULL
+  } else {
+    to_drop <- data_tree[which(data_tree$group == 0),]$label
+  }
+  #tree11<-tree11%>%as.phylo()
   tree11 <- drop.tip(tree11, to_drop)
 
 
   group_info<-split(taxon$name,taxon$Phylum)
   tree11<-groupOTU(tree11,group_info)
+  #tree11<-tree11%>%as.tibble()
   data_tree <-fortify(tree11)
 
   data_tree<- data_tree[which(data_tree$group != 0),]
 
   to_drop<-data_tree[which(data_tree$branch.length>1),]$label
+  #tree11<-tree11%>%as.phylo()
   tree11 <- drop.tip(tree11, to_drop)
   group_info<-split(taxon$name,taxon$Phylum)
   tree11<-groupOTU(tree11,group_info)
+  #tree11<-tree11%>%as.tibble()
   data_tree <-fortify(tree11)
   data_tree<- data_tree[which(data_tree$group != 0),]
 
@@ -868,6 +879,7 @@
   abun<-subset(abun,select = c(-label,-sum))
   rownames(taxon)<-taxon$name
   taxon<-subset(taxon,select = c(-name))
+  #tree11<-tree11%>%as.phylo()
   return(list(data_tree=data_tree,tree=tree11,group_info2=group_info2,taxon=taxon,abun=abun))
 }
 
@@ -1034,7 +1046,7 @@
                                        species.num=100,
                                        color_taxa=colorCustom(50,pal = "gygn"),
                                        export_path="microbial tree analysis") {
-  export_path<-paste(export_path,"/microbial tree analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial tree analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object !!!")

@@ -20,7 +20,7 @@
 
 "calcMicrochatAlphadiv" <- function(submchat,
                                     export_path="microbial diversity analysis") {
-  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(submchat)!="microchat") {
@@ -148,7 +148,7 @@
 
 
   method<-match.arg(method)
-  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Alpha diversity/data_alpha diversity",sep = "")
 
   dir.create(export_path, recursive = TRUE)
 
@@ -169,7 +169,8 @@
   ###define new alpha table according to the selected alpha index
   data_poi<-alphadiv.use[which(alphadiv.use$variable==index),]
   data_poi$group <- factor(data_poi$group , levels = unique(data_poi$group))
-
+  data_max <- subset(data_poi, select = c(1, 4)) %>% group_by(group) %>%
+    summarise_all(max)
   ###define new statistics table according to the selected alpha index
   data_err<-microchatAlphadivobj$statistics
   data_err<-data_err[which(data_err$index==index),]
@@ -203,24 +204,32 @@
 
     if (method %in% c("t.test","wilcox.test")) {
 
-      if (index %in% match.index) {
-        method= "t.test"
-      } else {
-        method= "wilcox.test"
-      }
 
-      if ( method== "t.test") {
+      #if ( method== "t.test") {
         sig_label_new=NULL
-       sta<-lapply(my_comparisons, function(x){
+       sta<-lapply(comparison, function(x){
         alphadiv.use.selected1<-data_poi[
           which(data_poi$group==x[1] | data_poi$group==x[2]),]
-        if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-          fit<-t.test(value~group, alphadiv.use.selected1,
-                      paired = TRUE, alternative = 'two.sided')
+
+        norm.fit<-norm.test(alphadiv.use.selected1[,4])
+        homn.fit<-variance.test(alphadiv.use.selected1,'value',alpha = 0.05)
+        if (norm.fit$p.value>=0.05) {
+          if (homn.fi$p.valuet>=0.05) {
+            fit<-t.test(value~group, alphadiv.use.selected1, var.equal=TRUE,
+                        paired = FALSE, alternative = 'two.sided')
+          } else {
+            fit<-t.test(value~group, alphadiv.use.selected1, var.equal=FALSE,
+                        paired = FALSE, alternative = 'two.sided')
+          }
+          method="t.test"
         } else {
-          fit<-t.test(value~group, alphadiv.use.selected1,
-                      paired = FALSE, alternative = 'two.sided')
+          fit<-wilcox.test(value~group, alphadiv.use.selected1,
+                           exact = FALSE,correct=FALSE,
+                           paired = FALSE, alternative = 'two.sided')
+          method="wilcox.test"
         }
+
+
         stats<-data.frame(
           index=index,
           group1=x[1],
@@ -275,75 +284,8 @@
 
       data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-}
+#}
 
-      if ( method== "wilcox.test") {
-        sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
-        alphadiv.use.selected1<-data_poi[
-          which(data_poi$group==x[1] | data_poi$group==x[2]),]
-        if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-          fit<-wilcox.test(value~group, alphadiv.use.selected1,
-                      paired = TRUE, alternative = 'two.sided')
-        } else {
-          fit<-wilcox.test(value~group, alphadiv.use.selected1,
-                      paired = FALSE, alternative = 'two.sided')
-        }
-        stats<-data.frame(
-          index=index,
-          group1=x[1],
-          group2=x[2],
-          mean1=mean(alphadiv.use.selected1$value[
-            which(alphadiv.use.selected1$group==x[1])]),
-          mean2=mean(alphadiv.use.selected1$value[
-            which(alphadiv.use.selected1$group==x[2])]),
-          max1=max(alphadiv.use.selected1$value[
-            which(alphadiv.use.selected1$group==x[1])]),
-          max2=max(alphadiv.use.selected1$value[
-            which(alphadiv.use.selected1$group==x[2])]),
-          statistics=fit$statistic,
-          p.value=fit$p.value,
-          method=fit$method)
-      })
-
-      data.alpha<-data.frame()
-      for (tt in 1:length(sta)) {
-        data.al<-sta[[tt]]
-        {
-          data.alpha<-rbind(data.alpha,data.al)
-        }
-      }
-
-
-      data.alpha$sig<-ifelse(data.alpha$p.value<0.001,"***",
-                             ifelse(data.alpha$p.value<0.01,"**",
-                                    ifelse(data.alpha$p.value<0.05,"*","ns")))
-
-      data.alpha$sd1<-data_err$sd[match(data.alpha$group1, data_err$group)]
-      data.alpha$sd2<-data_err$sd[match(data.alpha$group2, data_err$group)]
-      data.alpha$yvalue1<-data.alpha$mean1+data.alpha$sd1
-      data.alpha$yvalue2<-data.alpha$mean2+data.alpha$sd2
-
-      {group.selected<-c(unique(data.alpha$group1),unique(data.alpha$group2))
-
-        value.selected<-c(unique(data.alpha$yvalue1),unique(data.alpha$yvalue2))
-
-        max.value.selected<-value.selected%>%max()
-
-        max.value.group.selected<-group.selected[match(max.value.selected,
-                                                       value.selected)]
-
-
-      }
-
-      y.ratio<-(max(data_poi$value)-min(data_poi$value))/30
-      data.alpha$order<-(match(data.alpha$group2,
-                               data_err$group)-match(data.alpha$group1,
-                                                     data_err$group))
-
-      data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
-      data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
 
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
@@ -363,85 +305,30 @@
 
       if ( method == "anova") {
         variance.data<-subset(variance.data, select=c(1,match(match.index,colnames(variance.data))))
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1$mcletters$Letters)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1$mcletters$Letters)
-            }
-          }
-        }
+        fit <- aov(formula(paste(index, "~group")), data=variance.data)
+        tukey_result <- agricolae::HSD.test(fit, trt="group", group=TRUE, console=FALSE)
 
+        tukey <- tukey_result$groups
+        #means <- tapply(input.data[,index], input.data$group, mean)
+        #stds <- tapply(input.data[,index], input.data$group, sd)
+        #means_str <- sprintf("%0.2f±%0.2f", means, stds)
 
-        test.b<-test.b%>%data.frame()
-        colnames(test.b)<-colnames(variance.data)[2:ncol(variance.data)]
+        #
+        tukey$group<-rownames(tukey)
+        tukey$group<-factor(tukey$group,levels = levels(variance.data$group))
+        tukey<-tukey[order(tukey$group),]
+        tukey[,index]<-tukey$groups
+        tukey<-subset(tukey,select = -groups)
 
-        sig_label<-test.b
-        sig_label$group<-rownames(sig_label)
-        index_order<-which(colnames(sig_label)==index)
-        sig_label<-subset(sig_label,select = c(index_order,group))
-        sig_label$group <- factor(sig_label$group , levels = unique(sig_label$group))
+        tukey_new<-merge(tukey,data_max,by="group")
+        colnames(tukey_new)[2]<-"alpha"
+        tukey_new$group <- factor(tukey_new$group , levels = unique(tukey$group))
+        tukey_new<-merge(tukey_new,data_err,by="group")
+        tukey_new$valuey<-tukey_new$value+tukey_new$se
+        sig_label_new<-tukey_new
 
-        data_max<-subset(data_poi,select=c(1,4))%>%
-          group_by(group)%>%
-          summarise_all(max)
-
-        sig_label_new<-merge(sig_label,data_max,by="group")
-        colnames(sig_label_new)[2]<-"alpha"
-        sig_label_new$group <- factor(sig_label_new$group , levels = unique(sig_label$group))
-        sig_label_new<-merge(sig_label_new,data_err,by="group")
-        sig_label_new$valuey<-sig_label_new$value+sig_label_new$se
-
-        x = c(1:length(data_poi$sample))
-        y = data_poi$value
-
-        ##方差分析
-        fit1 <- aov(value ~  group,
-                    data = data_poi)
-        ##事后比较
-        tuk1<-glht(fit1,linfct=mcp(group="Tukey"))
-        ##显著性标志
-        res1 <- cld(tuk1,alpah=0.05)
-        ##显著性数值
-        ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-        pvalue<-ano$`Pr(>F)`[1]
+        aov_table <- anova(fit)
+        pvalue<-  aov_table$`Pr(>F)`[1]
         if (pvalue<0.001) pvalue=0.001
 
         data.alpha<-data.frame(
@@ -454,45 +341,36 @@
 
       if ( method == "kruskal.test") {
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
-        input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp.t(input.data)
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.c<-rbind(test.c,tuk1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.c<-rbind(test.c,tuk1)
-            }
-          }
-        }
 
-        input.data<-input.data1[which(input.data1$variable==index),]
+
+        comparison<-with(variance.data,agricolae::kruskal(eval(parse(text=index)),group,group=TRUE))
+
+        colnames(comparison$means)[1]<-"mean"
+        colnames(comparison$groups)[1]<-index
+
+        input.data<-comparison$means
+        input.data<-input.data%>%tibble::rownames_to_column("group")
+        input.data<-subset(input.data, select = c(1,4,2))
+
+        input.let<-comparison$groups
+        input.let<-input.let%>%tibble::rownames_to_column("group")
+        input.data<-merge(input.data,input.let,by="group")
+        input.data<-input.data[,-4]
+        colnames(input.data)[4]<-"Letters"
+        input.data[,"variable"]<-index
+
+        input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
         sig_label_new$valuey<-sig_label_new$mean+sig_label_new$std*sqrt(samplenum)
         sig_label_new$alpha<-sig_label_new$Letters
 
 
-        aovtest=aovtest[which(colnames(aovtest)==index)]
+        aovtest=comparison$statistics$p.chisq
         if (aovtest<0.001) aovtest=0.001
-        p.value<-aovtest
         data.alpha<-data.frame(
           index=index,
-          p.value=p.value,
+          p.value=aovtest,
           method=method
         )
         y.ratio=NULL
@@ -522,92 +400,37 @@
 
     if (method %in% c("t.test","wilcox.test")) {
 
-      if (index %in% match.index) {
-        method= "t.test"
-      } else {
-        method= "wilcox.test"
-      }
+     # if (index %in% match.index) {
+       # method= "t.test"
+      #} else {
+      #  method= "wilcox.test"
+     # }
 
-      if ( method== "t.test") {
+     # if ( method== "t.test") {
         sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
+        sta<-lapply(comparison, function(x){
           alphadiv.use.selected1<-data_poi[
             which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = TRUE, alternative = 'two.sided')
-          } else {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = FALSE, alternative = 'two.sided')
-          }
-          stats<-data.frame(
-            index=index,
-            group1=x[1],
-            group2=x[2],
-            mean1=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            mean2=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            max1=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            max2=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            statistics=fit$statistic,
-            p.value=fit$p.value,
-            method=fit$method)
-        })
-
-        data.alpha<-data.frame()
-        for (tt in 1:length(sta)) {
-          data.al<-sta[[tt]]
-          {
-            data.alpha<-rbind(data.alpha,data.al)
-          }
-        }
 
 
-        data.alpha$sig<-ifelse(data.alpha$p.value<0.001,"***",
-                               ifelse(data.alpha$p.value<0.01,"**",
-                                      ifelse(data.alpha$p.value<0.05,"*","ns")))
-
-        data.alpha$sd1<-data_err$sd[match(data.alpha$group1, data_err$group)]
-        data.alpha$sd2<-data_err$sd[match(data.alpha$group2, data_err$group)]
-        data.alpha$yvalue1<-data.alpha$mean1+data.alpha$sd1
-        data.alpha$yvalue2<-data.alpha$mean2+data.alpha$sd2
-
-        {group.selected<-c(unique(data.alpha$group1),unique(data.alpha$group2))
-
-          value.selected<-c(unique(data.alpha$yvalue1),unique(data.alpha$yvalue2))
-
-          max.value.selected<-value.selected%>%max()
-
-          max.value.group.selected<-group.selected[match(max.value.selected,
-                                                         value.selected)]
-
-
-        }
-
-        y.ratio<-(max(data_poi$value)-min(data_poi$value))/30
-        data.alpha$order<-(match(data.alpha$group2,
-                                 data_err$group)-match(data.alpha$group1,
-                                                       data_err$group))
-
-        data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
-        data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
-
-      if ( method== "wilcox.test") {
-        sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
-          alphadiv.use.selected1<-data_poi[
-            which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-            fit<-wilcox.test(value~group, alphadiv.use.selected1,
-                             paired = TRUE, alternative = 'two.sided')
+          norm.fit<-norm.test(alphadiv.use.selected1[,4])
+          homn.fit<-variance.test(alphadiv.use.selected1,'value',alpha = 0.05)
+          if (norm.fit$p.value>=0.05) {
+            if (homn.fit$p.value>=0.05) {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=TRUE,
+                          paired = FALSE, alternative = 'two.sided')
+            } else {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=FALSE,
+                          paired = FALSE, alternative = 'two.sided')
+            }
+            method="t.test"
           } else {
             fit<-wilcox.test(value~group, alphadiv.use.selected1,
+                             exact = FALSE,correct=FALSE,
                              paired = FALSE, alternative = 'two.sided')
+            method="wilcox.test"
           }
+
           stats<-data.frame(
             index=index,
             group1=x[1],
@@ -662,7 +485,7 @@
 
         data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
         data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
+    #  }
 
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
@@ -682,85 +505,30 @@
 
       if ( method == "anova") {
         variance.data<-subset(variance.data, select=c(1,match(match.index,colnames(variance.data))))
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1$mcletters$Letters)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1$mcletters$Letters)
-            }
-          }
-        }
+        fit <- aov(formula(paste(index, "~group")), data=variance.data)
+        tukey_result <- agricolae::HSD.test(fit, trt="group", group=TRUE, console=FALSE)
 
+        tukey <- tukey_result$groups
+        #means <- tapply(input.data[,index], input.data$group, mean)
+        #stds <- tapply(input.data[,index], input.data$group, sd)
+        #means_str <- sprintf("%0.2f±%0.2f", means, stds)
 
-        test.b<-test.b%>%data.frame()
-        colnames(test.b)<-colnames(variance.data)[2:ncol(variance.data)]
+        #
+        tukey$group<-rownames(tukey)
+        tukey$group<-factor(tukey$group,levels = levels(variance.data$group))
+        tukey<-tukey[order(tukey$group),]
+        tukey[,index]<-tukey$groups
+        tukey<-subset(tukey,select = -groups)
 
-        sig_label<-test.b
-        sig_label$group<-rownames(sig_label)
-        index_order<-which(colnames(sig_label)==index)
-        sig_label<-subset(sig_label,select = c(index_order,group))
-        sig_label$group <- factor(sig_label$group , levels = unique(sig_label$group))
+        tukey_new<-merge(tukey,data_max,by="group")
+        colnames(tukey_new)[2]<-"alpha"
+        tukey_new$group <- factor(tukey_new$group , levels = unique(tukey$group))
+        tukey_new<-merge(tukey_new,data_err,by="group")
+        tukey_new$valuey<-tukey_new$value+tukey_new$se
+        sig_label_new<-tukey_new
 
-        data_max<-subset(data_poi,select=c(1,4))%>%
-          group_by(group)%>%
-          summarise_all(max)
-
-        sig_label_new<-merge(sig_label,data_max,by="group")
-        colnames(sig_label_new)[2]<-"alpha"
-        sig_label_new$group <- factor(sig_label_new$group , levels = unique(sig_label$group))
-        sig_label_new<-merge(sig_label_new,data_err,by="group")
-        sig_label_new$valuey<-sig_label_new$value+sig_label_new$se
-
-        x = c(1:length(data_poi$sample))
-        y = data_poi$value
-
-        ##方差分析
-        fit1 <- aov(value ~  group,
-                    data = data_poi)
-        ##事后比较
-        tuk1<-glht(fit1,linfct=mcp(group="Tukey"))
-        ##显著性标志
-        res1 <- cld(tuk1,alpah=0.05)
-        ##显著性数值
-        ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-        pvalue<-ano$`Pr(>F)`[1]
+        aov_table <- anova(fit)
+        pvalue<-  aov_table$`Pr(>F)`[1]
         if (pvalue<0.001) pvalue=0.001
 
         data.alpha<-data.frame(
@@ -774,45 +542,35 @@
       if ( method == "kruskal.test") {
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
-        input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp.t(input.data)
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.c<-rbind(test.c,tuk1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.c<-rbind(test.c,tuk1)
-            }
-          }
-        }
 
-        input.data<-input.data1[which(input.data1$variable==index),]
+        comparison<-with(variance.data,agricolae::kruskal(eval(parse(text=index)),group,group=TRUE))
+
+        colnames(comparison$means)[1]<-"mean"
+        colnames(comparison$groups)[1]<-index
+
+        input.data<-comparison$means
+        input.data<-input.data%>%tibble::rownames_to_column("group")
+        input.data<-subset(input.data, select = c(1,4,2))
+
+        input.let<-comparison$groups
+        input.let<-input.let%>%tibble::rownames_to_column("group")
+        input.data<-merge(input.data,input.let,by="group")
+        input.data<-input.data[,-4]
+        colnames(input.data)[4]<-"Letters"
+        input.data[,"variable"]<-index
+
+        input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
         sig_label_new$valuey<-sig_label_new$mean+sig_label_new$std*sqrt(samplenum)
         sig_label_new$alpha<-sig_label_new$Letters
 
 
-        aovtest=aovtest[which(colnames(aovtest)==index)]
+        aovtest=comparison$statistics$p.chisq
         if (aovtest<0.001) aovtest=0.001
-        p.value<-aovtest
         data.alpha<-data.frame(
           index=index,
-          p.value=p.value,
+          p.value=aovtest,
           method=method
         )
         y.ratio=NULL
@@ -851,8 +609,12 @@
                                     xlabname=xlabname,
                                     color_group=colorCustom(5,pal = "gygn"),
                                     color_background="grey90",
+                                    panel.border=c("none","normal","all","axis"),
+                                    axis.x.angle.adjust=FALSE,
+                                    mytheme=NULL,
                                     export_path="microbial diversity analysis") {
-  export_path<-paste(export_path,"/microbial diversity analysis/Alpha diversity",sep = "")
+  panel.border<-match.arg(panel.border)
+  export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Alpha diversity",sep = "")
 
   dir.create(export_path, recursive = TRUE)
 
@@ -871,7 +633,6 @@
     }
   method<-microchatAlphadivStatobj$method
   sig_label_new<-microchatAlphadivStatobj$sig
-
 
   all.group<-microchatAlphadivStatobj$all.group
   sel.group<-unique(data_poi$group)
@@ -914,8 +675,10 @@
     geom_point(aes(group=index,color=group))
 
 
-  if (!seg) data.seg<-calcSegmentOrder(data.alpha,y.ratio,data_poi)
-  if (seg) data.seg<-calcSegment2Order(data.alpha,y.ratio,data_poi)
+  if (!seg) data.seg <- calcSegmentOrder(data.alpha, y.ratio,
+                                         data_poi)
+  if (seg) data.seg <-calcorderx(data.alpha, y.ratio,
+                                 data_poi)
 
   for (tt in 1:nrow(data.seg)) {
     x1<-data.seg$order1[tt]
@@ -979,8 +742,7 @@
     scale_discrete_manual(values=colors,
                           aesthetics = "fill")
 
-  p<-p+annotate("text",family="serif",
-                x = 1, y = min(data_poi$value),label=method)
+  p<-p+labs(title =method)
 
  }
 
@@ -1021,13 +783,11 @@
                                aesthetics = "colour")+
       scale_discrete_manual(values=colors,
                             aesthetics = "fill")
-    p<-p +
-      annotate('text', label = sprintf('italic(pvalue) == %.3f', signif(data.alpha$p.value,3)),
-               x = 1, y = max(data_poi$value)*1.02,
-               size = 3, parse = TRUE,family = "serif")
-
-    p<-p+annotate("text",family="serif",
-                  x = 1, y = min(data_poi$value),label=method)}
+    p<-p+labs(title =
+                paste(method,": p = ",
+                      keep.decmi(data.alpha$p.value),sep="")
+    )
+    }
 
    if (method=="kruskal.test") {
      p.value<-sig_label_new
@@ -1064,21 +824,69 @@
                               aesthetics = "colour")+
      scale_discrete_manual(values=colors,
                            aesthetics = "fill")
-   p<-p +
-     annotate('text', label = sprintf('italic(pvalue) == %.3f', signif(p.value,3)),
-              x = 1, y = max(data_poi$value)*1.02,
-              size = 3, parse = TRUE,family = "serif")
 
-   p<-p+annotate("text",family="serif",
-                 x = 1, y = min(data_poi$value),label=method)}
+   p<-p+labs(title =
+     paste(method,": p = ",
+           keep.decmi(data.alpha$p.value),sep="")
+   )
+   }
 
+ }
+
+ if (!is.null(xlabname)) p<-p+scale_x_discrete(labels=xlabname)
+
+  p<-p+theme(aspect.ratio = 1,
+             title =  element_text(size = 7,face="bold.italic"),
+             axis.title = element_text(size = 6,face="bold"),
+             axis.text = element_text(size = 4,face="bold"))
+
+
+  if (method %in% c("anova","kruskal.test")) {
+    y.offset<-1/20*max(data_poi$value)
   }
-p<-p+scale_x_discrete(labels=xlabname)
-  ggsave(paste(export_path,"/alpha_diversity (",index,") .pdf",sep = ""),p)
+
+  if (method %in% c("t.test","wilcox.test")) {
+    y.offset<-max(data.seg$y3)-max(data_poi$value)+y.ratio*2/3
+  }
+
+  if (panel.border=="all") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.5/2, xend = length(unique(data_poi$group))+0.5/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(data_poi$value), yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.5/2, xend = length(unique(data_poi$group))+0.5/2,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(data_poi$value), yend = max(data_poi$value)+y.offset,
+             x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.5/2, xend = length(unique(data_poi$group))+0.5/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(data_poi$value), yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
+  )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+
+  if (!is.null(mytheme)) p<-p+mytheme
+  p<-p+theme(text = element_text(family = "serif"))
+  ggsave(paste(export_path,"/alpha_diversity (",index,") .pdf",sep = ""),
+         units = "cm",
+         width = 21/3,
+         height = 21*p$theme$aspect.ratio/3,
+         p)
   cat("\n","Alpha diversity barplot has been exported. Please check it.","\n")
-
   return(p)
-
 }
 
 
@@ -1087,7 +895,7 @@ p<-p+scale_x_discrete(labels=xlabname)
                                    ordination="PCoA",
                                    export_path="microbial diversity analysis") {
 
-  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity/data_PCoA",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Beta diversity/data_PCoA",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   message(" bray distance based on abudance table，jaccard distance based on community structure.")
@@ -1214,10 +1022,13 @@ p<-p+scale_x_discrete(labels=xlabname)
                                    text.size=2.5,
                                    ellipse.linetype=2,
                                    layout=c("ellipse","chull","ellipse+chull"),
+                                   panel.border=c("none","normal","all","axis"),
+                                   axis.x.angle.adjust=FALSE,
+                                   mytheme=NULL,
                                    export_path="microbial diversity analysis") {
-
+  panel.border<-match.arg(panel.border)
   layout<-match.arg(layout)
-  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial diversity analysis/Beta diversity",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatBetadivobj)[1]!="microchat") {
@@ -1276,8 +1087,12 @@ p<-p+scale_x_discrete(labels=xlabname)
                  linetype=ellipse.linetype,alpha=0.1,show.legend = F)
 
   site$sample<-"none"
-  for (j in 1:length(unique(xlabname))) {
-    site[which(site$group==unique(site$group)[j]),]$sample<-unique(xlabname)[j]
+  if (!is.null(xlabname))  {
+    for (j in 1:length(unique(xlabname))) {
+      site[which(site$group==unique(site$group)[j]),]$sample<-unique(xlabname)[j]
+    }
+  } else {
+    site$sample<-site$group
   }
 
   p<-p+
@@ -1358,13 +1173,56 @@ p<-p+scale_x_discrete(labels=xlabname)
     text(s3d$xyz.convert(scores_3d[,c(1,2,3)] + 2),
          labels = rownames(scores_3d),
          cex = 0.8,col = "black")
-
-
   }
   ordination<-microchatBetadivobj$ordination
   distance<-microchatBetadivobj$distance
 
-  ggsave(paste(export_path,"/beta_diversity (",ordination,") based on ",distance," distance.pdf",sep = ""),p)
+  p<-p+theme(aspect.ratio = 1,
+             title =  element_text(size = 7,face="bold"),
+             axis.title = element_text(size = 6,face="bold"),
+             axis.text = element_text(size = 4,face="bold"))
+  if (panel.border=="all") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = min(microchatBetadivobj$PCoA1)*0.9,
+             xend = max(microchatBetadivobj$PCoA1)*0.9,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(microchatBetadivobj$PCoA2)*0.9,
+             yend = max(microchatBetadivobj$PCoA2)*0.9,
+             x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x =min(microchatBetadivobj$PCoA1 )*0.9,
+             xend = max(microchatBetadivobj$PCoA1 )*0.9,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(microchatBetadivobj$PCoA2)*0.9,
+             yend = max(microchatBetadivobj$PCoA2)*0.9,
+             x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x =min(microchatBetadivobj$PCoA1 )*0.9,
+             xend = max(microchatBetadivobj$PCoA1 )*0.9,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = min(microchatBetadivobj$PCoA2)*0.9,
+             yend = max(microchatBetadivobj$PCoA2)*0.9,
+             x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
+  )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+
+  if (!is.null(mytheme)) p<-p+mytheme
+  p<-p+theme(text = element_text(family = "serif"))
+  ggsave(paste(export_path,"/beta_diversity (",ordination,") based on ",distance," distance.pdf",sep = ""),
+         units = "cm",
+         width = 21/3,
+         height = 21*p$theme$aspect.ratio/3,
+         p)
   cat("\n","Beta diversity cluster plot has been exported. Please check it.","\n")
   return(p)
 }
@@ -1564,7 +1422,6 @@ p<-p+scale_x_discrete(labels=xlabname)
                                 p.adjust.m = "BH",
                                 distance = 'bray',
                                 export_path="cs2/microbial diversity analysis") {
-  export_path<-paste(export_path,"/microbial diversity analysis/Beta diversity",sep = "")
   dir.create(paste(export_path,"/Permutation tests",sep = ""), recursive = TRUE)
   suppressMessages(library(vegan))
   p.adjust.method()

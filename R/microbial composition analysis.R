@@ -9,6 +9,10 @@
                               aspect.ratio=0.8,
                               color_background=NULL,
                               color_border=NULL,
+                              layout.flow=FALSE,
+                              layout.flow.alpha=0.2,
+                              layout.flow.offset.x=0.01,
+                              layout.flow.offset.y=0.25,
                               mytheme=NULL,
                               export_path="microbial composition") {
   data_type=match.arg(data_type)
@@ -23,7 +27,7 @@
 
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
-  export_path<-paste(export_path,"/microbial composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -239,12 +243,120 @@
     p1<-p1+ scale_x_discrete(labels = xlabname)
   }
   if (is.null(mytheme)) p1<-p1 else p1<-p1+mytheme
-  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot (",chicklet,").pdf",sep = ""),p1,bg="white")
+
+if (layout.flow) {
+  xp_p_data<-stat_Barflow(p1$data,barplot.barwidth=barplot.barwidth,
+                          offset.x=layout.flow.offset.x, offset.y=layout.flow.offset.y)
+
+  p1<-PlotextendFlow(p1,xp_p_data,color_taxa,alpha=layout.flow.alpha)
+}
+
+  gnum<-length(unique(microchatcomobj$plot_data$group))
+  p1<-p1+ theme(legend.key.size = unit(0.5,'cm'),
+                legend.text =  element_text(size = 4,face="bold"),
+                legend.title = element_text(size = 6,face="bold"),
+                axis.title = element_text(size = 12,face="bold"),
+                axis.text = element_text(size = 8,face="bold"))+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-barplot.barwidth/2,
+             xend = length(unique(p1$data$variable))+barplot.barwidth/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = sum(p1$data$value)/length(unique(p1$data$variable)),
+             x = -Inf+1, xend = -Inf+1)
+  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot (",chicklet,").pdf",sep = ""),
+         p1,bg="white",
+         units = "cm",
+         width = 21/3*2,
+         height = 21*p1$theme$aspect.ratio/3*2)
   cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_barplot"," has been exported to ",export_path,sep = "","\n")
 
   return(p1)
 }
 
+'stat_Barflow' <- function(pp_data,barplot.barwidth=0.6,offset.x=0.01, offset.y=0.25) {
+
+  pp_data[which(pp_data$variable==unique(pp_data$variable)[1]),]->pp_data1
+  pp_data1<-pp_data1[order(pp_data1$tax),]
+  pp_data1$cum<-0
+  pp_data1$cum[1]<-pp_data1$value[1]
+
+  for (k in 2:nrow(pp_data1)) {
+    pp_data1$cum[k]<-sum(pp_data1$value[1:k])
+  }
+
+  for (t in 2:length(unique(pp_data$variable))) {
+    pp_data[which(pp_data$variable==unique(pp_data$variable)[t]),]->pp_data2
+    pp_data2<-pp_data2[order(pp_data2$tax),]
+
+    pp_data2$cum<-0
+    pp_data2$cum[1]<-pp_data2$value[1]
+    for (k in 2:nrow(pp_data2)) {
+      pp_data2$cum[k]<-sum(pp_data2$value[1:k])
+    }
+
+    pp_data1<-rbind(pp_data1,pp_data2)
+  }
+
+  pp_data1$tax%>%unique()%>%sort()->reod
+  pp_data1->plot_data
+  plot_data[which(plot_data$tax==reod[1]),]->c_data
+  c_data$x<-1:nrow(c_data)
+  c_data$y<-c_data$value
+  c_data$x0<-c_data$x+barplot.barwidth/2
+  c_data[nrow(c_data),]$x0<-c_data[nrow(c_data),]$x0-barplot.barwidth
+  c_data_2<-c_data[2:(nrow(c_data)-1),]
+  c_data_2$x0<-c_data_2$x-barplot.barwidth/2
+  c_data<-rbind(c_data,c_data_2)
+  c_data$ymax<-c_data$y
+  c_data$ymin<-0
+  c_data_x<-c_data
+
+  xp_p_data<-list()
+  xp_p_data[[1]]<-c_data_x
+  for (tk in 2:length(reod)) {
+    plot_data[which(plot_data$tax==reod[tk]),]->c_data
+    c_data$x<-1:nrow(c_data)
+    c_data$y<-c_data$value
+    c_data$x0<-c_data$x+barplot.barwidth/2
+    c_data[nrow(c_data),]$x0<-c_data[nrow(c_data),]$x0-barplot.barwidth
+
+    c_data_2<-c_data[2:(nrow(c_data)-1),]
+    c_data_2$x0<-c_data_2$x-barplot.barwidth/2
+    c_data<-rbind(c_data,c_data_2)
+    c_data$ymax<-c_data$cum
+    if (tk==2) c_data$ymin<-c_data_x$cum else c_data$ymin<-xp_p_data[[tk-1]]$cum
+
+    xp_p_data[[tk]]<-c_data
+  }
+
+  for (sk in 1:length(xp_p_data)) {
+    xp_p_data[[sk]]<-xp_p_data[[sk]][order(xp_p_data[[sk]]$x0),]
+
+    for (jk in 1:(nrow(xp_p_data[[1]])/2)) {
+      ## offset.x=0.01
+      xp_p_data[[sk]]$x0[jk*2]<-xp_p_data[[sk]]$x0[jk*2]-offset.x
+      xp_p_data[[sk]]$x0[jk*2-1]<-xp_p_data[[sk]]$x0[jk*2-1]+offset.x
+
+      ## offset.y=0.25
+      xp_p_data[[sk]][(2*jk-1):(2*jk),]$ymin<-xp_p_data[[sk]][(2*jk-1):(2*jk),]$ymin+offset.y
+      xp_p_data[[sk]][(2*jk-1):(2*jk),]$ymax<-xp_p_data[[sk]][(2*jk-1):(2*jk),]$ymax-offset.y
+    }
+  }
+  return(xp_p_data)
+}
+
+'PlotextendFlow' <- function(plot,xp_p_data,color_taxa,alpha) {
+  for (sk in 1:length(xp_p_data)) {
+    for (jk in 1:(nrow(xp_p_data[[1]])/2)) {
+      plot<-plot+geom_ribbon(data=xp_p_data[[sk]][(2*jk-1):(2*jk),],aes(x0,ymin=ymin,ymax=ymax),
+                             color=NA,linewidth=2,
+                             fill=color_taxa[match(unique(xp_p_data[[sk]]$tax),names(color_taxa))],
+                             alpha=alpha)
+    }
+  }
+  return(plot)
+}
 
 "plotMicrocomPie" <- function(microchatcomobj,
                               xlabname=NULL,
@@ -253,6 +365,8 @@
                               color_taxa=NULL,
                               color_group=NULL,
                               color_percent="white",
+                              top.layout=TRUE,
+                              medium.ring=FALSE,
                               export_path="microbial composition") {
   data_type=match.arg(data_type)
   sample_type=match.arg(sample_type)
@@ -267,7 +381,7 @@
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
-  export_path<-paste(export_path,"/microbial composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -295,7 +409,7 @@
   if (!is.null(xlabname)) {
     if (length(oriname)!=length(xlabname)) stop("The number of xlabname cannot meet the requirement!!!")
   }
-
+  plot_data_name<-microchatcomobj$wide_group_abs%>%colnames()
   pp<-list()
   for (t in 1:length(oriname)) {
     gname<-oriname[t]
@@ -304,14 +418,36 @@
     split_otu4$labelxs<-paste(sprintf("%0.2f",round(split_otu4$value/sum(split_otu4$value),4)*100),"%",sep = "")
     split_otu4$labelxs[which(split_otu4$value<0.04)]<-""
 
+    split_otu4$valuey<-1
+
     p1<-ggplot(split_otu4, aes(x = '', y = value,fill= tax)) +
-      geom_bar(stat = 'identity', show.legend = TRUE,width = 1) +
-      #facet_wrap(.~variable,ncol = ncols) +
+      geom_bar(stat = 'identity', show.legend = TRUE,width = 1,
+               color="white",size=0.5)
+
+   if (top.layout) p1<-p1 +geom_bar(aes(x = '', y = valuey),
+               fill=color_group[match(gname,plot_data_name)],
+               position = position_nudge(x = -0.25),
+               stat = 'identity', show.legend = FALSE,width = 0.5) +
+      geom_bar(aes(x = '', y = valuey),fill="white",
+               position = position_nudge(x = -0.025),
+               stat = 'identity', show.legend = FALSE,width = 0.05)
+
+    if (medium.ring) p1<-p1 + annotate(geom = "segment",
+                      x=1,y=0,xend = 1,yend = 1,
+                      color="black",
+                      linetype="solid",
+                      size=1)
+    p1<-p1 +
       geom_text(aes(y=rev(rev(value/2)+c(0,cumsum(rev(value))[-length(value)])),
-                    x= 1.05,label=labelxs),
-                size=4,colour=color_percent,family = "serif")+
-      coord_polar(theta = 'y')+
-      labs(title  = gname)+
+                    x= 1.25,label=labelxs),
+                size=4,colour=color_percent,family = "serif")
+
+if (top.layout) p1<-p1 + geom_text(aes(y=0.5,x= 0.5),
+                label=xlabname[t],
+                size=6,colour="white",family = "serif",fontface="bold")
+
+      p1<-p1 + coord_polar(theta = 'y')+
+      #labs(title  = gname)+
       theme_void()+
       theme(panel.grid = element_blank(),
             plot.title = element_text(hjust = 0.5),
@@ -339,18 +475,148 @@
       p1<-p1+scale_fill_manual(name=taxa,values = color_value1)
     }
 
-    if (!is.null(xlabname)) p1<-p1+labs(title  = xlabname[t])
+    #if (!is.null(xlabname)) p1<-p1+labs(title  = xlabname[t])
 
     pp[[t]]<-p1
   }
 
   pm<-wrap_plots(pp,ncol = ncols,guides="collect")
 
-  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot",".pdf",sep = ""),pm)
+  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot",".pdf",sep = ""),pm,
+         units = "cm",
+         width = 21)
   cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_pieplot"," has been exported to ",export_path,sep = "","\n")
 
   return(pm)
 }
+
+"plotMicrocom2Pie" <- function(microchatcomobj,
+                               xlabname=NULL,
+                               color_taxa=NULL,
+                               color_group=NULL,
+                               color_percent="white",
+                               inter.ring.radius=0.33,
+                               inter.ring.size=10,
+                               medium.ring=TRUE,
+                               medium.ring.color="black",
+                               medium.ring.linetype="solid",
+                               medium.ring.size=2,
+                               medium.ring.radius=0.1,
+                               export_path="microbial composition") {
+
+  if (class(microchatcomobj)!="microchat") {
+    stop("\n","Please convert the data into a 'microchat' object")
+  }
+  selected_taxa<-microchatcomobj$selected_taxa
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
+  dir.create(export_path, recursive = TRUE)
+  plot_data<-microchatcomobj$wide_group_abs
+  plot_data<-plot_data/rowSums(plot_data)
+  plot_data<-plot_data%>%tibble::rownames_to_column(var="taxa")
+  plot_data<-reshape2::melt(plot_data)
+
+  if (!is.null(xlabname)) {
+    if (length(unique(plot_data$variable)) != length(xlabname)) stop("please provide the same name as subgroups !!!")
+    plot_data$variables<-"xas"
+    for (xl in 1:length(xlabname)) {
+      plot_data$variables[which(plot_data$variable==unique(plot_data$variable)[xl])]=xlabname[xl]
+    }
+    plot_data$variables<-factor(plot_data$variables,levels = unique(plot_data$variables))
+    plot_data$variable<-plot_data$variables
+    plot_data<-subset(plot_data,select=-variables)
+  }
+
+  ncols<-plot_data$taxa%>%unique()%>%length()
+  if (ncols==1) ncols=1
+  if (ncols==2) ncols=2
+  if (ncols==3) ncols=3
+  if (ncols==4) ncols=2
+  if (ncols>4 & ncols <=9) ncols=3
+  if (ncols>9 & ncols <=16) ncols=4
+  if (ncols>16 & ncols <=25) ncols=5
+  t=unique(plot_data$taxa)[1]
+  plot_data_x<-microchatcomobj$wide_group_abs%>%rowSums()
+
+  pp<-list()
+  for (t in unique(plot_data$taxa)) {
+    split_otu4<-plot_data[which(plot_data$taxa==t),]
+    split_otu4$variable<-factor(split_otu4$variable,levels = unique(split_otu4$variable))
+    split_otu4$labelxs<-paste(sprintf("%0.2f",round(split_otu4$value/sum(split_otu4$value),4)*100),"%",sep = "")
+    split_otu4$labelxs[which(split_otu4$value<0.04)]<-""
+
+    split_otu4$valuey<-1
+
+    p1<-ggplot(split_otu4, aes(x = '', y = value,fill= variable)) +
+      geom_bar(stat = 'identity', show.legend = TRUE,width = 1,
+               color="white",size=2) +
+      geom_bar(aes(x = '', y = valuey),
+               fill=color_taxa[match(t,names(plot_data_x))],
+               position = position_nudge(x = -0.5+inter.ring.radius/2),
+               stat = 'identity', show.legend = FALSE,width = inter.ring.radius) +
+      geom_bar(aes(x = '', y = valuey),fill="white",
+               position = position_nudge(x = -0.5+inter.ring.radius+medium.ring.radius/2),
+               stat = 'identity', show.legend = FALSE,width = medium.ring.radius)
+
+    if (medium.ring) p1<-p1 + annotate(geom = "segment",
+                                       x=0.5+inter.ring.radius+0.05,
+                                       y=0,
+                                       xend = 0.5+inter.ring.radius+0.05,
+                                       yend = 1,
+                                       color=medium.ring.color,
+                                       linetype=medium.ring.linetype,
+                                       size=medium.ring.size)
+
+    p1<-p1+geom_text(
+      aes(y=rev(rev(value/2)+c(0,cumsum(rev(value))[-length(value)])),
+          x= 1+inter.ring.radius/2+medium.ring.radius/2,
+          label=labelxs),
+      size=4,colour=color_percent,family = "serif")+
+      geom_text(aes(y=0.5,x= 0.5),
+                label=match(t,names(plot_data_x)),
+                size=inter.ring.size,colour="white",family = "serif",fontface="bold")+
+      coord_polar(theta = 'y')+
+      labs(title  = t)+
+      theme_void()+
+      theme(panel.grid = element_blank(),
+            plot.title = element_text(hjust = 0.5),
+            panel.background = element_blank(),
+            text = element_text(family = "serif"),
+            axis.text.x = element_blank(), legend.position = "right",
+            legend.text = element_text(family = "serif"),
+            plot.background = element_blank())
+
+    if (!is.null(color_group)) {
+      color_value1<-color_group[1:length(unique(split_otu4$variable))]
+      names(color_value1)<-unique(split_otu4$variable)
+
+      message("use self-selected color")
+
+      p1<-p1+
+        scale_fill_manual(name=selected_taxa,values=color_value1)
+
+    } else {
+      color_value1<-randomcolor((length(unique(split_otu4$variable))))
+      names(color_value1)<-unique(split_otu4$variable)
+
+      p1<-p1+scale_fill_manual(name=selected_taxa,values = color_value1)
+    }
+
+    export_path_x<-paste(export_path,"/single pieplot/",selected_taxa,sep = "")
+    dir.create(export_path_x, recursive = TRUE)
+
+    ggsave(paste(export_path_x,"/(",match(t,names(plot_data_x)),")_",t,"_pieplot",".pdf",sep = ""),p1)
+    pp[[t]]<-p1
+  }
+  library(patchwork)
+  pm<-wrap_plots(pp,ncol = ncols,guides="collect")
+  print(pm)
+  ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".pdf",sep = ""),pm)
+  ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".png",sep = ""),pm)
+  ggsave(paste(export_path,"/",selected_taxa,"_pieplot",".tiff",sep = ""),pm)
+  message("Here exports a list of muti plots")
+  return(pp)
+}
+
 
 "plotMicrocomHeatmap" <- function(microchatcomobj,
                                   rescale=FALSE,
@@ -378,7 +644,7 @@
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
-  export_path<-paste(export_path,"/microbial composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (!rescale) {
@@ -600,7 +866,7 @@
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
-  export_path<-paste(export_path,"/microbial composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -695,6 +961,7 @@
                                  aspect.ratio=0.8,
                                  color_background=NULL,
                                  color_border=NULL,
+                                 mytheme=NULL,
                                  export_path="microbial composition") {
   data_type=match.arg(data_type)
   sample_type=match.arg(sample_type)
@@ -708,7 +975,7 @@
   taxa_num<-microchatcomobj$selected_taxanum
   taxa<-microchatcomobj$selected_taxa
 
-  export_path<-paste(export_path,"/microbial composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (data_type=="absolute") {
@@ -737,13 +1004,13 @@
                  alpha=bubble.alpha,show.legend = TRUE)+
       scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
       scale_color_manual(name=taxa,values=color_taxa)+
+      ylab(taxa)+
       theme(aspect.ratio = aspect.ratio,
             axis.ticks.length = unit(0.2,"lines"),
             axis.ticks = element_line(color='black'),
             panel.background = element_rect(fill = "grey90"),
             #axis.line = element_line(colour = "black"),
             axis.title.x=element_blank(),
-            axis.title.y=element_text(colour='black', size=18,face = "bold",family = "serif",vjust = 1.5),
             axis.text.y=element_text(colour='black',size=10,family = "serif"),
             axis.text.x=element_text(colour = "black",size = 10,
                                      angle = 0,hjust = 0.5,vjust =0.5,family = "serif"))
@@ -776,6 +1043,7 @@
                  alpha=bubble.alpha,show.legend = TRUE)+
       scale_size(range = c(0.1, bubble.max.size),guide=FALSE)+
       scale_color_manual(name=taxa,values=color_sample)+
+      ylab(taxa)+
       theme(aspect.ratio = aspect.ratio,
             axis.ticks.length = unit(0.2,"lines"),
             axis.ticks = element_line(color='black'),
@@ -800,7 +1068,26 @@
   } else {
     p1<-p1+theme(panel.border = element_rect(fill=NA,colour = color_border))
   }
-  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_bubble",".pdf",sep = ""),p1)
+
+  if (is.null(mytheme)) p1<-p1 else p1<-p1+mytheme
+
+  gnum<-length(unique(microchatcomobj$plot_data$group))
+  p1<-p1+ theme(legend.key.size = unit(0.5,'cm'),
+                legend.text =  element_text(size = 4,face="bold"),
+                legend.title = element_text(size = 6,face="bold"),
+                axis.title = element_text(size = 12,face="bold"),
+                axis.text = element_text(size = 8,face="bold"),
+                axis.text.y = element_text(angle = 45))+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.5/2, xend = gnum+0.5/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 1, yend = nrow(microchatcomobj$wide_group_abs), x = -Inf+1, xend = -Inf+1)
+  ggsave(paste(export_path,"/top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_bubble",".pdf",sep = ""),
+         p1,bg="white",
+         units = "cm",
+         width = 21/3*2,
+         height = 21*p1$theme$aspect.ratio/3*2)
   cat("\n","top_",taxa_num," (",taxa,") ",data_type," abundance of ",sample_type,"_bubble"," has been exported to ",export_path,sep = "","\n")
 
   return(p1)
@@ -816,7 +1103,7 @@
   if (class(mchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
   }
-  export_path<-paste(export_path,"/microbial composition/data_composition",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Basic description/data",sep = "")
   if (file.save) dir.create(export_path, recursive = TRUE)
 
   if (length(which(colSums(mchat$otu_table)==0)) !=0) mchat$otu_table<-mchat$otu_table[,-which(colSums(mchat$otu_table)==0)]
@@ -904,32 +1191,32 @@
 
   if (file.save) {
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_absabun.txt",sep = "" )
-  write.table(genus_top,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(genus_top,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
-  write.table(genus_topxx,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(genus_topxx,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") relative abundance of all samples has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_barplot.txt",sep = "" )
-  write.table(split_otu1,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(split_otu1,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
-  write.table(split_otu2,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(split_otu2,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_barplot.txt",sep = "" )
-  write.table(split_otu3,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(split_otu3,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") absolute abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 
   file2=paste(export_path, "/top_",taxa_num,"_abun_",taxa,"_pieplot.txt",sep = "" )
-  write.table(split_otu4,file = file2, row.names = FALSE,quote = FALSE, sep = "\t")
+  write.table(split_otu4,file = file2, row.names = TRUE,quote = FALSE, sep = "\t")
   cat("\n","top ",taxa_num," (",taxa,") relative abundance of all groups (long data) has been saved in the relative path"," '",export_path,"'",sep = "")
   cat("\n","-----------------------------------------------------------------------")
 }
@@ -979,12 +1266,18 @@
   data_venn1<-data_ve$data_with_taxa
   data_venn2<-data_ve$data_with_2taxa
 
+  data_venn3<-data_venn2
+  data_venn3<-subset(data_venn3, select=c(1,
+                                          (ncol(data_venn3)-6):ncol(data_venn3),
+                                          2:(ncol(data_venn3)-7)))
+
   ###create S3 object
   microchatVennobj <- list(data_venn,
                           data_venn1,
                           data_venn2,
                           otudata,
-                          taxon_table)
+                          taxon_table,
+                          data_venn3)
 
   class(microchatVennobj) <- "microchat"
 
@@ -993,6 +1286,7 @@
   names(microchatVennobj)[[3]]<-"data_venn2"
   names(microchatVennobj)[[4]]<-"otu_table"
   names(microchatVennobj)[[5]]<-"taxon_table"
+  names(microchatVennobj)[[6]]<-"data_venn3"
 
   return(microchatVennobj)
 }
@@ -1076,6 +1370,249 @@ par(family="serif")
   message("\n","The upset plot need to be saved manually.")
   return(pp)
 }
+
+"plotMicrochatAdvancedVenn" <- function(microchatVennobj,xlabname,color_group,
+                                        pieplot.mar = c(0.4,0.6,0.05,1),
+                                        linkplot.mar = c(0.85,1,0.2,1),
+                                        export_path) {
+
+  export_path<-paste(export_path,"/Venn",sep = "")
+  dir.create(export_path, recursive = TRUE)
+  data_venn3<-microchatVennobj$data_venn3
+
+  data_venn<-subset(data_venn3,select = c(1,9:ncol(data_venn3)))
+  data_venn<-data_venn%>%tibble::column_to_rownames(var = "name")
+
+  gnum<-ncol(data_venn)
+  data_venn<-data_venn[which(rowSums(data_venn)==1 | rowSums(data_venn)==gnum),]
+  data_vennx<-data_venn
+  data_vennx$sum<-rowSums(data_vennx)
+  data_vennxx<-data_venn
+  coln<-colnames(data_venn)
+
+  colna<-c()
+  for (t in 1:ncol(data_venn)) {
+    data_venn[,t][which(data_venn[,t]!=0)]<-colnames(data_venn)[t]
+    colna<-paste(colna,coln[t],sep="_")
+  }
+  colna<-substr(colna,start = 2,stop = nchar(colna))
+
+  data_venn$type<-" "
+  for (k in 1:nrow(data_venn)) {
+    if (data_vennx$sum[k]==1) {
+      data_venn$type[k]<-colnames(data_vennxx[k,][which(data_vennxx[k,]==1)])
+    } else if (data_vennx$sum[k]==(ncol(data_vennx)-1)){
+      data_venn$type[k]<-colna
+    }
+  }
+
+  data.use<-table(data_venn$type)
+  coln.use<-c(colna,coln)
+  data.use<-data.use[match(coln.use,names(data.use))]
+
+  plot_data<-data.use%>%as.data.frame()
+  plot_data$Freq<-plot_data$Freq%>%as.numeric()
+  plot_data$label<-plot_data$Var1
+  plot_data$label<-plot_data$label%>%as.character()
+  plot_data$label[1]<-"All"
+  plot_data$label[2:nrow(plot_data)]<-xlabname
+
+  color.use<-c("black",color_group)[1:nrow(plot_data)]
+  names(color.use)<-unique(plot_data$Var1)
+
+  ggplot(data=plot_data,aes(x=Var1,y=Freq,fill=Var1))+
+    #geom_bar(width = 0.25,color="grey75",size=2,stat = 'identity',position = position_nudge(x=-0.125))+
+    geom_bar(width = 0.75,color="grey90",size=0.5,stat = 'identity')+
+    geom_text(aes(color=Var1,
+                  label=paste0(plot_data$label," (",plot_data$Freq,")")),
+              vjust=-1,size=3,
+              family="serif",fontface="bold")+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(plot_data$Freq)*1.1, x = -Inf+1, xend = -Inf+1)+
+    labs(title = "OTU distribution patterns",x=NULL,y="OTU numbers")+
+    theme(text = element_text(family = "serif"),
+          panel.background = element_blank(),
+          legend.position = "none",
+          axis.ticks.length = unit(0.2,"lines"),
+          axis.ticks = element_line(color='black'),
+          axis.title  = element_text(size = 12,color = "black",face="bold"),
+          axis.text = element_text(size = 10,color = "black",face="bold"),
+          title = element_text(size = 12,color = "black",face="bold"),
+          axis.line.x.bottom = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          aspect.ratio = 2/4)+
+    ylim(0,max(plot_data$Freq)*1.1)+
+    #scale_y_continuous(expand = c(0, 0))+
+    scale_x_discrete(limits = unique(plot_data$Var1))+
+    scale_color_manual(values = color.use)+
+    scale_fill_manual(values = color.use)->p
+
+  plot_data_l<-plot_data
+  plot_data_l$Freq<-c(gnum,1:gnum)
+
+  xx<-"solid"
+  wc<-rep("solid",gnum)
+  for (t in 1:(gnum-1)) {
+    xx<-c(xx,rep("dashed",gnum),wc[t])
+  }
+
+  plot_data_lpt<-data.frame(Var1=c(rep(plot_data_l$Var1[1],gnum),rep(plot_data_l$Var1[2:nrow(plot_data_l)],gnum)),
+                            freq=c(0.5:(gnum-0.5),rep(0.5:(gnum-0.5),each=gnum)),
+                            type=c(rep("solid",gnum),xx))
+
+  plot_data_lpt$Var1<-factor(plot_data_lpt$Var1,levels = unique(plot_data$Var1))
+
+  color.use1<-c("grey75","black")
+  names(color.use1)<-c("dashed","solid")
+
+  rbp<-ggplot(data=plot_data_lpt,aes(x=Var1,y=freq,fill=type,color=type))
+  for (i in 1:(length(unique(plot_data_lpt$Var1)) - 1)) {
+    rbp <- rbp + annotate('rect',
+                          xmin = -Inf, xmax = Inf,
+                          ymin = i-1, ymax = i,
+                          fill = ifelse(i %% 2 == 0, 'white', 'gray95'))+
+      annotate(geom="segment",size=1,
+               x = 1, xend = 1, y = 0.5, yend = gnum-0.5,
+               lineend="round", colour = "black")+
+      annotate("text", x = 0.4, y = i-0.5, label = xlabname[i],
+               color=color.use[i+1],fontface="bold",size=3,
+               hjust=0,family="serif")
+  }
+
+  rbp+
+    geom_point(size=3,show.legend = 'none')+
+    scale_color_manual(values = color.use1)+
+    scale_fill_manual(values = color.use1)+
+    ylim(0,gnum)+
+    xlim(NA,gnum+1+0.5)+
+    scale_x_discrete(limits = unique(plot_data_l$Var1))+
+    theme(panel.background = element_blank(),aspect.ratio =1/4,
+          axis.ticks = element_blank(),
+          text = element_blank())->xp
+
+  ttx<-colSums(data_venn3[,(ncol(data_venn3)-gnum+1):ncol(data_venn3)])
+
+  pie_dta<-ttx%>%data.frame()
+  pie_dta<-pie_dta%>%tibble::rownames_to_column(var = "variable")
+  colnames(pie_dta)[2]<-"value"
+
+  split_otu4<-pie_dta
+  split_otu4$variable<-factor(split_otu4$variable,levels = unique(split_otu4$variable))
+  split_otu4$labelxs<-paste(split_otu4$value,"\n",sprintf("%0.2f",round(split_otu4$value/sum(split_otu4$value),4)*100),"%",sep = "")
+
+
+  split_otu4$valuey<-1
+
+  p1<-ggplot(split_otu4, aes(x = '', y = value,fill= variable)) +
+    geom_bar(stat = 'identity', show.legend = FALSE,width = 1,
+             color="white",size=1) +
+    geom_bar(aes(x = '', y = sum(value)),
+             fill=color_group[1],
+             position = position_nudge(x = -0.25),
+             stat = 'identity', show.legend = FALSE,width = 0.5) +
+    geom_bar(aes(x = '', y = sum(value)),fill="white",
+             position = position_nudge(x = 0.025),
+             stat = 'identity', show.legend = FALSE,width = 0.05)
+
+  p1<-p1 + annotate(geom = "segment",
+                    x=1,
+                    y=0,
+                    xend = 1,
+                    yend = sum(split_otu4$value),
+                    color="grey90",
+                    linetype="solid",
+                    size=1)
+
+  p1<-p1+geom_text(
+    aes(y=rev(rev(value/2)+c(0,cumsum(rev(value))[-length(value)])),
+        x= 1+0.5/2+0.1/2,
+        label=labelxs),fontface="bold",
+    size=1.5,colour=color_percent,family = "serif")+
+    geom_text(aes(y=0.5,x= 0.5),
+              label="Summary",
+              size=2,colour="white",family = "serif",fontface="bold")+
+    coord_polar(theta = 'y')+
+    theme_void()+
+    theme(panel.grid = element_blank(),
+          plot.title = element_text(hjust = 0.5),
+          panel.background = element_blank(),
+          text = element_text(family = "serif"),
+          axis.text.x = element_blank(), legend.position = "right",
+          legend.text = element_text(family = "serif"),
+          plot.background = element_blank())
+
+
+  color_value1<-color_group[1:length(unique(split_otu4$variable))]
+  names(color_value1)<-unique(split_otu4$variable)
+
+
+
+  p1<-p1+
+    scale_fill_manual(values=color_value1)
+  pieplot<-p1
+
+  split_otu4$order<-1:nrow(split_otu4)
+  split_otu4$value<-(-1)*split_otu4$value
+  ppx<-ggplot(split_otu4) +
+    geom_link(aes(x = 0, y = order,
+                  xend = value, yend = order,
+                  color = variable,
+                  alpha = stat(index), size = stat(index)),lineend="round")+
+    geom_text(aes(x=0,y=order,
+                  label=xlabname),size=1.5,
+              hjust=0,#vjust=0,
+              family="serif",fontface="bold")+
+    geom_text(aes(x=value,y=order,
+                  label=abs(value)),size=1.5,
+              hjust=2,
+              family="serif",fontface="bold")+
+    scale_color_manual(values=color_value1)+
+    xlim(min(split_otu4$value)*1.3,1)+
+    ylim(0.5,max(split_otu4$order)+0.5)+
+    theme(legend.position = "none",
+          aspect.ratio = 1.2,
+          axis.ticks = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          panel.grid = element_blank(),
+          plot.background = element_rect(fill = NA,color = NA),
+          #plot.background = element_blank(),
+          panel.background = element_blank())
+  ppx
+
+
+  p<-p+annotation_custom(grob=ggplotGrob(pieplot),
+                         ymin = 0+max(plot_data$Freq)*pieplot.mar[3],
+                         ymax = 0+max(plot_data$Freq)*pieplot.mar[4],
+                         xmin=0+gnum*pieplot.mar[1],
+                         xmax=1+gnum*pieplot.mar[2])+
+    annotation_custom(grob=ggplotGrob(ppx),
+                      ymin = 0+max(plot_data$Freq)*linkplot.mar[3],
+                      ymax = 0+max(plot_data$Freq)*linkplot.mar[4],
+                      xmin=0+gnum*linkplot.mar[1],
+                      xmax=1+gnum*linkplot.mar[2])
+  p<-p+theme(panel.background = element_rect(fill = NA,color = NA),
+             plot.background = element_rect(fill = NA,color = NA))
+  bp<-ggplot(data=plot_data_lpt,aes(x=Var1,y=freq,fill=type,color=type))+
+    ylim(0,gnum)+
+    xlim(NA,gnum+1+0.5)+
+    scale_x_discrete(limits = unique(plot_data_l$Var1))+
+    theme(panel.background = element_blank(),aspect.ratio =1/4,
+          axis.ticks = element_blank(),
+          text = element_blank())
+
+  mp<-bp+p+xp+plot_layout(heights = c(1,2,1),ncol = 1)
+  ggsave(paste(export_path,"/","venn",".pdf",sep = ""),
+         units = "cm",
+         width = 21/2,height = 21/2,
+         mp)
+  ggsave(paste(export_path,"/","venn",".png",sep = ""),
+         width = 21/2,height = 21/2,
+         mp)
+  return(mp)
+}
+
 
 "plotMicrochatVennFlower" <- function(microchatVennobj,alpha_thres=100) {
   if (class(microchatVennobj)!="microchat") {
@@ -1531,7 +2068,7 @@ par(family="serif")
 
 "exportMicrochatVennCyto" <- function(microchatVennobj,
                                       export_path="microbial composition") {
-  export_path_new<-paste(export_path,"/microbial composition/data_venn",sep = "")
+  export_path_new<-paste(export_path,"/Venn/Data for cytoscape",sep = "")
   dir.create(export_path_new, recursive = TRUE)
   if (class(microchatVennobj)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
@@ -1799,7 +2336,7 @@ par(family="serif")
                                    diffbar.border.color = "black",
                                    export_path=export_path) {
   comparison_sel<-microchatTaxFunDiff$comparison
-  export_path<-paste(export_path,"/microbial composition/Differential analysis/",comparison_sel,sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Statistical analysis/Differential analysis/",comparison_sel,sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (abundance.order) {
@@ -2285,9 +2822,14 @@ par(family="serif")
                                       method="t.test",
                                       my_comparisons=my_comparisons,
                                       color_group=color_group,
+                                      panel.border="all",
+                                      axis.x.angle.adjust=TRUE,
+                                      mytheme=NULL,
+                                      ncol = 4,
+                                      spline.params=NULL,
                                       export_path=export_path) {
 
-  export_path<-paste(export_path,"/microbial composition/All-group statistical analysis/",taxa,sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Statistical analysis/",taxa,sep = "")
   dir.create(export_path, recursive = TRUE)
 
   microchatcomobj<-calcMicrochatcom(submchat,
@@ -2322,6 +2864,11 @@ par(family="serif")
                                    method=method,
                                    comparison=my_comparisons,
                                    color_group=color_group,
+                                   panel.border=panel.border,
+                                   axis.x.angle.adjust=axis.x.angle.adjust,
+                                   mytheme=mytheme,
+                                   ncol = ncol,
+                                   spline.params=spline.params,
                                    export_path=export_path)
 
   return(p)
@@ -2331,15 +2878,21 @@ par(family="serif")
                                       taxa="Genus",
                                       taxa_num=10,
                                       file.save=FALSE,
+                                      hollow.barplot=FALSE,
                                       xlabname=xlabname,
                                       ylim.fold=1, ##值越大，y轴显示范围越大
                                       strictmod=TRUE,
                                       method="t.test",
                                       my_comparisons=my_comparisons,
                                       color_group=color_group,
+                                      panel.border="all",
+                                      axis.x.angle.adjust=TRUE,
+                                      mytheme=NULL,
+                                      ncol = 4,
+                                      spline.params=NULL,
                                       export_path=export_path) {
 
-  export_path<-paste(export_path,"/microbial composition/All-group statistical analysis/",taxa,sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial composition/Statistical analysis/",taxa,sep = "")
   dir.create(export_path, recursive = TRUE)
 
   microchatcomobj<-calcMicrochatcom(submchat,
@@ -2363,16 +2916,37 @@ par(family="serif")
   submchat<-subsampleMicrochat(tidymchat,sample.size=NULL,export_path=export_path)
   microchatParamobj<-calcMicrochatParam(submchat,
                                         export_path=export_path)
-
-  p<-plotMicrochatParamMutiBarplot(microchatParamobj,
-                                   xlabname=xlabname,
-                                   ylim.fold=ylim.fold, ##值越大，y轴显示范围越大
-                                   yaxis.italic=FALSE,
-                                   strictmod=strictmod,
-                                   method=method,
-                                   comparison=my_comparisons,
-                                   color_group=color_group,
-                                   export_path=export_path)
+  if (!hollow.barplot) {
+    p<-plotMicrochatParamMutiBarplot(microchatParamobj,
+                                     xlabname=xlabname,
+                                     ylim.fold=ylim.fold, ##值越大，y轴显示范围越大
+                                     yaxis.italic=FALSE,
+                                     strictmod=strictmod,
+                                     method=method,
+                                     comparison=my_comparisons,
+                                     color_group=color_group,
+                                     panel.border=panel.border,
+                                     axis.x.angle.adjust=axis.x.angle.adjust,
+                                     mytheme=mytheme,
+                                     ncol = ncol,
+                                     spline.params=spline.params,
+                                     export_path=export_path)
+  } else {
+    p<-plotMicrochatParamMuti2Barplot(microchatParamobj,
+                                     xlabname=xlabname,
+                                     ylim.fold=ylim.fold, ##值越大，y轴显示范围越大
+                                     yaxis.italic=FALSE,
+                                     strictmod=strictmod,
+                                     method=method,
+                                     comparison=my_comparisons,
+                                     color_group=color_group,
+                                     panel.border=panel.border,
+                                     axis.x.angle.adjust=axis.x.angle.adjust,
+                                     mytheme=mytheme,
+                                     ncol = ncol,
+                                     spline.params=spline.params,
+                                     export_path=export_path)
+  }
 
   return(p)
 }

@@ -1166,7 +1166,7 @@
                                barplot.nogreyback=FALSE,
                                export_path="sourcetracker") {
   plot_type<-match.arg(plot_type)
-  export_path<-paste(export_path,"/microbial sourcetracking analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial sourcetracking analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   library(dplyr)
   single_st<-microchatSourceobj

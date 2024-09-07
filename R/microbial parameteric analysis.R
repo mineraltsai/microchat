@@ -1,12 +1,10 @@
 "calcMicrochatParam" <- function(submchat,
                                  paramfile.select=c("gut_gene","gut_enzyme"),
                                  export_path="microbial parameteric analysis") {
-  dir.create(export_path, recursive = TRUE)
-
   if (class(submchat)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
   }
-
+  dir.create(export_path, recursive = TRUE)
   if (class(submchat$param_table)!="list") {
     param_table<-submchat$param_table
     paramfile.select<-NULL
@@ -27,7 +25,6 @@
     }
     param_table<-param.select
   }
-
 
   param_table<-tibble::rownames_to_column(param_table,var = "sample")
   param_table$group<-substr(param_table$sample,start = 1,stop = 2)
@@ -127,17 +124,12 @@
   return(microchatParamobj)
 }
 
-
-
-
-
 "calcMicrochatParamStat" <- function(microchatParamobj,
                                         select.index="ph",
                                         strictmod=FALSE,
                                         method=c("t.test","wilcox.test","anova","kruskal.test"),
                                         comparison=my_comparisons,
                                         export_path="microbial parameteric analysis") {
-
 
   method<-match.arg(method)
   dir.create(export_path, recursive = TRUE)
@@ -197,92 +189,32 @@
 
     if (method %in% c("t.test","wilcox.test")) {
 
-      if (index %in% match.index) {
-        method= "t.test"
-      } else {
-        method= "wilcox.test"
-      }
 
-      if ( method== "t.test") {
+      #if ( method== "t.test") {
         sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
+        sta<-lapply(comparison, function(x){
           alphadiv.use.selected1<-data_poi[
             which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = TRUE, alternative = 'two.sided')
-          } else {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = FALSE, alternative = 'two.sided')
-          }
-          stats<-data.frame(
-            index=index,
-            group1=x[1],
-            group2=x[2],
-            mean1=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            mean2=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            max1=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            max2=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            statistics=fit$statistic,
-            p.value=fit$p.value,
-            method=fit$method)
-        })
 
-        data.alpha<-data.frame()
-        for (tt in 1:length(sta)) {
-          data.al<-sta[[tt]]
-          {
-            data.alpha<-rbind(data.alpha,data.al)
-          }
-        }
-
-
-        data.alpha$sig<-ifelse(data.alpha$p.value<0.001,"***",
-                               ifelse(data.alpha$p.value<0.01,"**",
-                                      ifelse(data.alpha$p.value<0.05,"*","ns")))
-
-        data.alpha$sd1<-data_err$sd[match(data.alpha$group1, data_err$group)]
-        data.alpha$sd2<-data_err$sd[match(data.alpha$group2, data_err$group)]
-        data.alpha$yvalue1<-data.alpha$mean1+data.alpha$sd1
-        data.alpha$yvalue2<-data.alpha$mean2+data.alpha$sd2
-
-        {group.selected<-c(unique(data.alpha$group1),unique(data.alpha$group2))
-
-          value.selected<-c(unique(data.alpha$yvalue1),unique(data.alpha$yvalue2))
-
-          max.value.selected<-value.selected%>%max()
-
-          max.value.group.selected<-group.selected[match(max.value.selected,
-                                                         value.selected)]
-
-
-        }
-
-        y.ratio<-(max(data_poi$value)-min(data_poi$value))/30
-        data.alpha$order<-(match(data.alpha$group2,
-                                 data_err$group)-match(data.alpha$group1,
-                                                       data_err$group))
-
-        data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
-        data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
-
-      if ( method== "wilcox.test") {
-        sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
-          alphadiv.use.selected1<-data_poi[
-            which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-            fit<-wilcox.test(value~group, alphadiv.use.selected1,
-                             paired = TRUE, alternative = 'two.sided')
+          norm.fit<-norm.test(alphadiv.use.selected1[,4])
+          homn.fit<-variance.test(alphadiv.use.selected1,'value',alpha = 0.05)
+          if (norm.fit$p.value>=0.05) {
+            if (homn.fit$p.value>=0.05) {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=TRUE,
+                          paired = FALSE, alternative = 'two.sided')
+            } else {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=FALSE,
+                          paired = FALSE, alternative = 'two.sided')
+            }
+            method="t.test"
           } else {
             fit<-wilcox.test(value~group, alphadiv.use.selected1,
+                             exact = FALSE,correct=FALSE,
                              paired = FALSE, alternative = 'two.sided')
+            method="wilcox.test"
           }
+
+
           stats<-data.frame(
             index=index,
             group1=x[1],
@@ -337,7 +269,7 @@
 
         data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
         data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
+     # }
       opc.data<-NULL
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
@@ -357,87 +289,30 @@
 
       if ( method == "anova") {
         variance.data<-subset(variance.data, select=c(1,match(match.index,colnames(variance.data))))
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
+        fit <- aov(formula(paste(index, "~group")), data=variance.data)
+        tukey_result <- agricolae::HSD.test(fit, trt="group", group=TRUE, console=FALSE)
 
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
+        tukey <- tukey_result$groups
+        #means <- tapply(input.data[,index], input.data$group, mean)
+        #stds <- tapply(input.data[,index], input.data$group, sd)
+        #means_str <- sprintf("%0.2f±%0.2f", means, stds)
 
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1)
-            }
-          }
-        }
+        #
+        tukey$group<-rownames(tukey)
+        tukey$group<-factor(tukey$group,levels = levels(variance.data$group))
+        tukey<-tukey[order(tukey$group),]
+        tukey[,index]<-tukey$groups
+        tukey<-subset(tukey,select = -groups)
 
+        tukey_new<-merge(tukey,data_max,by="group")
+        colnames(tukey_new)[2]<-"alpha"
+        tukey_new$group <- factor(tukey_new$group , levels = unique(tukey$group))
+        tukey_new<-merge(tukey_new,data_err,by="group")
+        tukey_new$valuey<-tukey_new$value+tukey_new$se
+        sig_label_new<-tukey_new
 
-        test.b<-test.b%>%data.frame()
-        colnames(test.b)<-colnames(variance.data)[2:ncol(variance.data)]
-
-        sig_label<-test.b
-        sig_label$group<-rownames(sig_label)
-        index_order<-which(colnames(sig_label)==index)
-        sig_label<-subset(sig_label,select = c(index_order,group))
-        sig_label$group <- factor(sig_label$group , levels = unique(sig_label$group))
-
-        data_max<-subset(data_poi,select=c(1,4))%>%
-          group_by(group)%>%
-          summarise_all(max)
-
-        sig_label_new<-merge(sig_label,data_max,by="group")
-        colnames(sig_label_new)[2]<-"alpha"
-        sig_label_new$group <- factor(sig_label_new$group , levels = unique(sig_label$group))
-        sig_label_new<-merge(sig_label_new,data_err,by="group")
-        sig_label_new$valuey<-sig_label_new$value+sig_label_new$se
-
-        x = c(1:length(data_poi$sample))
-        y = data_poi$value
-
-        ##方差分析
-        fit1 <- aov(value ~  group,
-                    data = data_poi)
-        ##事后比较
-        tuk1<-glht(fit1,linfct=mcp(group="Tukey"))
-        ##显著性标志
-        res1 <- cld(tuk1,alpah=0.05)
-        ##显著性数值
-        ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-        pvalue<-ano$`Pr(>F)`[1]
+        aov_table <- anova(fit)
+        pvalue<-  aov_table$`Pr(>F)`[1]
         if (pvalue<0.001) pvalue=0.001
 
         data.alpha<-data.frame(
@@ -451,33 +326,23 @@
       if ( method == "kruskal.test") {
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
-        input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp.t(input.data)
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.c<-rbind(test.c,tuk1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.c<-rbind(test.c,tuk1)
-            }
-          }
-        }
 
-        input.data<-input.data1[which(input.data1$variable==index),]
+        comparison<-with(variance.data,agricolae::kruskal(eval(parse(text=index)),group,group=TRUE))
+
+        colnames(comparison$means)[1]<-"mean"
+        colnames(comparison$groups)[1]<-index
+
+        input.data<-comparison$means
+        input.data<-input.data%>%tibble::rownames_to_column("group")
+        input.data<-subset(input.data, select = c(1,4,2))
+
+        input.let<-comparison$groups
+        input.let<-input.let%>%tibble::rownames_to_column("group")
+        input.data<-merge(input.data,input.let,by="group")
+        input.data<-input.data[,-4]
+        colnames(input.data)[4]<-"Letters"
+        input.data[,"variable"]<-index
+
         input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
@@ -485,12 +350,11 @@
         sig_label_new$alpha<-sig_label_new$Letters
 
 
-        aovtest=aovtest[which(colnames(aovtest)==index)]
+        aovtest=comparison$statistics$p.chisq
         if (aovtest<0.001) aovtest=0.001
-        p.value<-aovtest
         data.alpha<-data.frame(
           index=index,
-          p.value=p.value,
+          p.value=aovtest,
           method=method
         )
         y.ratio=NULL
@@ -522,92 +386,37 @@
 
     if (method %in% c("t.test","wilcox.test")) {
 
-      if (index %in% match.index) {
-        method= "t.test"
-      } else {
-        method= "wilcox.test"
-      }
+      #if (index %in% match.index) {
+      #  method= "t.test"
+      #} else {
+      #  method= "wilcox.test"
+      #}
 
-      if ( method== "t.test") {
+      #if ( method== "t.test") {
         sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
+        sta<-lapply(comparison, function(x){
           alphadiv.use.selected1<-data_poi[
             which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = TRUE, alternative = 'two.sided')
+
+          norm.fit<-norm.test(alphadiv.use.selected1[,4])
+          if (norm.fit$p.value>=0.05) {
+            homn.fit<-variance.test(alphadiv.use.selected1,'value',alpha = 0.05)
+            if (homn.fit$p.value>=0.05) {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=TRUE,
+                          paired = FALSE, alternative = 'two.sided')
+            } else {
+              fit<-t.test(value~group, alphadiv.use.selected1, var.equal=FALSE,
+                          paired = FALSE, alternative = 'two.sided')
+            }
+            method="t.test"
           } else {
-            fit<-t.test(value~group, alphadiv.use.selected1,
-                        paired = FALSE, alternative = 'two.sided')
-          }
-          stats<-data.frame(
-            index=index,
-            group1=x[1],
-            group2=x[2],
-            mean1=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            mean2=mean(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            max1=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[1])]),
-            max2=max(alphadiv.use.selected1$value[
-              which(alphadiv.use.selected1$group==x[2])]),
-            statistics=fit$statistic,
-            p.value=fit$p.value,
-            method=fit$method)
-        })
-
-        data.alpha<-data.frame()
-        for (tt in 1:length(sta)) {
-          data.al<-sta[[tt]]
-          {
-            data.alpha<-rbind(data.alpha,data.al)
-          }
-        }
-
-
-        data.alpha$sig<-ifelse(data.alpha$p.value<0.001,"***",
-                               ifelse(data.alpha$p.value<0.01,"**",
-                                      ifelse(data.alpha$p.value<0.05,"*","ns")))
-
-        data.alpha$sd1<-data_err$sd[match(data.alpha$group1, data_err$group)]
-        data.alpha$sd2<-data_err$sd[match(data.alpha$group2, data_err$group)]
-        data.alpha$yvalue1<-data.alpha$mean1+data.alpha$sd1
-        data.alpha$yvalue2<-data.alpha$mean2+data.alpha$sd2
-
-        {group.selected<-c(unique(data.alpha$group1),unique(data.alpha$group2))
-
-          value.selected<-c(unique(data.alpha$yvalue1),unique(data.alpha$yvalue2))
-
-          max.value.selected<-value.selected%>%max()
-
-          max.value.group.selected<-group.selected[match(max.value.selected,
-                                                         value.selected)]
-
-
-        }
-
-        y.ratio<-(max(data_poi$value)-min(data_poi$value))/30
-        data.alpha$order<-(match(data.alpha$group2,
-                                 data_err$group)-match(data.alpha$group1,
-                                                       data_err$group))
-
-        data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
-        data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
-
-      if ( method== "wilcox.test") {
-        sig_label_new=NULL
-        sta<-lapply(my_comparisons, function(x){
-          alphadiv.use.selected1<-data_poi[
-            which(data_poi$group==x[1] | data_poi$group==x[2]),]
-          if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
+            #homn.fit<-fligner.test(value ~ group, data = alphadiv.use.selected1)
             fit<-wilcox.test(value~group, alphadiv.use.selected1,
-                             paired = TRUE, alternative = 'two.sided')
-          } else {
-            fit<-wilcox.test(value~group, alphadiv.use.selected1,
+                             exact = FALSE,correct=FALSE,
                              paired = FALSE, alternative = 'two.sided')
+            method="wilcox.test"
           }
+
           stats<-data.frame(
             index=index,
             group1=x[1],
@@ -662,7 +471,8 @@
 
         data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
         data.alpha<-data.alpha[order(data.alpha$order,data.alpha$error,decreasing = FALSE),]
-      }
+      #}
+
       opc.data<-NULL
       #data.alpha$error<-(data.alpha$max1-data.alpha$max2)%>%abs()
       #data.alpha<-data.alpha[order(data.alpha$order),]
@@ -682,89 +492,30 @@
 
       if ( method == "anova") {
         variance.data<-subset(variance.data, select=c(1,match(match.index,colnames(variance.data))))
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,level=0.05)
+        fit <- aov(formula(paste(index, "~group")), data=variance.data)
+        tukey_result <- agricolae::HSD.test(fit, trt="group", group=TRUE, console=FALSE)
 
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                            x=dif, reversed = TRUE,
-                            input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
+        tukey <- tukey_result$groups
+        #means <- tapply(input.data[,index], input.data$group, mean)
+        #stds <- tapply(input.data[,index], input.data$group, sd)
+        #means_str <- sprintf("%0.2f±%0.2f", means, stds)
 
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.b <- cbind(test.b,res1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-aov.test(input.data,colnames(input.data)[2])
-            tuk1<-multcomp::glht(fit1,linfct=multcomp::mcp(group="Tukey"))
-            res1 <- multcomp::cld(tuk1,alpah=0.05)
+        #
+        tukey$group<-rownames(tukey)
+        tukey$group<-factor(tukey$group,levels = levels(variance.data$group))
+        tukey<-tukey[order(tukey$group),]
+        tukey[,index]<-tukey$groups
+        tukey<-subset(tukey,select = -groups)
 
-            diffx<-data.frame(res1$comps)
-            diffx$com<-paste(diffx$X2,diffx$X1,sep = "-")
-            dif<-res1$signif
-            names(dif)<-diffx$com
-            resx<-multcompView::multcompLetters2(as.formula(paste(colnames(variance.data)[i], "~ group",sep = "")),
-                                   x=dif, reversed = TRUE,
-                                   input.data)
-            resx<-resx$Letters
-            res2<-resx[match(unique(input.data$group),names(resx))]
-            res1<-res2
+        tukey_new<-merge(tukey,data_max,by="group")
+        colnames(tukey_new)[2]<-"alpha"
+        tukey_new$group <- factor(tukey_new$group , levels = unique(tukey$group))
+        tukey_new<-merge(tukey_new,data_err,by="group")
+        tukey_new$valuey<-tukey_new$value+tukey_new$se
+        sig_label_new<-tukey_new
 
-            ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-            ano1<-ano$`Pr(>F)`%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.b <- cbind(test.b,res1)
-            }
-          }
-        }
-
-
-        test.b<-test.b%>%data.frame()
-        colnames(test.b)<-colnames(variance.data)[2:ncol(variance.data)]
-
-        sig_label<-test.b
-        sig_label$group<-rownames(sig_label)
-        index_order<-which(colnames(sig_label)==index)
-        sig_label<-subset(sig_label,select = c(index_order,group))
-        sig_label$group <- factor(sig_label$group , levels = unique(sig_label$group))
-
-        data_max<-subset(data_poi,select=c(1,4))%>%
-          group_by(group)%>%
-          summarise_all(max)
-
-        sig_label_new<-merge(sig_label,data_max,by="group")
-        colnames(sig_label_new)[2]<-"alpha"
-        sig_label_new$group <- factor(sig_label_new$group , levels = unique(sig_label$group))
-        sig_label_new<-merge(sig_label_new,data_err,by="group")
-        sig_label_new$valuey<-sig_label_new$value+sig_label_new$se
-
-        x = c(1:length(data_poi$sample))
-        y = data_poi$value
-
-        ##方差分析
-        fit1 <- aov(value ~  group,
-                    data = data_poi)
-        ##事后比较
-        tuk1<-glht(fit1,linfct=mcp(group="Tukey"))
-        ##显著性标志
-        res1 <- cld(tuk1,alpah=0.05)
-        ##显著性数值
-        ano<-summary(fit1)%>%'[['(1)%>%as.data.frame()
-        pvalue<-ano$`Pr(>F)`[1]
+        aov_table <- anova(fit)
+        pvalue<-  aov_table$`Pr(>F)`[1]
         if (pvalue<0.001) pvalue=0.001
 
         data.alpha<-data.frame(
@@ -778,33 +529,23 @@
       if ( method == "kruskal.test") {
         variance.data<-subset(variance.data, select=c(1,match(diff.index,colnames(variance.data))))
 
-        input.data<-reshape2::melt(variance.data)
-        input.data1<-kruskalmuticomp.t(input.data)
-        for (i in 2:length(colnames(variance.data))) {
-          if (i==2) {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            aovtest<-rbind(aovtest,ano1)
-            test.c<-rbind(test.c,tuk1)
-          } else {
-            input.data=subset(variance.data,select = c(group,i))
-            fit1<-kruskal(input.data,colnames(input.data)[2])
-            tuk1<-dunn.test(input.data,colnames(input.data)[2])
-            ano<-fit1$p.value
-            ano1<-ano%>%data.frame()
-            colnames(ano1)<-colnames(variance.data)[i]
-            {
-              aovtest<-cbind(aovtest,ano1)
-              test.c<-rbind(test.c,tuk1)
-            }
-          }
-        }
 
-        input.data<-input.data1[which(input.data1$variable==index),]
+        comparison<-with(variance.data,agricolae::kruskal(eval(parse(text=index)),group,group=TRUE))
+
+        colnames(comparison$means)[1]<-"mean"
+        colnames(comparison$groups)[1]<-index
+
+        input.data<-comparison$means
+        input.data<-input.data%>%tibble::rownames_to_column("group")
+        input.data<-subset(input.data, select = c(1,4,2))
+
+        input.let<-comparison$groups
+        input.let<-input.let%>%tibble::rownames_to_column("group")
+        input.data<-merge(input.data,input.let,by="group")
+        input.data<-input.data[,-4]
+        colnames(input.data)[4]<-"Letters"
+        input.data[,"variable"]<-index
+
         input.data<-merge(input.data,data_max,by="group")
         sig_label_new<-input.data
         samplenum<-variance.data$group%>%table()%>%max()
@@ -812,12 +553,11 @@
         sig_label_new$alpha<-sig_label_new$Letters
 
 
-        aovtest=aovtest[which(colnames(aovtest)==index)]
+        aovtest=comparison$statistics$p.chisq
         if (aovtest<0.001) aovtest=0.001
-        p.value<-aovtest
         data.alpha<-data.frame(
           index=index,
-          p.value=p.value,
+          p.value=aovtest,
           method=method
         )
         y.ratio=NULL
@@ -849,7 +589,255 @@
   return(microchatParamStatobj)
 }
 
+"linear_equa_fitTest" <-function(data_err,start_pos=1){
+  asd<-data_err
+  asd$gg<-start_pos:(nrow(data_err)+start_pos-1)
+  asd$gg<-asd$gg%>%as.numeric()
+  # 拟合二次函数
+  model <- lm(asd$mean ~ poly(asd$gg, 1, raw = TRUE), data = asd)
 
+  ###5.非线性回归的方程
+  mylr = function(x,y){
+    ###绘点图
+    #plot(x,y)
+
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    a = coef(model)[2]
+    b = coef(model)[1]
+
+    # 构造非线性回归方程
+    f <- a *x +b
+
+    ###点图按照上述方程拟合曲线
+    #curve(c + b*x + a*x^2, add = TRUE)
+    ###生成总平方和
+    sst = sum((y-y_mean)^2)
+    ##残差平方和
+    sse = sum((y-f)^2)
+    ##回归平方和
+    ssr = sum((f-y_mean)^2)
+
+    result = c(a,b,sst,sse,ssr)
+    names(result) = c('a','b','sst','sse','ssr')
+    return(result)
+  }
+
+  ##横坐标为时间
+  x = asd$gg
+  ##纵坐标为表达量
+  y = asd$mean
+  ###代入公式
+  f = mylr(x,y)
+
+  ###计算拟合度，回归平方和除以总平方和
+  R2= f['ssr']/f['sst']
+
+  f = mylr(x,y)
+  a<-f['a']
+  b<-f['b']
+
+  asd$y_new<-a*asd$gg+b
+
+  kk<-list(R2=R2,a=a,b=b,formula=f,asd=asd)
+
+  return(kk)
+}
+"obtainSlope" <-function(data_err){
+  asd<-data_err
+  asd$gg<-1:nrow(data_err)
+  asd$gg<-asd$gg%>%as.numeric()
+  # 拟合二次函数
+  model <- lm(asd$mean ~ poly(asd$gg, 1, raw = TRUE), data = asd)
+
+  ###5.非线性回归的方程
+  mylr = function(x,y){
+    ###绘点图
+    #plot(x,y)
+
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    a = coef(model)[2]
+    b = coef(model)[1]
+
+    # 构造非线性回归方程
+    f <- a *x +b
+
+    ###点图按照上述方程拟合曲线
+    #curve(c + b*x + a*x^2, add = TRUE)
+    ###生成总平方和
+    sst = sum((y-y_mean)^2)
+    ##残差平方和
+    sse = sum((y-f)^2)
+    ##回归平方和
+    ssr = sum((f-y_mean)^2)
+
+    result = c(a,b,sst,sse,ssr)
+    names(result) = c('a','b','sst','sse','ssr')
+    return(result)
+  }
+
+  ##横坐标为时间
+  x = asd$gg
+  ##纵坐标为表达量
+  y = asd$mean
+  ###代入公式
+  f = mylr(x,y)
+  a<-f['a']
+
+  return(a)
+}
+"getCrossCoord" <- function(data1,data2) {
+  data_err_test1<-data1
+  data_err_test2<-data2
+  a1 <- data_err_test1$a
+  b1 <- data_err_test1$b
+  a2 <- data_err_test2$a
+  b2 <- data_err_test2$b
+
+  x <- (b2 - b1) / (a1 - a2)
+  y <- a1 * x + b1
+  return(list(x=x,y=y))
+}
+"qua_equa_fitTest" <-function(data_err){
+  asd<-data_err
+  asd$gg<-1:nrow(data_err)
+  asd$gg<-asd$gg%>%as.numeric()
+  # 拟合二次函数
+  model <- lm(asd$mean ~ poly(asd$gg, 2, raw = TRUE), data = asd)
+
+  ###5.非线性回归的方程
+  mylr = function(x,y){
+    ###绘点图
+    #plot(x,y)
+
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    a = coef(model)[3]
+    b = coef(model)[2]
+    c = coef(model)[1]
+
+    # 构造非线性回归方程
+    f <- a * x^2 + b *x +c
+
+    ###点图按照上述方程拟合曲线
+    #curve(c + b*x + a*x^2, add = TRUE)
+    ###生成总平方和
+    sst = sum((y-y_mean)^2)
+    ##残差平方和
+    sse = sum((y-f)^2)
+    ##回归平方和
+    ssr = sum((f-y_mean)^2)
+
+    result = c(a,b,c,sst,sse,ssr)
+    names(result) = c('a','b','c','sst','sse','ssr')
+    return(result)
+  }
+
+  ##横坐标为时间
+  x = asd$gg
+  ##纵坐标为表达量
+  y = asd$mean
+  ###代入公式
+  f = mylr(x,y)
+
+  ###计算拟合度，回归平方和除以总平方和
+  R2= f['ssr']/f['sst']
+
+  opt.dose<-(-coef(model)[2])/(2*coef(model)[3])
+  opt.dose
+
+  f = mylr(x,y)
+  a<-f['a']
+  b<-f['b']
+  c<-f['c']
+
+  asd$y_new<-a*asd$gg^2+b*asd$gg+c
+
+  kk<-list(R2=R2,a=a,b=b,c=c,
+           opt.dose=opt.dose,formula=f,asd=asd)
+
+  return(kk)
+}
+
+"cub_equa_fitTest" <-function(data_err){
+  asd<-data_err
+  asd$gg<-1:nrow(data_err)
+  asd$gg<-asd$gg%>%as.numeric()
+  # 拟合二次函数
+  model <- lm(asd$mean ~ poly(asd$gg, 3, raw = TRUE), data = asd)
+
+  # 提取多项式系数
+  coefficients <- coef(model)
+
+  # 定义三次函数
+  func <- function(x) {
+    return(coefficients[1] + coefficients[2]*x + coefficients[3]*x^2 + coefficients[4]*x^3)
+  }
+
+  ###5.非线性回归的方程
+  mylr = function(x,y){
+    ###绘点图
+    #plot(x,y)
+    #line(x,y)
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    a = coef(model)[3]
+    b = coef(model)[2]
+    c = coef(model)[1]
+    d = coef(model)[4]
+
+    # 构造非线性回归方程
+    f <- d * x^3 + a * x^2 + b *x +c
+
+    ###点图按照上述方程拟合曲线
+    #curve(c + b*x + a*x^2, add = TRUE)
+    ###生成总平方和
+    sst = sum((y-y_mean)^2)
+    ##残差平方和
+    sse = sum((y-f)^2)
+    ##回归平方和
+    ssr = sum((f-y_mean)^2)
+
+    result = c(d,a,b,c,sst,sse,ssr)
+    names(result) = c('d','a','b','c','sst','sse','ssr')
+    return(result)
+  }
+
+  ##横坐标为时间
+  x = asd$gg
+  ##纵坐标为表达量
+  y = asd$mean
+  ###代入公式
+  f = mylr(x,y)
+
+  ###计算拟合度，回归平方和除以总平方和
+  R2= f['ssr']/f['sst']
+
+  opt.dose<-optimize(func, interval = c(1, nrow(data_err)),maximum = TRUE)$maximum
+
+  f = mylr(x,y)
+  d<-f['d']
+  a<-f['a']
+  b<-f['b']
+  c<-f['c']
+
+  asd$y_new<- d*asd$gg^3+a*asd$gg^2+b*asd$gg+c
+
+
+  # 预测拟合的值
+  x_pred <- seq(1,nrow(data_err), length.out = 100)
+  y_pred <- d*x_pred^3+a*x_pred^2+b*x_pred+c
+
+  kk<-list(R2=R2,d=d,a=a,b=b,c=c,x_pred=x_pred,y_pred=y_pred,
+           opt.dose=opt.dose,formula=f,asd=asd)
+
+  return(kk)
+}
 
 "plotMicrochatParamBoxplot" <- function(microchatParamStatobj,
                                         geom.line=TRUE,
@@ -860,13 +848,16 @@
                                         errorbar.pos.adj=TRUE,
                                     errorbar.line.add=FALSE,
                                     seg=TRUE,
-                                    add.spline=TRUE,
-                                    panel.border=TRUE,
+                                    panel.border=c("none","normal","all","axis"),
                                     errorbar.point.size=0.1,
                                     y.point.adj=NULL,
                                     color_group=colorCustom(5,pal = "gygn"),
-                                    color_backgroud="grey90",
+                                    color_backgroud=NA,
+                                    axis.x.angle.adjust=FALSE,
+                                    mytheme=NULL,
+                                    spline.params=NULL,
                                     export_path="microbial diversity analysis") {
+  panel.border<-match.arg(panel.border)
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatParamStatobj)[1]!="microchat") {
@@ -890,16 +881,15 @@
   o.data <- opc.data[which(opc.data$index == index), ]
   gnum <- ncol(o.data)
   gnum/2
-  liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ",
+  liner <- paste(colnames(o.data[gnum/2 + 2]), " effect: ", # " effect: "
                  o.data[gnum/2 + 2], sep = "")
   quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
                 o.data[gnum/2 +  3], sep = "")
-  subtitile <- paste(liner, quad, sep = " ")
+  subtitile <- paste(liner, "\n",quad, sep = "")
   }
 
   colors<-color_group
   names(colors)<-unique(data_poi$group)
-
 
   if (method %in% c("t.test","wilcox.test")) {
     if (errorbar.pos.adj)
@@ -925,7 +915,7 @@
                                   aes(x=group, y=mean, group=index))
     p<-p+geom_errorbar(data = data_err,
                        aes(x = group, y = mean, group = index,
-                           ymin = mean-se, ymax = mean+se),
+                           ymin = mean-sd, ymax = mean+sd),
                        colour = "grey50",width=.25)+
       geom_boxplot(aes(fill=group),
         outlier.shape = NA,
@@ -1039,6 +1029,7 @@
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -1048,22 +1039,23 @@
                                     aes(x=group, y=mean, group=index))
       p<-p+geom_errorbar(data = data_err,
                          aes(x = group, y = mean, group = index,
-                             ymin = mean-se, ymax = mean+se),
+                             ymin = mean-sd, ymax = mean+sd),
                          colour = "grey50",width=.25)+
       geom_boxplot(data=data_poi,
                    aes(x = group,y = value,fill = group),
                    outlier.shape = NA,
                    width = 0.5,
                    color = "white")+
-      geom_jitter(data=data_poi,size=3,alpha=0.5,
+      geom_jitter(data=data_poi,size=2.5,alpha=0.75,
                   aes(x=group, y=value, group=index,color=group))+
       geom_point(data=data_poi,
                  aes(x=group, y=value, group=index,color=group)) +
-      geom_text(data = sig_label_new,vjust=-0.5,
+      geom_text(data = sig_label_new,#vjust=-0.5,
+                nudge_y=1/20*max(data_poi$value),
                 aes(x = group,
                     y = value,  ## mean+se
                     label = alpha),
-                size = 5,color = "black",family = "serif")
+                size = 3,color = "black",family = "serif", fontface="bold")
 
     p<-p+scale_discrete_manual(values=colors,
                                aesthetics = "colour")+
@@ -1072,16 +1064,20 @@
 
 
     if (yaxis.italic) p<-p+labs(y=index,
-                                subtitle=subtitile,
-                                title = paste(method,": p = ",
-                                              keep.decmi(data.alpha$p.value),sep=""))+
+                                title = paste(
+                                  paste(method,": p = ",
+                                        keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                  subtitile,sep = ""
+                                ))+
       theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
             title = element_text(face = "bold.italic",family = "serif", size=12))
 
     if (!yaxis.italic) p<-p+labs(y=index,
-                                 subtitle=subtitile,
-                                 title = paste(method,": p = ",
-                                               keep.decmi(data.alpha$p.value),sep=""))+
+                                 title = paste(
+                                   paste(method,": p = ",
+                                         keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                   subtitile,sep = ""
+                                 ))+
       theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
             title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -1099,16 +1095,12 @@
         #strip.background =  element_blank(),
         legend.position = "none",aspect.ratio = 1)
 
-
-
-    if (add.spline) p<-p+
-      ggalt::geom_xspline(data= sig_label_new,size=0.5,color="grey50",
-                                      aes(x=group, y=mean, group=index),spline_shape = 1)
     }
 
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -1119,7 +1111,7 @@
                   aes(x=group, y=mean, group=index))
       p<-p+geom_errorbar(data = data_err,
                       aes(x = group, y = mean, group = index,
-                          ymin = mean-se, ymax = mean+se),
+                          ymin = mean-sd, ymax = mean+sd),
                       colour = "grey50",width=.25)+
         geom_boxplot(data=data_poi,
                      aes(x = group,y = value,fill = group),
@@ -1130,11 +1122,12 @@
                     aes(x=group, y=value, group=index,color=group))+
         geom_point(data=data_poi,
                    aes(x=group, y=value, group=index,color=group)) +
-        geom_text(data = sig_label_new,vjust=-0.5,
+        geom_text(data = sig_label_new,#vjust=-0.5,
+                  nudge_y=1/20*max(data_poi$value),
                   aes(x = group,
                       y = value, #### mean+se
                       label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 3,color = "black",family = "serif", fontface="bold")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -1142,16 +1135,20 @@
                               aesthetics = "fill")
 
       if (yaxis.italic) p<-p+labs(y=index,
-                                  subtitle=subtitile,
-                                  title = paste(method,": p = ",
-                                                keep.decmi(data.alpha$p.value),sep=""))+
+                                  title = paste(
+                                    paste(method,": p = ",
+                                          keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                    subtitile,sep = ""
+                                  ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
-                                   subtitle=subtitile,
-                                   title = paste(method,": p = ",
-                                                 keep.decmi(data.alpha$p.value),sep=""))+
+                                   title = paste(
+                                     paste(method,": p = ",
+                                           keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                     subtitile,sep = ""
+                                   ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -1169,14 +1166,226 @@
           #strip.background =  element_blank(),
           legend.position = "none",aspect.ratio = 1)
 
-
-      if (add.spline) p<-p+
-        ggalt::geom_xspline(data= sig_label_new,size=0.5,color="grey50",
-                        aes(x=group, y=mean),spline_shape = 1)
       }
-
   }
 
+  ##add fitted curve for  quadratic model
+  if (method %in% c("anova","kruskal.test") & !is.null(spline.params)){
+    opc.thres=spline.params$opc.thres
+    spline.size = spline.params$spline.size
+    spline.color=spline.params$spline.color
+    spline.shape =spline.params$spline.shape
+    spline.type=spline.params$spline.type
+    opt.interval=spline.params$opt.interval
+    optimal.pt.size=spline.params$optimal.pt.size
+    optimal.pt.color=spline.params$optimal.pt.color
+    optimal.pt.type=spline.params$optimal.pt.type
+
+    vline.color=spline.params$vline.color
+    vline.size=spline.params$vline.size
+    vline.type=spline.params$vline.type
+
+    csal<-strsplit(o.data$Linear,"( )")[[1]][2]
+    lin.num<-substr(csal,start = 2,stop =nchar(csal)-1 )%>%as.numeric()
+
+    csa<-strsplit(o.data$Quadratic,"( )")[[1]][2]
+    qua.num<-substr(csa,start = 2,stop =nchar(csa)-1 )%>%as.numeric()
+
+    if (!is.na(lin.num)) {
+
+    if ("Cubic" %in% colnames(o.data)) {
+      csac<-strsplit(o.data$Cubic,"( )")[[1]][2]
+      cub.num<-substr(csac,start = 2,stop =nchar(csac)-1 )%>%as.numeric()
+
+      all.opc.r<-c(lin.num,qua.num,cub.num)
+
+    } else {
+      all.opc.r<-c(lin.num,qua.num)
+    }
+
+    #拟合三次函数
+      if ("Cubic" %in% colnames(o.data)) if (cub.num>opc.thres & max(all.opc.r)==cub.num) {
+      data_err_test<-cub_equa_fitTest(microchatParamStatobj$data_err)
+
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      d<-data_err_test$d
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(d = as.numeric(format(d, digits = 2)),
+                a = as.numeric(format(a, digits = 2)),
+                b = as.numeric(format(b, digits = 2)),
+                c = as.numeric(format(c, digits = 2)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 2)))
+      #eq<-substitute(italic(y) ==  d %.% (italic(x)-dose)^3 + a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + geom_line(data = data.frame(x = data_err_test$x_pred,
+                                         y = data_err_test$y_pred),
+                       aes(x, y),
+                       color = spline.color,
+                       linewidth = spline.size/2,
+                       linetype=spline.type,
+                       lineend = "round")+
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend = d*opt.dose^3+ a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=d*opt.dose^3+a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(d*opt.dose^3+a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合二次函数
+    if (qua.num>opc.thres & max(all.opc.r)==qua.num) {
+      data_err_test<-qua_equa_fitTest(microchatParamStatobj$data_err)
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(a = as.numeric(format(a, digits = 3)),
+                b = as.numeric(format(b, digits = 3)),
+                c=as.numeric(format(c, digits = 3)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 3)))
+      #eq<-substitute(italic(y) == a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + ggalt::geom_xspline(data = asd,
+                                 linetype=spline.type,lineend = "round",
+                                 size = spline.size, color = spline.color,
+                                 aes(x = gg, y = y_new), spline_shape = spline.shape) +
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend =  a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合线性模型
+    if (lin.num>opc.thres & max(all.opc.r)==lin.num) {
+      data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
+
+      if (data_err_test$a>=0) {
+        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+      } else {
+        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        message("Namely, fitted curve for broken-line model is showing  !!!")
+
+        slope<-c()
+        for (t in 1:(nrow(data_err_test$asd)-1)) {
+          slope<-c(slope,obtainSlope(data<-data_err_test$asd[t:(t+1),]))
+        }
+        slope_a<-slope[which(slope<0)]
+        slope_a<-slope_a[which(slope_a==min(slope_a))]
+        spot_start<-which(slope==slope_a)
+        if (which(data_err_test$asd$mean==max(data_err_test$asd$mean))!=as.numeric(spot_start)) {
+          spot_start<-which(data_err_test$asd$mean==max(data_err_test$asd$mean))
+        } else {
+          spot_start<-spot_start
+        }
+        if (spot_start ==2 | spot_start==3) {
+          spot_end<-spot_start+1
+
+          data_err_test1<-linear_equa_fitTest(microchatParamStatobj$data_err[1:spot_start,])
+          data_err_test2<-linear_equa_fitTest(microchatParamStatobj$data_err[spot_end:nrow(microchatParamStatobj$data_err),],spot_end)
+
+          crossdot<-getCrossCoord(data_err_test1,data_err_test2)
+
+          if (crossdot$x>1 & crossdot$x <nrow(data_err_test$asd)) {
+            asd1<-data_err_test1$asd
+            a1<-data_err_test1$a
+            b1<-data_err_test1$b
+            asd2<-data_err_test2$asd
+            asd2$gg<-(max(asd1$gg)+1):nrow(data_err_test$asd)
+            a2<-data_err_test2$a
+            b2<-data_err_test2$b
+
+            asd1_a<-asd1[1:2,]
+            asd1_a$gg[1]<-min(asd1$gg)-0.3
+            asd1_a$y_new[1]<-a1*asd1_a$gg[1]+b1
+            asd1_a$gg[2]<-crossdot$x+0.3
+            asd1_a$y_new[2]<-a1*asd1_a$gg[2]+b1
+            asd1<-rbind(asd1,asd1_a)
+
+            asd2_a<-asd2[1:2,]
+            asd2_a$gg[1]<-max(asd2$gg)+0.3
+            asd2_a$y_new[1]<-a2*asd2_a$gg[1]+b2
+            asd2_a$gg[2]<-crossdot$x-0.3
+            asd2_a$y_new[2]<-a2*asd2_a$gg[2]+b2
+            asd2<-rbind(asd2,asd2_a)
+
+            opt.inclusion<-opt.interval[as.integer(crossdot$x)]+(crossdot$x-as.integer(crossdot$x))*(opt.interval[as.integer(crossdot$x)+1]-opt.interval[as.integer(crossdot$x)])
+
+            la <- list(a = as.numeric(format(a1, digits = 2)),
+                       b = as.numeric(format(b1, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test1$R2, digits = 2)))
+            #eq1<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,la)
+            lb <- list(a = as.numeric(format(a2, digits = 2)),
+                       b = as.numeric(format(b2, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test2$R2, digits = 2)))
+            #eq2<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,lb)
+            eq1<-""
+            eq2<-""
+            p<-p + geom_line(data = asd1,
+                             aes(gg, y_new),
+                             color = spline.color,
+                             linewidth = spline.size/2,
+                             linetype=spline.type,
+                             lineend = "round")+
+              geom_line(data = asd2,
+                        aes(gg, y_new),
+                        color = spline.color,
+                        linewidth = spline.size/2,
+                        linetype=spline.type,
+                        lineend = "round")+
+              annotate(geom="segment",x = crossdot$x, xend = crossdot$x,
+                       size=vline.size,linetype=vline.type,
+                       lineend = "round",
+                       y =-Inf, yend = a1*crossdot$x+b1,
+                       color=vline.color)+
+              geom_point(aes(x=crossdot$x,y=a1*crossdot$x+b1),
+                         shape=optimal.pt.type,
+                         size=optimal.pt.size,color=optimal.pt.color)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=crossdot$x,y=a1*crossdot$x+b1),
+                                       aes(x=crossdot$x,y=-Inf,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                       arrow = arrow(length = unit(0.04, "npc")),family="serif",size=2.5,
+                                       box.padding = 1)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+min(asd1$gg))/2,
+                                                       y=(a1*crossdot$x+b1+0)*0.6),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq1))),parse = TRUE)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+max(asd2$gg))/2,
+                                                       y=(a2*crossdot$x+b2+0)*0.4),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq2))),parse = TRUE)
+          }
+        }
+      }
+    }
+    }
+  }
   ####change x-axis label
   if (!is.null(xlabname)) {
     orignam<-microchatParamStatobj$data_err$group%>%unique()
@@ -1184,18 +1393,58 @@
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  ylim.fold
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  if (panel.border) p<-p+theme(
-    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
+
+  p<-p+theme(aspect.ratio = 1,
+             title =  element_text(size = 7,face="bold.italic"),
+             axis.title = element_text(size = 6,face="bold"),
+             axis.text = element_text(size = 4,face="bold"))
+
+  if (method %in% c("anova","kruskal.test")) {
+    y.offset<-1/20*max(data_poi$value)
+  }
+
+  if (method %in% c("t.test","wilcox.test")) {
+    y.offset<-max(data.seg$y3)-max(data_poi$value)+y.ratio*2/3
+  }
+
+  if (panel.border=="all") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
   )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+
+  if (!is.null(mytheme)) p<-p+mytheme
   ggsave(paste(export_path,"/Parameter (",index,")_boxplot.pdf",sep = ""),
-         width = 3,height = 3,
+         units = "cm",
+         width = 21/3,
+         height = 21*p$theme$aspect.ratio/3,
          p)
   cat("Parametric properities boxplot has been exported. Please check it.","\n")
-
+  cat("----------------------------------------------------------------------","\n")
   return(p)
-
 }
 
 "calcorderx"<-function (data.alpha, y.ratio, data_poi)
@@ -1411,7 +1660,7 @@
   return(p1)
 }
 
-plotMicrochatParamHeatmap<-function(microchatParamobj,
+"plotMicrochatParamHeatmap"<-function(microchatParamobj,
                                     rescale=FALSE,
                                     standardlization=c("0-1","scale","center","normal"),
                                     ###0-1 standardlization
@@ -1426,8 +1675,6 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                     export_path="microbial composition") {
   sample_type=match.arg(sample_type)
   standardlization=match.arg(standardlization)
-
-  export_path<-paste(export_path,"/microbial composition",sep = "")
   dir.create(export_path, recursive = TRUE)
 
 
@@ -1752,21 +1999,27 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
-                                            panel.border=TRUE,
+                                            panel.border=c("none","normal","all","axis"),
                                             method="anova",
                                             seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             color_backgroud="grey90",
+                                            axis.x.angle.adjust=FALSE,
+                                            mytheme=NULL,
+                                            ncol=3,
+                                            spline.params=NULL,
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
-
+  if (dev.cur() != 1) {
+    dev.off()
+  }
   select.index<-microchatParamobj$all.index
   paramfile.select<-microchatParamobj$paramfile.select
   export_path<-paste0(export_path,"/",paramfile.select)
   pp<-list()
   height.sel<-length(ncol_layout(length(select.index)))*3
   width.sel<-ncol_layout(length(select.index))[[1]]%>%length()*3
-  #t=select.index[2]
+  #t=select.index[8]
   for (t in select.index) {
     microchatParamStatobj<-calcMicrochatParamStat(microchatParamobj,
                                                   select.index=t,
@@ -1785,19 +2038,25 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                  errorbar.point.size=0.1,
                                  y.point.adj=0.1,
                                  seg=seg,
-                                 add.spline=FALSE,
                                  panel.border=panel.border,
                                  color_group=color_group,
                                  color_backgroud=color_backgroud,
+                                 axis.x.angle.adjust=axis.x.angle.adjust,
+                                 mytheme=mytheme,
+                                 spline.params=spline.params,
                                  export_path=export_path)
     pp[[t]]<-p
   }
 
   library(patchwork)
-  pm<-wrap_plots(pp)
-  print(pm)
+  pm<-wrap_plots(pp,ncol=ncol)
+
+  rownum<-length(select.index)/ncol
+  if (rownum>as.integer(rownum)) nrows<-as.integer(rownum)+1 else nrows<-as.integer(rownum)
+
   ggsave(paste(export_path,"/Muti-parameter","_boxplot.pdf",sep = ""),
-         width = width.sel*4/3,height = height.sel*4/3,
+         units = "cm",
+         width = 7*ncol,height = 7*nrows,
          pm)
   message("Muti-parametric properities boxplot has been exported. Please check it.")
 
@@ -1808,9 +2067,12 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                       strictmod=TRUE,
                                       method="anova",
                                       comparison=my_comparisons,
+                                      mean_dec=2,
+                                      se_dec=2,
                                       export_path="microbial parameteric analysis") {
-  dir.create(export_path, recursive = TRUE)
   paramfile.select<-microchatParamobj$paramfile.select
+  export_path<-paste(export_path,"/",paramfile.select,sep = "")
+  dir.create(export_path, recursive = TRUE)
   if (class(microchatParamobj)[1]!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
   }
@@ -1818,7 +2080,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
   suppressMessages(library(microchat))
 
   data_err<-microchatParamobj$statistics
-  data_err$summa<-paste(sprintf("%0.2f", data_err$mean),sprintf("%0.2f", data_err$se),sep = "±")
+  data_err$summa<-paste(sprintf(paste0("%0.",mean_dec,"f"), data_err$mean),sprintf(paste0("%0.",se_dec,"f"), data_err$se),sep = "±")
 
   param_tab<-subset(data_err,select=c(index,group,summa))%>%spread(key =group, value = summa )
 
@@ -1846,9 +2108,9 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
       gwrow<-which(as.character(unique(sigtab$group1)[2])==as.character(sigtab$group1))
       for (tk in gwrow) {
         if (sigtab$sig[tk]=="*") sigtab$sig[tk]<-"#"
-        if (sigtab$sig[tk]=="**") sigtab$sig[tk]<-"#"
-        if (sigtab$sig[tk]=="***") sigtab$sig[tk]<-"#"
-        if (sigtab$sig[tk]=="****") sigtab$sig[tk]<-"#"
+        if (sigtab$sig[tk]=="**") sigtab$sig[tk]<-"##"
+        if (sigtab$sig[tk]=="***") sigtab$sig[tk]<-"###"
+        if (sigtab$sig[tk]=="****") sigtab$sig[tk]<-"####"
       }
     }
 
@@ -1876,6 +2138,8 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
   if (method %in% c("anova","kruskal.test")) {
     select.index<-microchatParamobj$all.index
     sigtabx<-data.frame()
+    anova_p<-data.frame()
+    t=select.index[1]
     for (t in select.index) {
       microchatParamStatobj<-calcMicrochatParamStat( microchatParamobj,
                                                      select.index=t,
@@ -1893,6 +2157,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
       sigtab<-sigtab[order(sigtab$group),]
       {
         sigtabx<-rbind(sigtabx,sigtab)
+        anova_p<-rbind(anova_p,microchatParamStatobj$param.stats)
       }
     }
 
@@ -1909,6 +2174,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
       }
     }
 
+    param_tab$ANOVA_p<- keep.decmi(anova_p[match(rownames(param_tab),anova_p$index),]$p.value)
     ###add opc prediction
     params_table<-microchatParamobj$param_table
     params_table<-params_table[,-1]
@@ -1918,7 +2184,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     trt_id <-unique(colname)
 
     ttk<-sapply(trt_id,function(x){
-      grep(x,colnames(params_table))
+      match(x,colnames(params_table)) #grep(x,colnames(params_table))
     })
 
     split_otu <-
@@ -1967,17 +2233,12 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     }
   }
 
-
-
   if (!is.null(paramfile.select)) flie=paste(export_path,"/(",paramfile.select,")parameters_statistic_",method,".csv", sep = "")
   if (is.null(paramfile.select)) flie=paste(export_path,"/","parameters_statistic_",method,".csv", sep = "")
   write.csv(param_tab,file = flie,row.names = FALSE)
   class(param_tab) <- c("microchat","data.frame")
   return(param_tab)
 }
-
-
-
 
 "plotMicrochatParamComplexBoxplot" <- function(submchat,
                                                geom.line=TRUE,
@@ -1991,7 +2252,6 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                                color_group=colorCustom(5,pal = "ywbu"),
                                                export_path="ss21/microbial parameteric analysis") {
   params<-submchat$param_table
-
   for (paramname in names(params)) {
 
     export_path1<-export_path
@@ -2028,12 +2288,16 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                         errorbar.line.add=FALSE,
                                         seg=TRUE,
                                         add.spline=TRUE,
-                                        panel.border=TRUE,
+                                        panel.border=c("none","normal","all","axis"),
                                         errorbar.point.size=0.1,
                                         y.point.adj=NULL,
                                         color_group=colorCustom(5,pal = "gygn"),
                                         color_backgroud="grey90",
+                                        axis.x.angle.adjust=FALSE,
+                                        mytheme=NULL,
+                                        spline.params=NULL,
                                         export_path="microbial diversity analysis") {
+  panel.border<-match.arg(panel.border)
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatParamStatobj)[1]!="microchat") {
@@ -2061,7 +2325,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                    o.data[gnum/2 + 2], sep = "")
     quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
                   o.data[gnum/2 +  3], sep = "")
-    subtitile <- paste(liner, quad, sep = " ")
+    subtitile <- paste(liner, "\n",quad, sep = "")
 }
 
   colors<-color_group
@@ -2194,6 +2458,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -2208,7 +2473,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                  width = 0.7,colour = "white") +
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 3,color = "black",family = "serif", fontface="bold")
 
 
       p<-p+scale_discrete_manual(values=colors,
@@ -2216,18 +2481,21 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
         scale_discrete_manual(values=colors,
                               aesthetics = "fill")
 
-
       if (yaxis.italic) p<-p+labs(y=index,
-                                  subtitle=subtitile,
-                                  title = paste(method,": p = ",
-                                                keep.decmi(data.alpha$p.value),sep=""))+
+                                  title = paste(
+                                    paste(method,": p = ",
+                                          keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                    subtitile,sep = ""
+                                  ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
-                                   subtitle=subtitile,
-                                   title = paste(method,": p = ",
-                                                 keep.decmi(data.alpha$p.value),sep=""))+
+                                   title = paste(
+                                     paste(method,": p = ",
+                                           keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                     subtitile,sep = ""
+                                   ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -2255,6 +2523,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -2269,7 +2538,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
 
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 3,color = "black",family = "serif", fontface="bold")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -2277,16 +2546,20 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                               aesthetics = "fill")
 
       if (yaxis.italic) p<-p+labs(y=index,
-                                  subtitle=subtitile,
-                                  title = paste(method,": p = ",
-                                                keep.decmi(data.alpha$p.value),sep=""))+
+                                  title = paste(
+                                    paste(method,": p = ",
+                                          keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                    subtitile,sep = ""
+                                  ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
-                                   subtitle=subtitile,
-                                   title = paste(method,": p = ",
-                                                 keep.decmi(data.alpha$p.value),sep=""))+
+                                   title = paste(
+                                     paste(method,": p = ",
+                                           keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                     subtitile,sep = ""
+                                   ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -2312,6 +2585,222 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
 
   }
 
+  ##add fitted curve for  quadratic model
+  if (method %in% c("anova","kruskal.test") & !is.null(spline.params)){
+    opc.thres=spline.params$opc.thres
+    spline.size = spline.params$spline.size
+    spline.color=spline.params$spline.color
+    spline.shape =spline.params$spline.shape
+    spline.type=spline.params$spline.type
+    opt.interval=spline.params$opt.interval
+    optimal.pt.size=spline.params$optimal.pt.size
+    optimal.pt.color=spline.params$optimal.pt.color
+    optimal.pt.type=spline.params$optimal.pt.type
+
+    vline.color=spline.params$vline.color
+    vline.size=spline.params$vline.size
+    vline.type=spline.params$vline.type
+
+    csal<-strsplit(o.data$Linear,"( )")[[1]][2]
+    lin.num<-substr(csal,start = 2,stop =nchar(csal)-1 )%>%as.numeric()
+
+    csa<-strsplit(o.data$Quadratic,"( )")[[1]][2]
+    qua.num<-substr(csa,start = 2,stop =nchar(csa)-1 )%>%as.numeric()
+    if (!is.na(lin.num)) {
+    if ("Cubic" %in% colnames(o.data)) {
+      csac<-strsplit(o.data$Cubic,"( )")[[1]][2]
+      cub.num<-substr(csac,start = 2,stop =nchar(csac)-1 )%>%as.numeric()
+
+      all.opc.r<-c(lin.num,qua.num,cub.num)
+
+    } else {
+      all.opc.r<-c(lin.num,qua.num)
+    }
+
+    #拟合三次函数
+      if ("Cubic" %in% colnames(o.data)) if (cub.num>opc.thres & max(all.opc.r)==cub.num) {
+      data_err_test<-cub_equa_fitTest(microchatParamStatobj$data_err)
+
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      d<-data_err_test$d
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(d = as.numeric(format(d, digits = 2)),
+                a = as.numeric(format(a, digits = 2)),
+                b = as.numeric(format(b, digits = 2)),
+                c = as.numeric(format(c, digits = 2)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 2)))
+      #eq<-substitute(italic(y) ==  d %.% (italic(x)-dose)^3 + a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + geom_line(data = data.frame(x = data_err_test$x_pred,
+                                         y = data_err_test$y_pred),
+                       aes(x, y),
+                       color = spline.color,
+                       linewidth = spline.size/2,
+                       linetype=spline.type,
+                       lineend = "round")+
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend = d*opt.dose^3+ a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=d*opt.dose^3+a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(d*opt.dose^3+a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合二次函数
+    if (qua.num>opc.thres & max(all.opc.r)==qua.num) {
+      data_err_test<-qua_equa_fitTest(microchatParamStatobj$data_err)
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(a = as.numeric(format(a, digits = 3)),
+                b = as.numeric(format(b, digits = 3)),
+                c=as.numeric(format(c, digits = 3)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 3)))
+      #eq<-substitute(italic(y) == a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + ggalt::geom_xspline(data = asd,
+                                 linetype=spline.type,lineend = "round",
+                                 size = spline.size, color = spline.color,
+                                 aes(x = gg, y = y_new), spline_shape = spline.shape) +
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend =  a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合线性模型
+    if (lin.num>opc.thres & max(all.opc.r)==lin.num) {
+      data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
+
+      if (data_err_test$a>=0) {
+        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+      } else {
+        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        message("Namely, fitted curve for broken-line model is showing  !!!")
+
+        slope<-c()
+        for (t in 1:(nrow(data_err_test$asd)-1)) {
+          slope<-c(slope,obtainSlope(data<-data_err_test$asd[t:(t+1),]))
+        }
+        slope_a<-slope[which(slope<0)]
+        slope_a<-slope_a[which(slope_a==min(slope_a))]
+        spot_start<-which(slope==slope_a)
+        if (which(data_err_test$asd$mean==max(data_err_test$asd$mean))!=as.numeric(spot_start)) {
+          spot_start<-which(data_err_test$asd$mean==max(data_err_test$asd$mean))
+        } else {
+          spot_start<-spot_start
+        }
+        if (spot_start ==2 | spot_start==3) {
+          spot_end<-spot_start+1
+
+          data_err_test1<-linear_equa_fitTest(microchatParamStatobj$data_err[1:spot_start,])
+          data_err_test2<-linear_equa_fitTest(microchatParamStatobj$data_err[spot_end:nrow(microchatParamStatobj$data_err),],spot_end)
+
+          crossdot<-getCrossCoord(data_err_test1,data_err_test2)
+
+          if (crossdot$x>1 & crossdot$x <nrow(data_err_test$asd)) {
+            asd1<-data_err_test1$asd
+            a1<-data_err_test1$a
+            b1<-data_err_test1$b
+            asd2<-data_err_test2$asd
+            asd2$gg<-(max(asd1$gg)+1):nrow(data_err_test$asd)
+            a2<-data_err_test2$a
+            b2<-data_err_test2$b
+
+            asd1_a<-asd1[1:2,]
+            asd1_a$gg[1]<-min(asd1$gg)-0.3
+            asd1_a$y_new[1]<-a1*asd1_a$gg[1]+b1
+            asd1_a$gg[2]<-crossdot$x+0.3
+            asd1_a$y_new[2]<-a1*asd1_a$gg[2]+b1
+            asd1<-rbind(asd1,asd1_a)
+
+            asd2_a<-asd2[1:2,]
+            asd2_a$gg[1]<-max(asd2$gg)+0.3
+            asd2_a$y_new[1]<-a2*asd2_a$gg[1]+b2
+            asd2_a$gg[2]<-crossdot$x-0.3
+            asd2_a$y_new[2]<-a2*asd2_a$gg[2]+b2
+            asd2<-rbind(asd2,asd2_a)
+
+            opt.inclusion<-opt.interval[as.integer(crossdot$x)]+(crossdot$x-as.integer(crossdot$x))*(opt.interval[as.integer(crossdot$x)+1]-opt.interval[as.integer(crossdot$x)])
+
+            la <- list(a = as.numeric(format(a1, digits = 2)),
+                       b = as.numeric(format(b1, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test1$R2, digits = 2)))
+            #eq1<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,la)
+            lb <- list(a = as.numeric(format(a2, digits = 2)),
+                       b = as.numeric(format(b2, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test2$R2, digits = 2)))
+            #eq2<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,lb)
+            eq1<-""
+            eq2<-''
+            p<-p + geom_line(data = asd1,
+                             aes(gg, y_new),
+                             color = spline.color,
+                             linewidth = spline.size/2,
+                             linetype=spline.type,
+                             lineend = "round")+
+              geom_line(data = asd2,
+                        aes(gg, y_new),
+                        color = spline.color,
+                        linewidth = spline.size/2,
+                        linetype=spline.type,
+                        lineend = "round")+
+              annotate(geom="segment",x = crossdot$x, xend = crossdot$x,
+                       size=vline.size,linetype=vline.type,
+                       lineend = "round",
+                       y =-Inf, yend = a1*crossdot$x+b1,
+                       color=vline.color)+
+              geom_point(aes(x=crossdot$x,y=a1*crossdot$x+b1),
+                         shape=optimal.pt.type,
+                         size=optimal.pt.size,color=optimal.pt.color)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=crossdot$x,y=a1*crossdot$x+b1),
+                                       aes(x=crossdot$x,y=-Inf,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                       arrow = arrow(length = unit(0.04, "npc")),family="serif",size=2.5,
+                                       box.padding = 1)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+min(asd1$gg))/2,
+                                                       y=(a1*crossdot$x+b1+0)*0.6),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq1))),parse = TRUE)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+max(asd2$gg))/2,
+                                                       y=(a2*crossdot$x+b2+0)*0.4),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq2))),parse = TRUE)
+          }
+        }
+      }
+    }
+    }
+  }
+
   ####change x-axis label
   if (!is.null(xlabname)) {
     orignam<-microchatParamStatobj$data_err$group%>%unique()
@@ -2319,19 +2808,63 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  ylim.fold
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  if (panel.border) p<-p+theme(
-    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
-  )
-  ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),
-         width = 3,height = 3,p)
-  cat("Parametric properities barplot has been exported. Please check it.","\n")
 
+  p<-p+theme(aspect.ratio = 1,
+             title =  element_text(size = 7,face="bold.italic"),
+             axis.title = element_text(size = 6,face="bold"),
+             axis.text = element_text(size = 4,face="bold"))
+
+  if (method %in% c("anova","kruskal.test")) {
+    y.offset<-1/20*max(data_poi$value)
+  }
+
+  if (method %in% c("t.test","wilcox.test")) {
+    y.offset<-max(data.seg$y3)-max(data_poi$value)+y.ratio*2/3
+  }
+
+  if (panel.border=="all") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+theme(
+    aspect.ratio = 1,
+    title =  element_text(size = 7,face="bold.italic"),
+    axis.title = element_text(size = 6,face="bold"),
+    axis.text = element_text(size = 4,face="bold"),
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
+  )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+  if (!is.null(mytheme)) p<-p+mytheme
+  ggsave(paste(export_path,"/Parameter (",index,")_barplot.pdf",sep = ""),
+         units = "cm",
+         width = 21/3,
+         height = 21*p$theme$aspect.ratio/3,
+         p)
+  cat("Parametric properities barplot has been exported. Please check it.","\n")
+  cat("----------------------------------------------------------------------","\n")
   return(p)
 
 }
-
 
 "plotMicrochatParamLineplot" <- function(microchatParamStatobj,
                                          ylim.fold=1.1,
@@ -2505,6 +3038,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-factor(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
@@ -2518,7 +3052,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                       colour = "grey50",width=.25)+
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 5,color = "black",family = "serif", fontface="bold")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -2565,6 +3099,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-factor(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       sig_label_new<-sig_label_new[order(sig_label_new$group),]
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
@@ -2578,7 +3113,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                       colour = "grey50",width=.25)+
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 5,color = "black",family = "serif", fontface="bold")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -2646,15 +3181,21 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                          xlabname=NULL,
                                          yaxis.italic=TRUE,
                                          strictmod=TRUE,
-                                         panel.border=TRUE,
+                                         panel.border=c("none","normal","all","axis"),
                                          method="anova",
                                          bar.border.size=1,
                                          seg=FALSE,
                                          comparison=my_comparisons,
                                          color_group=colorCustom(5,pal = "ywbu"),
                                          color_backgroud="grey90",
+                                         axis.x.angle.adjust=FALSE,
+                                         mytheme=NULL,
+                                         ncol=3,
+                                         spline.params=NULL,
                                          export_path="ss21/microbial parameteric analysis/liver_gene") {
-
+  if (dev.cur() != 1) {
+    dev.off()
+  }
   select.index<-microchatParamobj$all.index
   paramfile.select<-microchatParamobj$paramfile.select
   export_path<-paste0(export_path,"/",paramfile.select)
@@ -2682,15 +3223,23 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                   add.spline=FALSE,
                                   color_group=color_group,
                                   color_backgroud=color_backgroud,
+                                  axis.x.angle.adjust=axis.x.angle.adjust,
+                                  mytheme=mytheme,
+                                  spline.params=spline.params,
                                   export_path=export_path)
     pp[[t]]<-p
   }
 
   library(patchwork)
-  pm<-wrap_plots(pp)
-  print(pm)
+  pm<-wrap_plots(pp,ncol=ncol)
+
+  rownum<-length(select.index)/ncol
+  if (rownum>as.integer(rownum)) nrows<-as.integer(rownum)+1 else nrows<-as.integer(rownum)
+
   ggsave(paste(export_path,"/Muti-parameter","_hollow_barplot.pdf",sep = ""),
-         width = width.sel*4/3,height = height.sel*4/3,pm)
+         units = "cm",
+         width = 7*ncol,height = 7*nrows,
+         pm)
   message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
@@ -2702,7 +3251,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                      yaxis.italic=TRUE,
                                      errorbar.pos.adj=TRUE,
                                      errorbar.line.add=FALSE,
-                                     panel.border=TRUE,
+                                     panel.border=c("none","normal","all","axis"),
                                      seg=TRUE,
                                      add.spline=TRUE,
                                      errorbar.point.size=0.1,
@@ -2710,7 +3259,11 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                      y.point.adj=NULL,
                                      color_group=colorCustom(5,pal = "gygn"),
                                      color_backgroud="grey90",
+                                     axis.x.angle.adjust=FALSE,
+                                     mytheme=NULL,
+                                     spline.params=NULL,
                                      export_path="microbial diversity analysis") {
+  panel.border<-match.arg(panel.border)
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatParamStatobj)[1]!="microchat") {
@@ -2738,7 +3291,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                    o.data[gnum/2 + 2], sep = "")
     quad <- paste(colnames(o.data[gnum/2 +3]), " effect: ",
                   o.data[gnum/2 +  3], sep = "")
-    subtitile <- paste(liner, quad, sep = " ")
+    subtitile <- paste(liner, "\n",quad, sep = "")
   }
 
   colors<-color_group
@@ -2872,6 +3425,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="anova") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -2887,7 +3441,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                  width = 0.7) +
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 3,color = "black",family = "serif", fontface="bold")
 
 
       p<-p+scale_discrete_manual(values=colors,
@@ -2897,16 +3451,20 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
 
 
       if (yaxis.italic) p<-p+labs(y=index,
-                                  subtitle=subtitile,
-                                  title = paste(method,": p = ",
-                                                keep.decmi(data.alpha$p.value),sep=""))+
+                                  title = paste(
+                                    paste(method,": p = ",
+                                          keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                    subtitile,sep = ""
+                                  ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
-                                   subtitle=subtitile,
-                                   title = paste(method,": p = ",
-                                                 keep.decmi(data.alpha$p.value),sep=""))+
+                                   title = paste(
+                                     paste(method,": p = ",
+                                           keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                     subtitile,sep = ""
+                                   ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -2934,6 +3492,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     if (method=="kruskal.test") {
       gorder<-unique(data_poi$group)%>%as.character()
       sig_label_new$group<-ordered(sig_label_new$group,levels = gorder)
+      if (microchatParamStatobj$param.stats$p.value>0.05) sig_label_new$alpha<-''
       data_errx<-subset(data_err, select=c(group,se))
       if ("se" %in% colnames(sig_label_new)) sig_label_new<-sig_label_new else sig_label_new<-merge(sig_label_new,data_errx,by="group")
       if(length(unique(sig_label_new$alpha))==1) sig_label_new$alpha<-""
@@ -2948,7 +3507,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                  width = 0.7) +
         geom_text(data = sig_label_new,vjust=-0.5,
                   aes(x = group,y = mean+se,label = alpha),
-                  size = 5,color = "black",family = "serif")
+                  size = 3,color = "black",family = "serif", fontface="bold")
 
       p<-p+scale_discrete_manual(values=colors,
                                  aesthetics = "colour")+
@@ -2956,16 +3515,20 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                               aesthetics = "fill")
 
       if (yaxis.italic) p<-p+labs(y=index,
-                                  subtitle=subtitile,
-                                  title = paste(method,": p = ",
-                                                keep.decmi(data.alpha$p.value),sep=""))+
+                                  title = paste(
+                                    paste(method,": p = ",
+                                          keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                    subtitile,sep = ""
+                                  ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold.italic",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
       if (!yaxis.italic) p<-p+labs(y=index,
-                                   subtitle=subtitile,
-                                   title = paste(method,": p = ",
-                                                 keep.decmi(data.alpha$p.value),sep=""))+
+                                   title = paste(
+                                     paste(method,": p = ",
+                                           keep.decmi(data.alpha$p.value),sep=""),"\n",
+                                     subtitile,sep = ""
+                                   ))+
         theme(axis.title.y = element_text(colour='black', size=12,face = "bold",family = "serif",vjust = 1.5),
               title = element_text(face = "bold.italic",family = "serif", size=12))
 
@@ -2991,6 +3554,222 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
 
   }
 
+  ##add fitted curve for  quadratic model
+  if (method %in% c("anova","kruskal.test") & !is.null(spline.params)){
+    opc.thres=spline.params$opc.thres
+    spline.size = spline.params$spline.size
+    spline.color=spline.params$spline.color
+    spline.shape =spline.params$spline.shape
+    spline.type=spline.params$spline.type
+    opt.interval=spline.params$opt.interval
+    optimal.pt.size=spline.params$optimal.pt.size
+    optimal.pt.color=spline.params$optimal.pt.color
+    optimal.pt.type=spline.params$optimal.pt.type
+
+    vline.color=spline.params$vline.color
+    vline.size=spline.params$vline.size
+    vline.type=spline.params$vline.type
+
+    csal<-strsplit(o.data$Linear,"( )")[[1]][2]
+    lin.num<-substr(csal,start = 2,stop =nchar(csal)-1 )%>%as.numeric()
+
+    csa<-strsplit(o.data$Quadratic,"( )")[[1]][2]
+    qua.num<-substr(csa,start = 2,stop =nchar(csa)-1 )%>%as.numeric()
+    if (!is.na(lin.num)) {
+    if ("Cubic" %in% colnames(o.data)) {
+      csac<-strsplit(o.data$Cubic,"( )")[[1]][2]
+      cub.num<-substr(csac,start = 2,stop =nchar(csac)-1 )%>%as.numeric()
+
+      all.opc.r<-c(lin.num,qua.num,cub.num)
+
+    } else {
+      all.opc.r<-c(lin.num,qua.num)
+    }
+
+    #拟合三次函数
+      if ("Cubic" %in% colnames(o.data))  if (cub.num>opc.thres & max(all.opc.r)==cub.num) {
+      data_err_test<-cub_equa_fitTest(microchatParamStatobj$data_err)
+
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      d<-data_err_test$d
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(d = as.numeric(format(d, digits = 2)),
+                a = as.numeric(format(a, digits = 2)),
+                b = as.numeric(format(b, digits = 2)),
+                c = as.numeric(format(c, digits = 2)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 2)))
+      #eq<-substitute(italic(y) ==  d %.% (italic(x)-dose)^3 + a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + geom_line(data = data.frame(x = data_err_test$x_pred,
+                                         y = data_err_test$y_pred),
+                       aes(x, y),
+                       color = spline.color,
+                       linewidth = spline.size/2,
+                       linetype=spline.type,
+                       lineend = "round")+
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend = d*opt.dose^3+ a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=d*opt.dose^3+a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(d*opt.dose^3+a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合二次函数
+    if (qua.num>opc.thres & max(all.opc.r)==qua.num) {
+      data_err_test<-qua_equa_fitTest(microchatParamStatobj$data_err)
+      asd<-data_err_test$asd
+      opt.dose<-data_err_test$opt.dose
+      a<-data_err_test$a
+      b<-data_err_test$b
+      c<-data_err_test$c
+      opt.inclusion<-opt.interval[as.integer(opt.dose)]+(opt.dose-as.integer(opt.dose))*(opt.interval[as.integer(opt.dose)+1]-opt.interval[as.integer(opt.dose)])
+
+      l <- list(a = as.numeric(format(a, digits = 3)),
+                b = as.numeric(format(b, digits = 3)),
+                c=as.numeric(format(c, digits = 3)),
+                dose = as.numeric(format(opt.inclusion, digits = 2)),
+                r2 = as.numeric(format(data_err_test$R2, digits = 3)))
+      #eq<-substitute(italic(y) == a %.% (italic(x)-dose)^2 + b %.% (italic(x)-dose) + c~","~italic(R)^2~"="~r2,l)
+      eq<-""
+
+      p<-p + ggalt::geom_xspline(data = asd,
+                                 linetype=spline.type,lineend = "round",
+                                 size = spline.size, color = spline.color,
+                                 aes(x = gg, y = y_new), spline_shape = spline.shape) +
+        annotate(geom="segment",x = opt.dose, xend = opt.dose, size=vline.size,linetype=vline.type,
+                 lineend = "round",
+                 y =-Inf, yend =  a*opt.dose^2+b*opt.dose+c,color=vline.color)+
+        geom_point(aes(x=opt.dose,y=a*opt.dose^2+b*opt.dose+c),
+                   shape=optimal.pt.type,
+                   size=optimal.pt.size,color=optimal.pt.color)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)),
+                                 aes(x=opt.dose,y=y,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                 arrow = arrow(length = unit(0.01, "npc")),family="serif",size=2.5,
+                                 box.padding = 1)+
+        ggrepel::geom_text_repel(data=data.frame(opt.dose=opt.dose,y=(a*opt.dose^2+b*opt.dose+c)*0.8),
+                                 family="serif",size=2,
+                                 aes(x = opt.dose, y = -Inf, label = as.character(as.expression(eq))),parse = TRUE)
+    }
+    #拟合线性模型
+    if (lin.num>opc.thres & max(all.opc.r)==lin.num) {
+      data_err_test<-linear_equa_fitTest(microchatParamStatobj$data_err)
+
+      if (data_err_test$a>=0) {
+        message("The fitted curve was drawn as user required. However, the slope of the fitted curve is higher than 0, so the fitted curve will not display.")
+      } else {
+        message("The fitted curve was drawn as user required. The slope of the fitted curve is lower than 0, so the fitted curve will be divided into two segments.")
+        message("Namely, fitted curve for broken-line model is showing  !!!")
+
+        slope<-c()
+        for (t in 1:(nrow(data_err_test$asd)-1)) {
+          slope<-c(slope,obtainSlope(data<-data_err_test$asd[t:(t+1),]))
+        }
+        slope_a<-slope[which(slope<0)]
+        slope_a<-slope_a[which(slope_a==min(slope_a))]
+        spot_start<-which(slope==slope_a)
+        if (which(data_err_test$asd$mean==max(data_err_test$asd$mean))!=as.numeric(spot_start)) {
+          spot_start<-which(data_err_test$asd$mean==max(data_err_test$asd$mean))
+        } else {
+          spot_start<-spot_start
+        }
+        if (spot_start ==2 | spot_start==3) {
+          spot_end<-spot_start+1
+
+          data_err_test1<-linear_equa_fitTest(microchatParamStatobj$data_err[1:spot_start,])
+          data_err_test2<-linear_equa_fitTest(microchatParamStatobj$data_err[spot_end:nrow(microchatParamStatobj$data_err),],spot_end)
+
+          crossdot<-getCrossCoord(data_err_test1,data_err_test2)
+
+          if (crossdot$x>1 & crossdot$x <nrow(data_err_test$asd)) {
+            asd1<-data_err_test1$asd
+            a1<-data_err_test1$a
+            b1<-data_err_test1$b
+            asd2<-data_err_test2$asd
+            asd2$gg<-(max(asd1$gg)+1):nrow(data_err_test$asd)
+            a2<-data_err_test2$a
+            b2<-data_err_test2$b
+
+            asd1_a<-asd1[1:2,]
+            asd1_a$gg[1]<-min(asd1$gg)-0.3
+            asd1_a$y_new[1]<-a1*asd1_a$gg[1]+b1
+            asd1_a$gg[2]<-crossdot$x+0.3
+            asd1_a$y_new[2]<-a1*asd1_a$gg[2]+b1
+            asd1<-rbind(asd1,asd1_a)
+
+            asd2_a<-asd2[1:2,]
+            asd2_a$gg[1]<-max(asd2$gg)+0.3
+            asd2_a$y_new[1]<-a2*asd2_a$gg[1]+b2
+            asd2_a$gg[2]<-crossdot$x-0.3
+            asd2_a$y_new[2]<-a2*asd2_a$gg[2]+b2
+            asd2<-rbind(asd2,asd2_a)
+
+            opt.inclusion<-opt.interval[as.integer(crossdot$x)]+(crossdot$x-as.integer(crossdot$x))*(opt.interval[as.integer(crossdot$x)+1]-opt.interval[as.integer(crossdot$x)])
+
+            la <- list(a = as.numeric(format(a1, digits = 2)),
+                       b = as.numeric(format(b1, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test1$R2, digits = 2)))
+            #eq1<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,la)
+            lb <- list(a = as.numeric(format(a2, digits = 2)),
+                       b = as.numeric(format(b2, digits = 2)),
+                       dose = as.numeric(format(opt.inclusion, digits = 2)),
+                       r2 = as.numeric(format(data_err_test2$R2, digits = 2)))
+            #eq2<-substitute(italic(y) ==  a %.% (italic(x)-dose) + b~","~italic(R)^2~"="~r2,lb)
+            eq1<-""
+            eq2<-""
+            p<-p + geom_line(data = asd1,
+                             aes(gg, y_new),
+                             color = spline.color,
+                             linewidth = spline.size/2,
+                             linetype=spline.type,
+                             lineend = "round")+
+              geom_line(data = asd2,
+                        aes(gg, y_new),
+                        color = spline.color,
+                        linewidth = spline.size/2,
+                        linetype=spline.type,
+                        lineend = "round")+
+              annotate(geom="segment",x = crossdot$x, xend = crossdot$x,
+                       size=vline.size,linetype=vline.type,
+                       lineend = "round",
+                       y =-Inf, yend = a1*crossdot$x+b1,
+                       color=vline.color)+
+              geom_point(aes(x=crossdot$x,y=a1*crossdot$x+b1),
+                         shape=optimal.pt.type,
+                         size=optimal.pt.size,color=optimal.pt.color)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=crossdot$x,y=a1*crossdot$x+b1),
+                                       aes(x=crossdot$x,y=-Inf,label=paste0("Optimal level: ",round(opt.inclusion,2))),
+                                       arrow = arrow(length = unit(0.04, "npc")),family="serif",size=2.5,
+                                       box.padding = 1)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+min(asd1$gg))/2,
+                                                       y=(a1*crossdot$x+b1+0)*0.6),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq1))),parse = TRUE)+
+              ggrepel::geom_text_repel(data=data.frame(opt.dose=(crossdot$x+max(asd2$gg))/2,
+                                                       y=(a2*crossdot$x+b2+0)*0.4),
+                                       family="serif",size=2,arrow = arrow(length = unit(0.03, "npc")),
+                                       aes(x = opt.dose, y = y, label = as.character(as.expression(eq2))),parse = TRUE)
+          }
+        }
+      }
+    }
+    }
+  }
+
   ####change x-axis label
   if (!is.null(xlabname)) {
     orignam<-microchatParamStatobj$data_err$group%>%unique()
@@ -2998,15 +3777,56 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
     names(xlabname)<-orignam
     p<-p+ scale_x_discrete(labels = xlabname)
   }
-  ylim.fold
-  p<-p+theme(title = element_text(size=8),aspect.ratio = 1)
-  if (panel.border) p<-p+theme(
-    panel.border = element_rect(linetype = "solid", fill = NA,color = "black")
-  )
-  ggsave(paste(export_path,"/Parameter (",index,")_hollow_barplot.pdf",sep = ""),
-         width = 3,height = 3,p)
-  cat("Parametric properities barplot has been exported. Please check it.","\n")
 
+  p<-p+theme(aspect.ratio = 1,
+             title =  element_text(size = 7,face="bold.italic"),
+             axis.title = element_text(size = 6,face="bold"),
+             axis.text = element_text(size = 4,face="bold"))
+
+  if (method %in% c("anova","kruskal.test")) {
+    y.offset<-1/20*max(data_poi$value)
+  }
+
+  if (method %in% c("t.test","wilcox.test")) {
+    y.offset<-max(data.seg$y3)-max(data_poi$value)+y.ratio*2/3
+  }
+
+  if (panel.border=="all") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(data_poi$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(data_poi$value)+y.offset,
+             x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+theme(
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
+  )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+  if (!is.null(mytheme)) p<-p+mytheme
+  ggsave(paste(export_path,"/Parameter (",index,")_hollow_barplot.pdf",sep = ""),
+         units = "cm",
+         width = 21/3,
+         height = 21*p$theme$aspect.ratio/3,
+         p)
+  cat("Parametric properities barplot has been exported. Please check it.","\n")
+  cat("----------------------------------------------------------------------","\n")
   return(p)
 
 }
@@ -3016,14 +3836,20 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                             xlabname=NULL,
                                             yaxis.italic=TRUE,
                                             strictmod=TRUE,
-                                            panel.border=TRUE,
+                                            panel.border=c("none","normal","all","axis"),
                                             method="anova",
                                             seg=FALSE,
                                             comparison=my_comparisons,
                                             color_group=colorCustom(5,pal = "ywbu"),
                                             color_backgroud="grey90",
+                                            axis.x.angle.adjust=FALSE,
+                                            mytheme=NULL,
+                                            ncol=3,
+                                            spline.params=NULL,
                                             export_path="ss21/microbial parameteric analysis/liver_gene") {
-
+  if (dev.cur() != 1) {
+    dev.off()
+  }
   select.index<-microchatParamobj$all.index
   paramfile.select<-microchatParamobj$paramfile.select
   export_path<-paste0(export_path,"/",paramfile.select)
@@ -3050,21 +3876,26 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                  panel.border=panel.border,
                                  color_group=color_group,
                                  color_backgroud=color_backgroud,
+                                 axis.x.angle.adjust=axis.x.angle.adjust,
+                                 mytheme=mytheme,
+                                 spline.params=spline.params,
                                  export_path=export_path)
     pp[[t]]<-p
   }
 
   library(patchwork)
-  pm<-wrap_plots(pp)
-  print(pm)
+  pm<-wrap_plots(pp,ncol=ncol)
+  rownum<-length(select.index)/ncol
+  if (rownum>as.integer(rownum)) nrows<-as.integer(rownum)+1 else nrows<-as.integer(rownum)
+
   ggsave(paste(export_path,"/Muti-parameter","_barplot.pdf",sep = ""),
-         width = width.sel*4/3,height = height.sel*4/3,pm)
+         units = "cm",
+         width = 7*ncol,height = 7*nrows,
+         pm)
   message("Muti-parametric properities barplot has been exported. Please check it.")
 
   return(pm)
 }
-
-
 
 "plotMicrochatParamComplexBarplot" <- function(submchat,
                                                strictmod=TRUE,
@@ -3075,7 +3906,6 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
                                                color_group=colorCustom(5,pal = "ywbu"),
                                                export_path="ss21/microbial parameteric analysis") {
   params<-submchat$param_table
-
   for (paramname in names(params)) {
 
     export_path1<-export_path
@@ -3115,7 +3945,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
   colname<-colnames(params_table)
   trt_id <-unique(colname)
   ttk<-sapply(trt_id,function(x){
-    grep(x,colnames(params_table))
+    match(x,colnames(params_table)) #grep(x,colnames(params_table))
   })
 
   split_otu <-
@@ -3222,7 +4052,7 @@ plotMicrochatParamHeatmap<-function(microchatParamobj,
               vjust=-0.5,
               position = position_dodge(0.9),
               color="black",family="serif")+
-    ylim(NA,max(params.n$mean)*1.1)+
+    ylim(NA,max(params.n$mean)*1.4)+
     scale_fill_manual(values = color_bar,name="Group")+
     labs(y="Parameters")+
     theme(legend.position = "right",

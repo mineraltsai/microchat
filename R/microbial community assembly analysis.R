@@ -1,6 +1,6 @@
 "calcMicrochatAssemblyNiche" <- function(submchat,
                                     export_path="cs2/microbial assembly analysis") {
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Ecological niche width/data",sep = ""), recursive = TRUE)
 
@@ -120,12 +120,15 @@
   return(spec_gen.all)
 }
 
-"plotMicrochatAssemblyNiche"<-function(spec_gen,nrow=1,
+"plotMicrochatAssemblyNiche"<-function(spec_gen,nrow=1,ncol=3,
+                                       xlabname=NULL,
                                        specified.thres=NULL,
                                        sel.shape=c(21,19,23),
                                        color_type=c("red","white","blue"),
+                                       nice_layout=FALSE,
+                                       color_background=NA,
                                        export_path="cs2/microbial assembly analysis") {
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Ecological niche width",sep = ""), recursive = TRUE)
 
@@ -136,6 +139,7 @@
   pp<-list()
   for (tt in 1:length(spec_gen.x)) {
     sel.g<-names(spec_gen.x)[[tt]]
+    if (!is.null(xlabname)) sel.gn<-xlabname[tt] else sel.gn<-sel.g
     sel.prop<-subset(spec_gen.prop.x,select=c(1,match(sel.g,colnames(spec_gen.prop.x))))
     spec_gen.t<-spec_gen.x[[tt]]
 
@@ -156,22 +160,47 @@
     spe.num<-which(spec_gen.t$sign=="SPECIALIST")%>%length()
     gen.num<-which(spec_gen.t$sign=="GENERALIST")%>%length()
     p<-ggplot(spec_gen.t,aes(mean,niche,color=sign))+
-      geom_point(aes(shape=sign))+
+      geom_point(aes(shape=sign),size=1.5)+
       scale_shape_manual(values = sel.shape)+
       scale_color_manual(values = color_type)+
       geom_hline(yintercept=1.5,color=color_type[1],linetype="dashed")+
       geom_hline(yintercept=high.thres[tt],color=color_type[3],linetype="dashed")+
       annotate(geom="text",label=paste("Generalist: ",gen.num," (",sel.prop[1,2],")",sep = ""),
-               x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=high.thres[tt]+0.3,family="serif",color=color_type[1])+
+               x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=high.thres[tt]+0.3,
+               size=3,fontface="bold",
+               family="serif",color=color_type[1])+
       annotate(geom="text",label=paste("Specialist: ",spe.num," (",sel.prop[3,2],")",sep = ""),
-               x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=1.2,family="serif",color=color_type[3])+
-      labs(x="Mean abundance",y="Niche breadth (B)",title = sel.g)+
-      theme(panel.background = element_rect(color = "grey50"),
-            text = element_text(family = "serif"),aspect.ratio = 1,
+               x=(max(spec_gen.t$mean)-min(spec_gen.t$mean))/2,y=1.2,
+               size=3,fontface="bold",
+               family="serif",color=color_type[3])+
+      labs(x="Mean abundance",y="Niche breadth (B)",title = sel.gn)+
+      theme(panel.background = element_rect(color = color_background,fill = NA),
+            text = element_text(family = "serif"),
+            aspect.ratio = 1,
+            title =  element_text(size = 10,face="bold"),
+            axis.title = element_text(size = 12,face="bold"),
+            axis.text = element_text(size = 10,face="bold"),
+            panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5),
             legend.position = "none")
+    if (nice_layout) p<-p+theme(
+      panel.border = element_blank()
+    )+annotate(geom = "segment",size=2,lineend = "round",
+               x = 0, xend =max(spec_gen.t$mean),
+               y = -Inf, yend = -Inf)+
+      annotate(geom = "segment",size=2,lineend = "round",
+               y = min(spec_gen.t$niche), yend = max(spec_gen.t$niche), x = -Inf+1, xend = -Inf+1)+
+      annotate(geom = "segment",size=2,lineend = "round",
+               x = 0, xend = max(spec_gen.t$mean),
+               y = Inf, yend = Inf)+
+      annotate(geom = "segment",size=2,lineend = "round",
+               y =  min(spec_gen.t$niche), yend = max(spec_gen.t$niche), x = Inf+1, xend = Inf+1)
     if (!is.null(export_path)) {
       file2=paste(export_path,"/Ecological niche width/",sel.g,"_niche breadth.pdf",sep = "")
-      ggsave(file2, p)
+      ggsave(file2,
+             units = "cm",
+             width = 21/3,
+             height = 21*p$theme$aspect.ratio/3,
+             p)
       cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
     } else {
       cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
@@ -179,13 +208,27 @@
     pp[[tt]]<-p
   }
 
-  mp<-patchwork::wrap_plots(pp,nrow=nrow)
-  print(mp)
-  if (is.integer(length(pp)/nrow)) colnum<-as.integer(length(pp)/nrow)+1 else colnum<-as.integer(length(pp)/nrow)
+  if (!is.null(ncol)){
+    width.sel<-ncol
+    if ((length(pp)/width.sel)%%1==0) {
+      height.sel<-(length(pp)/width.sel)%>%as.integer()
+    } else {
+      height.sel<-(length(pp)/width.sel)%>%as.integer()+1
+    }
+  } else {
+    width.sel<-ncol_layout(length(pp))[[1]]%>%length()
+    height.sel<-ncol_layout(length(pp))%>%length()
+  }
+  if (!is.null(nrow)) xxxxpx<-nrow
+  mp<-patchwork::wrap_plots(pp,ncol = width.sel)
+
   if (!is.null(export_path)) {
     file2=paste(export_path,"/Ecological niche width/","Muti-group niche breadth.pdf",sep = "")
+    rownum<-length(pp)/ncol
+    if (rownum>as.integer(rownum)) nrows<-as.integer(rownum)+1 else nrows<-as.integer(rownum)
     ggsave(file2,
-           width = colnum*4,height = nrow*4,
+           units = "cm",
+           width = 7*ncol,height = 7*nrows,
            mp)
     cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
   } else {
@@ -198,8 +241,14 @@
 
 "plotMicrochatNicheWidth" <- function(spec_gen,
                                       color_group=colorCustom(4,pal = "set3"),
+                                      panel.border=c("none","normal","all","axis"),
+                                      axis.x.angle.adjust=FALSE,
+                                      xlabname=NULL,
+                                      mytheme=NULL,
+                                      color_background=NA,
                                       export_path="cs2/microbial assembly analysis") {
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  panel.border<-match.arg(panel.border)
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Ecological niche width",sep = ""), recursive = TRUE)
 
@@ -229,30 +278,90 @@
     geom_errorbar(data = input.data1,
                   aes(x = group, y = mean, group = group,
                       ymin = mean-std, ymax = mean+std),
-                  colour = "grey50",width=.25)+
+                  colour = "black",width=.25)+
     geom_boxplot(outlier.shape = NA,
                  width = 0.5,
                  color = "white")+
     geom_text(data = input.data1,aes(x=group,y=max,label=Letters),
-              size=5,vjust=-0.5,family="serif")+
-    geom_jitter(data=xx,size=3,alpha=0.5,aes(color=group),
+              size=4,vjust=-0.5,family="serif")+
+    geom_jitter(data=xx,size=1,alpha=0.75,aes(color=group),
                 width = 0.25)+
-    geom_point(aes(color=group))+
+    geom_point(aes(color=group),size=1)+
     scale_color_manual(values = color_group)+
     scale_fill_manual(values = color_group)+
     labs(y="Niche breadth (B)")+
-    theme(panel.background = element_rect(color = "grey50"),
+    theme(
           text = element_text(family = "serif"),aspect.ratio = 1,
           legend.position = "none")
 
     for (i in 1:nrow(input.data1)) p<-p + annotate(geom="text",
             label=sprintf("%0.2f",round(input.data1$mean[i],2)),
-             x=i,y=0,family="serif",color="black")
+             x=i,y=0,family="serif",color="black",size=3)
 
-  print(p)
+  p<-p+
+    theme(
+      panel.border = element_blank(),
+      axis.ticks.length = unit(0.2,"lines"),
+      axis.ticks = element_line(color='black'),
+      panel.background = element_rect(fill = color_background,color = color_background),
+      legend.position = "none",aspect.ratio = 1)
+
+  ####change x-axis label
+  if (!is.null(xlabname)) {
+    orignam<-input.data1$group%>%unique()
+    if (length(orignam)!=length(xlabname)) stop("The number of xlabname cannot meet the requirement!!!")
+    names(xlabname)<-orignam
+    p<-p+ scale_x_discrete(labels = xlabname)
+  }
+  if (panel.border=="all") p<-p+theme(aspect.ratio = 1,
+                                      title =  element_text(size = 7,face="bold"),
+                                      axis.title = element_text(size = 12,face="bold"),
+                                      axis.title.x = element_blank(),
+                                      axis.text = element_text(size = 10,face="bold"))+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(xx$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(xx$niche)*1.1, x = -Inf+1, xend = -Inf+1)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(xx$group))+0.7/2,
+             y = Inf, yend = Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(xx$niche)*1.1, x = Inf+1, xend = Inf+1)
+
+  if (panel.border=="axis") p<-p+theme(aspect.ratio = 1,
+                                       title =  element_text(size = 7,face="bold"),
+                                       axis.title = element_text(size = 12,face="bold"),
+                                       axis.title.x = element_blank(),
+                                       axis.text = element_text(size = 10,face="bold"))+
+    annotate(geom = "segment",size=2,lineend = "round",
+             x = 1-0.7/2, xend = length(unique(xx$group))+0.7/2,
+             y = -Inf, yend = -Inf)+
+    annotate(geom = "segment",size=2,lineend = "round",
+             y = 0, yend = max(xx$niche)*1.1, x = -Inf+1, xend = -Inf+1)
+
+  if (panel.border=="normal") p<-p+ylim(0,max(xx$niche)*1.1)+
+    theme(
+    aspect.ratio = 1,
+    title =  element_text(size = 7,face="bold"),
+    axis.title = element_text(size = 12,face="bold"),
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 10,face="bold"),
+    panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5)
+  )
+  if (panel.border=="none") p<-p
+
+  if (axis.x.angle.adjust) p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+  if (!is.null(mytheme)) p<-p+mytheme
+
   if (!is.null(export_path)) {
     file2=paste(export_path,"/Ecological niche width/","Allgroup_niche breadth.pdf",sep = "")
-    ggsave(file2, p)
+
+    ggsave(file2,
+           units = "cm",
+           width = 21/3,
+           height = 21*p$theme$aspect.ratio/3,
+           p)
     cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment has been exported to ","/",export_path,"",sep = "","\n")
   } else {
     cat("\n","Relationship between mean abundance of OTUs and ecological niche width in ",names(spec_gen)[tt]," treatment was not exported to local path","",sep = "","\n")
@@ -551,7 +660,7 @@
 
 "calcMicrochatAssemblyNCM" <- function(submchat,
                                        export_path="cs2/microbial assembly analysis") {
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Neutral community model",sep = ""), recursive = TRUE)
 
@@ -610,6 +719,8 @@
 }
 
 "plotMicrochatAssemblyNCM" <- function(plot.ddat,
+                                       ncol=3,
+                                       xlabname=NULL,
                                        nrow_layout=NULL,
                                        point.size=1,
                                        add.border=FALSE,
@@ -617,8 +728,9 @@
                                        color_pie.text="white",
                                        color_NCM=c('black','#A52A2A','#29A6A6'),
                                        color_line=c("blue","blue","blue"),
+                                       mytheme=NULL,
                                        export_path="cs2/microbial assembly analysis") {
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
 
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Neutral community model",sep = ""), recursive = TRUE)
@@ -629,6 +741,8 @@
   xmin<-sapply(plot.ddat, function(x){
     min(log10(x$p))
   })%>%min()
+
+if (!is.null(xlabname)) names(plot.ddat)[1:(length(plot.ddat)-1)]<-xlabname
 
   pp<-list()
   for (tk in 1:length(plot.ddat)) {
@@ -641,7 +755,6 @@
     Rsqr<-plot.ddat[[tk]]$Rsqr
     abun<-plot.ddat[[tk]]$abundance
     N<-plot.ddat[[tk]]$sample.size
-
 
     bacnlsALL <-data.frame(pE,freq,freq.pred,pred.ci[,2:3])
     bacnlsALL$inter.col<-"NCM"
@@ -663,16 +776,16 @@
 
     barph<-ggplot(abun.all,aes(x="",y=abun)) +
       geom_bar(stat = "identity",show.legend = FALSE,
-               aes(fill=inter.col),width = 0.4)+
-      geom_text(aes(label=paste(round(abun,2),"%",sep = "")),
-                color=color_pie.text,family="serif",
+               aes(fill=inter.col),width = 0.42)+
+      geom_text(aes(label=ifelse(abun>3.9,paste(round(abun,0),"%",sep = ""),"")),
+                color=color_pie.text,family="serif",size=2,
                 position = position_stack(vjust = 0.5))+
       scale_fill_manual(values = col)+
       coord_flip()+
-      theme(text = element_text(family = "serif"),legend.position = "none")+
+      theme(text = element_text(family = "serif"),
+            plot.background = element_rect(fill = NA,color = NA),
+            legend.position = "none")+
       theme_void()
-
-
 
     pp[[tk]]<-ggplot(bacnlsALL,aes(x=pE))+
       geom_point(aes(y=freq,color=inter.col),size=point.size)+
@@ -689,16 +802,24 @@
            y='Frequency of Occurance',title = names(plot.ddat)[tk])+
       annotate(geom = "text",
                x = xmin*0.85, y = 0.85,
-               family="serif",
-               label = paste("R2=",round(Rsqr,3),"\n",
+               family="serif",size=2.5,
+               label = paste0("R2=",round(Rsqr,3),"\n",
                              "Nm=",round(coef(m.fit)*N),"\n",
                              "N=",N,"\n","m=",round(coef(m.fit),3)))+
       theme(text = element_text(family = "serif"),
             legend.position = "none",
-            plot.margin = margin(r = 20, l = 20, unit = "pt"),
+            #plot.margin = margin(r = 20, l = 20, unit = "pt"),
             panel.background = element_rect(fill = color_background),
             aspect.ratio = 1)+
       scale_x_continuous(limits = c(xmin,xmax))
+
+    pp[[tk]]<-pp[[tk]]+theme(aspect.ratio = 1,
+                 title =  element_text(size = 8,face="bold"),
+                 axis.title = element_text(size =10,face="bold"),
+                 axis.text = element_text(size = 8,face="bold"),
+                 plot.background = element_rect(fill = NA,color = NA),
+                 panel.border = element_rect(linetype = "solid", fill = NA,color = "black",linewidth=1.5))
+    if (!is.null(mytheme)) pp[[tk]]<-pp[[tk]]+mytheme
 
     if (add.border) pp[[tk]]<- pp[[tk]]+ theme(panel.border = element_rect(fill=NA))
 
@@ -712,12 +833,15 @@
 
     barpv<-ggplot(node_phylumx,aes(x="",y=Freq)) +
       geom_bar(stat = "identity",show.legend = FALSE,
-               aes(fill=Var1),width = 0.4)+
-      geom_text(aes(label=scales::percent(Freq/sum(Freq))),
-                color=color_pie.text,family="serif",angle=270,
+               aes(fill=Var1),width = 0.42)+
+      geom_text(aes(label=ifelse(Freq/sum(Freq)*100>3.9,
+                                 paste(round(Freq/sum(Freq)*100,0),"%",sep = ""),
+                                 "")),
+                color=color_pie.text,family="serif",angle=270,size=2,
                 position = position_stack(vjust = 0.5))+
       scale_fill_manual(values = col)+
       theme(text = element_text(family = "serif"),
+            plot.background = element_rect(fill = NA,color = NA),
             legend.position = "none")+
       theme_void()
 
@@ -725,19 +849,23 @@
       geom_bar(stat = 'identity', width = 0.5) +
       coord_polar(theta = "y") +
       scale_fill_manual(limits = names(col), values = col) +
-      geom_text(aes(y=rev(rev(Freq/2)+c(0,cumsum(rev(Freq))[-length(Freq)])),
-                    x= 1.05,label=scales::percent(Freq/sum(node_phylum$Freq))),
-                size=4,colour=color_pie.text,family = "serif")+
-      geom_text(aes(y=rev(rev(Freq/2)+c(0,cumsum(rev(Freq))[-length(Freq)])),
-                    x= 1.35,label=Var1),
-                size=4,color="black",family = "serif")+
-      theme(panel.grid = element_blank(),
-            panel.background = element_blank(),
-            axis.text.x = element_blank()) +
-      labs(x = '', y = '')+theme_void()+
-      theme(legend.position = "none")
 
-    xxmin<-(xmin-xmax)/2
+      geom_text(aes(y=rev(rev(Freq/2)+c(0,cumsum(rev(Freq))[-length(Freq)])),
+                    x= 1.05,
+                    label=ifelse(Freq/sum(node_phylum$Freq)*100>3.9,
+                       paste(round(Freq/sum(node_phylum$Freq)*100,0),"%",sep = ""),
+                       "")),
+                size=2,colour=color_pie.text,family = "serif")+
+      geom_text(aes(y=rev(rev(Freq/2)+c(0,cumsum(rev(Freq))[-length(Freq)])),
+                    x= 1.35,label=Var1),fontface="bold",
+                size=2,color="black",family = "serif")+
+      theme(panel.grid = element_blank(),
+            plot.background = element_rect(fill = NA,color = NA),
+            axis.text.x = element_blank()) +
+      labs(x = '', y = '')+
+        theme_void()+theme(legend.position = "none")
+
+    (xxmin<-(xmin-xmax)/2)
     pp[[tk]]<- pp[[tk]] + annotation_custom(grob=ggplotGrob(piep),
                                  ymin = -0.2, ymax = 0.6,
                                  xmin=xxmin-0.3,
@@ -762,7 +890,12 @@
 
     if (!is.null(export_path)) {
       filex<-paste(export_path,"/Neutral community model/",names(plot.ddat)[tk],"_NCM.pdf",sep = "")
-      ggsave(filex, pp[[tk]])
+      ggsave(filex,
+             units = "cm",
+             width = 7,
+             height = 7*pp[[tk]]$theme$aspect.ratio,
+             pp[[tk]])
+
       cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  has been exported to ","/",filex,"",sep = "","\n")
     } else {
       cat("\n","Neutral community model in ",names(plot.ddat)[tk],"  was not exported to local path","",sep = "","\n")
@@ -770,13 +903,27 @@
 
   }
 
-  if (is.null(nrow_layout)) mp<-patchwork::wrap_plots(pp) else mp<-patchwork::wrap_plots(pp,nrow=nrow_layout)
-
+  if (!is.null(ncol)){
+    width.sel<-ncol
+    if ((length(pp)/width.sel)%%1==0) {
+      height.sel<-(length(pp)/width.sel)%>%as.integer()
+    } else {
+      height.sel<-(length(pp)/width.sel)%>%as.integer()+1
+    }
+  } else {
+    width.sel<-ncol_layout(length(pp))[[1]]%>%length()
+    height.sel<-ncol_layout(length(pp))%>%length()
+  }
+  if (!is.null(nrow_layout)) xxxxpx<-nrow_layout
+  mp<-patchwork::wrap_plots(pp,ncol = width.sel)
   if (!is.null(export_path)) {
     filex<-paste(export_path,"/Neutral community model/","Muti-NCM.pdf",sep = "")
-    ggsave(filex, mp,
-           width = 6*max(ncol_layout(length(pp))[[1]]),
-           height = 6*length(ncol_layout(length(pp))))
+    rownum<-length(pp)/ncol
+    if (rownum>as.integer(rownum)) nrows<-as.integer(rownum)+1 else nrows<-as.integer(rownum)
+    ggsave(filex,
+           units = "cm",
+           width = 7*ncol,height = 7*nrows,
+           mp)
 
     cat("\n","Neutral community model in whole data"," has been exported to ","/",filex,"",sep = "","\n")
   } else {
@@ -909,7 +1056,7 @@
 
   geom<-match.arg(geom)
   suppressMessages(library(circlize))
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
 
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Beta nearest taxon index (βNTI)",sep = ""), recursive = TRUE)
@@ -1087,7 +1234,7 @@
 
   geom<-match.arg(geom)
   suppressMessages(library(circlize))
-  export_path<-paste(export_path,"/microbial assembly analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial assembly analysis",sep = "")
 
   dir.create(export_path, recursive = TRUE)
   dir.create(paste(export_path,"/Normalized stochasticity ratio (NST)",sep = ""), recursive = TRUE)

@@ -79,7 +79,7 @@
     apply(ttk,2,FUN = function(x){
       otudata[,x]
     }),function(x){
-      x[-(which(rowSums(x)==0)),]
+      if (length(which(rowSums(x)==0))!=0) x[-(which(rowSums(x)==0)),] else x
     })
   return(split_otu)
 }
@@ -100,7 +100,7 @@
     lapply(ttk,FUN = function(x){
       otudata[,x]
     }),function(x){
-      x[-(which(rowSums(x)==0)),]
+      if (length(which(rowSums(x)==0))!=0)  x[-(which(rowSums(x)==0)),] else x
     })
   return(split_otu)
 }
@@ -218,13 +218,83 @@ if (as.numeric(matchnum) == as.numeric(allnum)) {
   return(mat.use)
 }
 
+"otu_ultra_filter" <- function(abun,filter_num,seed) {
+  otu_rare<-abun
+  colname<-colnames(otu_rare)
+  colname<-substr(colname,start = 1,stop = 2)
+  trt_id <-unique(colname)
+
+
+  groupname<-substr(colnames(otu_rare),start = 1,stop = 2)%>%unique()
+
+  collen<-lapply(lapply(groupname,function(x){
+    grep(x,colnames(otu_rare))
+  }),function(y){
+    y %>%length()
+  })
+
+  collen1<-collen%>%data.frame()%>%max()
+  matchnum<-which(collen==collen1)%>%length()
+  allnum<-groupname%>%length()
+
+  if (as.numeric(matchnum) != as.numeric(allnum)) split_otu <- lapply(
+    sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),
+    FUN = function(x){otu_rare[,x]})
+
+  if (as.numeric(matchnum) == as.numeric(allnum)) split_otu <- apply(
+    sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),2,
+    FUN = function(x){otu_rare[,x]})
+
+
+  #if (as.numeric(matchnum) != as.numeric(allnum)) split_otu <- lapply(lapply(sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),FUN = function(x){otu_rare[,x]}),function(x){x[-(which(rowSums(x)==0)),]})
+
+  #if (as.numeric(matchnum) == as.numeric(allnum)) split_otu <- lapply(apply(sapply(trt_id,function(x){grep(x,colnames(otu_rare))}),2,FUN = function(x){otu_rare[,x]}),function(x){x[-(which(rowSums(x)==0)),]})
+  set.seed(seed)
+  otu<-otu_filter(split_otu,filter_num = filter_num,filter = TRUE,self = TRUE)
+
+
+
+  otu <- lapply(otu,function(x){
+    x$name <- rownames(x)
+    return(x)
+  })
+
+  asd<-full_join(otu[[1]],otu[[2]],by=c("name"="name"))
+
+  if (length(otu)>=3) {
+    for (tk in 3:length(otu)) {
+      asd<-full_join(asd,otu[[tk]],by=c("name"="name"))
+    }
+  }
+
+  asd<-column_to_rownames(asd,var = "name")
+  asd[is.na(asd)]<-0
+  return(asd)
+}
+
 "colorCustom"  <- function(num,pal=c("pkgn","ywbu","gygn",
                                      "classic","favor",
-                                     "cyto_pie","xiena",
+                                     "cyto_pie","xiena","nicely",
+                                     "na1","na2","na3","na4",
+                                     "na5","na6","na7","na8",
                                      "set1","set2","set3")) {
 
   pal<-match.arg(pal)
-  if (pal=="favor") colors<-c("#8f850b","#faf4b4","#bde7ff","#dcd9c3","#e9f5fc")
+
+  if (pal=="nicely") colors<-c("#a58b51" ,"#026250", "#1ea242","#fd2c89","#f9d538",
+                               "#09a2fb" ,"#eb84aa","#a6144d", "#d4782b","#aebd28")
+  if (pal=="na1") colors<-c("#F4F1DE","#DF7A5E","#3C405B","#82B29A","#F2CC8E")
+  if (pal=="na2") colors<-c("#264653","#2A9D8E","#E9C46B","#F3A261","#E66F51")
+  if (pal=="na6") colors<-c("#0E606B","#FFC24B","#F66F69","#1597A5","#FEB3AE","#FFF4F2")
+  if (pal=="na7") colors<-c("#90C9E7","#219EBC","#136783","#02304A","#FEB705","#FF9E02","#FA8600")
+
+  if (pal=="na3") colors<-c("#B7B5A0","#44757A","#452A3D","#D44C3C","#DD6C4C","#E5855D","#EED5B7")
+  if (pal=="na4") colors<-c("#E73847","#F0FAEF","#A8DADB","#457B9D","#1D3557")
+  if (pal=="na5") colors<-c("#FBF0C3","#54686F","#E57B7F","#9E3150","#87BBA4")
+  if (pal=="na8") colors<-c("#780001","#C11221","#FEF0D5","#002F49","#669BBB")
+
+
+    if (pal=="favor") colors<-c("#8f850b","#faf4b4","#bde7ff","#dcd9c3","#e9f5fc")
   if (pal=="xiena") colors<-c("#FFC300", "#FF878A" ,"#005C54" ,"#F3F1E4","#AEBD28")
   if (pal=="gygn") colors<-c("#FEBD05", "#889A23" ,"#A69BBA" ,"#0F9DDD", "#887FFE", "#4DB491", "#D4782B",
                              "#3786D4", "#FFC4AB", "#FADD7E", "#8FDDEA", "#83C875", "#DFAB1A", "#31963E",
@@ -309,6 +379,185 @@ if (length(colors)<num) {
 }
 
 
+
+"balanceAbun" <- function(otu_table2,maxnum=1.05,minnum=0.95) {
+  otu_rare<-otu_table2
+  colname<-colnames(otu_rare)
+
+  colname<-substr(colname,start = 1,stop = 2)
+  trt_id <-unique(colname)
+  group_num<-length(trt_id)
+  groupname<-substr(colnames(otu_rare),start = 1,stop = 2)%>%unique()
+  collen<-lapply(lapply(groupname,function(x){
+    grep(x,colnames(otu_rare))
+  }),function(y){
+    y %>%length()
+  })
+  collen1<-collen%>%data.frame()%>%max()
+  matchnum<-which(collen==collen1)%>%length()
+  allnum<-groupname%>%length()
+  samplenum<-collen%>%as.numeric()
+
+  ccc1<-calcMean(otu_table2,0)
+  ccc2<-calcSd(otu_table2,0)
+
+  add.sample.size=max(samplenum)*2
+  fff<-addsample(ccc1,ccc2,0,allnum,add.sample.size,maxnum=maxnum,minnum=minnum)
+  newfff<-calcAbun(fff)
+  addnum<-add.sample.size-collen%>%as.numeric()
+  orinum<-collen%>%as.numeric()
+  abunx=otu_table2
+  if (length(which(addnum==0))>0) {
+    abunxxx<-calcAbun(abunx)
+    tkf1<-abunxxx[[1]]
+  } else {
+    tkf1<-newfff[[1]][,1:addnum[1]]
+    colnames(tkf1)<-paste(unique(substr(colnames(tkf1),start = 1,stop = 2)),
+                          (1):(addnum[1]),
+                          sep="")
+  }
+  return(tkf1)
+}
+
+'adjustTaxaTrend' <- function(tidymchat,
+                              specified.taxa="g__Tyzzerella",
+                              specified.group=NULL,
+                              selected.trend=c(1,1,1,1,1)
+) {
+  taxon_table<-tidymchat$taxon_table
+  otu_table<-tidymchat$otu_table
+
+  allchar<-character()
+  for (tk in 1:length(colnames(taxon_table))) {
+    allcharr<-taxon_table[,tk]%>%unique()
+    {
+      allchar<-c(allchar,allcharr)
+    }
+  }
+
+  if (is.null(specified.taxa)) {
+    taxon_table<-taxon_table
+  } else {
+    specified.taxa1<-specified.taxa[1]
+    if (substr(specified.taxa1,start = 2,stop = 3)!="__") {
+      specified.taxa<-stringr::str_to_title(specified.taxa)
+    } else {
+      splitdata<-str_split_fixed(specified.taxa,pattern="__",2)
+      splitdata[,2]<-stringr::str_to_title(splitdata[,2])
+      specified.taxa<-paste(splitdata[,1],"__",splitdata[,2],sep = "")
+    }
+
+    fulltaxon<-lapply(
+      lapply(
+        sapply(as.list(specified.taxa), grep,allchar),
+        function (x) {
+          x<-x[1]
+        }),
+      function(y) {
+        allchar[y]
+      })%>%as.character()
+
+    taxon_table2<-data.frame()
+    for (sk in 1:length(colnames(taxon_table))) {
+      taxon_table1<-taxon_table[which(taxon_table[,sk] %in% fulltaxon),]
+      {
+        taxon_table2<-rbind(taxon_table2,taxon_table1)
+      }
+    }
+
+    taxon_table<-taxon_table2
+
+    cat("\n","Taxa belonging to '",fulltaxon,"' have (has) been modified.",sep=" ")
+  }
+
+  otu_table2<-otu_table[which(rownames(otu_table) %in% rownames(taxon_table)),]
+
+  if (is.null(selected.trend)) {
+    if (is.null(specified.group)) {
+      abunxxx<-calcAbun(otu_table2)
+      tkg1<-balanceAbun(abunxxx[[1]],
+                        maxnum=1+0.05,
+                        minnum=1-0.05)
+      for (ttk in 2:length(abunxxx)) {
+        tkg<-balanceAbun(abunxxx[[ttk]],
+                         maxnum=1+0.05,
+                         minnum=1-0.05)
+        {
+          tkg1<-cbind(tkg1,tkg)
+        }
+      }
+    } else {
+      abunxxx<-calcAbun(otu_table2)
+      tkg1<-balanceAbun(abunxxx[[specified.group]],
+                        maxnum=1+0.05,
+                        minnum=1-0.05)
+      for (ttk in setdiff(1:length(abunxxx),specified.group)) {
+        tkg<-balanceAbun(abunxxx[[ttk]],
+                         maxnum=1+0.05,
+                         minnum=1-0.05)
+        {
+          tkg1<-cbind(tkg1,tkg)
+        }
+      }
+
+      tkg2<-otu_table2
+      for (t in 1:ncol(tkg2)) {
+        tkg2[,which(colnames(tkg2)==colnames(tkg1)[t])]<-tkg1[,t]
+      }
+      tkg1<-tkg2
+    }
+  } else {
+    if (is.null(specified.group)) {
+      if (length(selected.trend)<length(unique(group_generate(otu_table2)$group))) {
+        stop("Please provide more `selected.trend`")
+      } else {
+        abunxxx<-calcAbun(otu_table2)
+        tkg1<-balanceAbun(abunxxx[[1]],
+                          maxnum=selected.trend[1]+0.05,
+                          minnum=selected.trend[1]-0.05)
+        for (ttk in 2:length(abunxxx)) {
+          tkg<-balanceAbun(abunxxx[[ttk]],
+                           maxnum=selected.trend[ttk]+0.05,
+                           minnum=selected.trend[ttk]-0.05)
+          {
+            tkg1<-cbind(tkg1,tkg)
+          }
+        }
+      }
+    } else {
+      if (length(selected.trend)<length(unique(group_generate(otu_table2)$group))) {
+        stop("Please provide more `selected.trend`")
+      } else {
+        abunxxx<-calcAbun(otu_table2)
+        tkg1<-balanceAbun(abunxxx[[specified.group]],
+                          maxnum=selected.trend[specified.group]+0.05,
+                          minnum=selected.trend[specified.group]-0.05)
+        for (ttk in setdiff(1:length(abunxxx),specified.group)) {
+          tkg<-balanceAbun(abunxxx[[ttk]],
+                           maxnum=selected.trend[ttk]+0.05,
+                           minnum=selected.trend[ttk]-0.05)
+          {
+            tkg1<-cbind(tkg1,tkg)
+          }
+        }
+
+        tkg2<-otu_table2
+        for (t in 1:ncol(tkg2)) {
+          tkg2[,which(colnames(tkg2)==colnames(tkg1)[t])]<-tkg1[,t]
+        }
+        tkg1<-tkg2
+      }
+    }
+  }
+
+  for (t in 1:nrow(tkg1)) {
+    otu_table[which(rownames(otu_table)==rownames(tkg1)[t]),]<-tkg1[t,]
+  }
+  tidymchat$otu_table<-otu_table
+  tidymchat$taxon_table<-tidymchat$taxon_table
+  return(tidymchat)
+}
+
 "filter_merge_sum" <- function(otudata,taxon_table) {
   data1<-filter_merge(otudata,taxon_table,
                       filter_num = 1,
@@ -324,6 +573,14 @@ if (length(colors)<num) {
   abun_new1<-abun_new%>%
     group_by(group)%>%
     summarise_all(sum)
+
+  abun_new1$group<-factor(abun_new1$group, levels = unique(sampledata$group))
+  abun_new1x<-abun_new1
+  for (t in 1:nrow(abun_new1x)) {
+    abun_new1x[t,]<-abun_new1[match(unique(sampledata$group)[t],abun_new1$group),]
+  }
+  abun_new1<-abun_new1x
+
   abun_new1<-tibble::column_to_rownames(abun_new1,var = "group")
 
   abun_new2<-t(abun_new1)%>%data.frame()
@@ -601,7 +858,7 @@ if (length(colors)<num) {
 }
 
 
-"kruskal"<- function(input.data,index){
+"kruskal.pre"<- function(input.data,index){
   fit<- kruskal.test(as.formula(paste(index, "~ group",sep = "")), data = input.data)
 }
 

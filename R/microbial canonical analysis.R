@@ -1142,7 +1142,7 @@
                                export_path="microbial canonical analysis") {
   axis.layout<-match.arg(axis.layout)
   order.part<-match.arg(order.part)
-
+  export_path<-paste0(export_path,"/data_microbiome/microbial canonical analysis")
   dir.create(export_path, recursive = TRUE)
   if (class(microchatRDAobj)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")
@@ -1210,6 +1210,7 @@
                                       export_path="microbial canonical analysis") {
 
   layout<-match.arg(layout)
+  export_path<-paste0(export_path,"/data_microbiome/microbial canonical analysis")
   dir.create(export_path, recursive = TRUE)
   if (class(microchatRDAobj)!="microchat") {
     stop("\n","Please convert the data into a 'microchat' object")

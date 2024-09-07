@@ -159,7 +159,7 @@
                                               color_group=colorCustom(5,pal = "gygn"),
                                               export_path="microbial chat") {
 
-  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial communication analysis/inter-taxa-interaction",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   dir.create(export_path, recursive = TRUE)
@@ -1018,7 +1018,7 @@
                                             char.stop=10,
                                             color_taxa=colorCustom(50,pal = "gygn"),
                                             export_path="microbial communication analysis/inter-taxa-interaction") {
-  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial communication analysis/inter-taxa-interaction",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(submchat)!="microchat") {
@@ -1773,7 +1773,7 @@
                                                color.heatmap = colorCustom(50,pal = "gygn"),
                                                export_path="microbial communication analysis/inter-taxa-interaction") {
 
-  export_path<-paste(export_path,"/microbial communication analysis/inter-taxa-interaction",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial communication analysis/inter-taxa-interaction",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   if (class(microchatInterobj)!="microchat") {

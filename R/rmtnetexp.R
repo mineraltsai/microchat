@@ -1,4 +1,7 @@
-"plot_rmnet" <- function(g,split_otu,thres,num= length(g),rows=num/cols,cols=num/rows,display_filter=TRUE,radius=1.15,layout="fr",circle_plot=TRUE) {
+"plot_rmnet" <- function(g,split_otu,thres,num= length(g),rows=num/cols,cols=num/rows,display_filter=TRUE,radius=1.15,
+                         vertex_size=2,
+                         edge_size=2,
+                         layout="fr",circle_plot=TRUE) {
   col_g <- "#C1C1C1"
   colors <- c("#DEB99B" ,"#5ECC6D", "#5DAFD9", "#7ED1E4", "#EA9527", "#F16E1D" ,"#6E4821", "#A4B423",
               "#C094DF" ,"#DC95D8" ,"#326530", "#50C0C9", "#67C021" ,"#DC69AF", "#8C384F", "#30455C", "#F96C72","#5ED2BF")
@@ -59,7 +62,7 @@
     if (layout=="rand") sub_net_layout <- layout_randomly(g2)
 
 
-    plot(g2,layout=sub_net_layout, edge.color = E(g2)$color,vertex.size=2,edge.curved=.1)
+    plot(g2,layout=sub_net_layout, edge.color = E(g2)$color,vertex.size=vertex_size,edge.curved=.1,edge.width=edge_size)
     if (circle_plot)  plotrix::draw.circle(0,0,radius,border="grey50",lty = 2)
     if (display_filter) title(main = paste0(name,":",'Nodes=',length(V(g1)$name),', ',
                                             'Edges=',nrow(data.frame(as_edgelist(g1)))," (",modulenum,")",
@@ -2203,9 +2206,10 @@
     sel.dat$Both<-sel.dat$Both%>%as.numeric()
     max.row<-which(sel.dat$Both==max(sel.dat$Both))
 
-    sel.data<-sel.dat[which(sel.dat$clusters!=sel.dat[max.row,]$clusters),]
+    sel.data<-sel.dat[which(sel.dat$clusters[setdiff(sel.dat$clusters,sel.dat[max.row,]$clusters)[1]]!=
+                              sel.dat[max.row,]$clusters),]
     rm.num<-sel.data%>%rownames()%>%as.numeric()
-    if (length(rm.num[rm.num<=(nrow(wqc)/2)])!=0) rm.num[rm.num<=(nrow(wqc)/2)]<-rm.num[rm.num>(nrow(wqc)/2)]
+    if (length(rm.num[rm.num<=(nrow(wqc)/2)])!=0) rm.num[rm.num<=(nrow(wqc)/2)]<-rm.num[rm.num<=(nrow(wqc)/2)]
     if (length(rm.num[rm.num>(nrow(wqc)/2)])!=0) rm.num[rm.num>(nrow(wqc)/2)]<-rm.num[rm.num>(nrow(wqc)/2)]-(nrow(wqc)/2)
     rm.n<-c(rm.n,rm.num)
   }
@@ -2223,6 +2227,8 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
 
 "plotRMTnetModPreserve" <- function(g,taxon,
+                                    specified.taxa.order=FALSE,
+                                    taxa.order=levels(unique(microchatcomobj$plot_data$Taxo)),
                                     pdf.sel=FALSE,
                                     xlabname,
                                     bar.height=NULL, ### or 随便一个数字
@@ -2230,6 +2236,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
                                     display.interval.line=FALSE,
                                     display.interval.line.style=c("grey","dashed",1),
                                     pal_taxa ="gygn",
+                                    pal_taxa_alpha=0.5,
                                     pal_cluster = "set2",
                                     color_bar.text="black",
                                     min.node.num=3,
@@ -2267,8 +2274,8 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
   pcoord$Phylum<-factor(pcoord$Phylum,levels = unique(nodes$Phylum))
   pcoord<-pcoord[order(pcoord$Phylum,decreasing = FALSE),]
-  color_module<-colorCustom(length(unique(pcoord$Phylum)),pal=pal_taxa)
-  names(color_module)<-unique(pcoord$Phylum)
+  color_module<-colorCustom(length(unique(pcoord$Phylum)),pal=pal_taxa) %>% adjustcolor(alpha.f = pal_taxa_alpha)
+  if (!specified.taxa.order)  names(color_module)<-unique(pcoord$Phylum) else names(color_module)<-taxa.order
 
   ###merge scatterpie coord
   pcoord.pie<-pcoord
@@ -2357,10 +2364,20 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
                   size=1*pcoordxs$tsize),
               family = "serif",fontface="bold")+
     #ylim(NA,max(pcoord$x))+
-    scale_color_manual(values = color_module)+
-    scale_shape_manual(values = shapes,name="\nTopological role")+
+    scale_color_manual(values = color_module,
+                       guide=guide_legend(keywidth = 1,
+                                          keyheight = 1,
+                                          order=0,
+                                          ncol = 1,
+                                          override.aes=list(size=3)))+
+    scale_shape_manual(values = shapes,name="\nTopological role",
+                       guide=guide_legend(keywidth = 1,
+                                          keyheight = 1,
+                                          order=0,
+                                          ncol = 1,
+                                          override.aes=list(size=3)))+
     theme_void()+
-    theme(legend.position = "none",
+    theme(legend.position = "right",
           text = element_text(family = "serif"),
           aspect.ratio = (3*totalncol-1)/(3*maxwidth-1))+
     labs(title="Modularity")+
@@ -2465,6 +2482,11 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
   ppxx<-ppxx+
     scatterpie::geom_scatterpie(aes(x=x0, y=y0,r=1.15),
+                                data=xxa,
+                                cols = "type",color="white",fill="white",
+                                long_format=TRUE)+
+    ggnewscale::new_scale_fill()+
+    scatterpie::geom_scatterpie(aes(x=x0, y=y0,r=1.15),
                       data=xxa,
                       cols = "type",color=NA,
                       long_format=TRUE)+
@@ -2508,7 +2530,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
                colour = link.neg,alpha=link.right.alpha,
                aes(x = x.x, y = y.x,
                    xend = x.y, yend = y.y) )+
-    geom_point(data = pcoord,size=point.size,
+    geom_point(data = pcoord,size=point.size,show.legend = FALSE,
                aes(x=x,y=y,color="grey",shape=role.x))+
     geom_text(data=pcoordxs,show.legend = FALSE,
               aes(x=x0,y=y0,label=Mtext,
@@ -2640,41 +2662,23 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 }
 
   library(patchwork)
-  xp<-tp+bp+ppx+ppxx+pp+plot_layout(ncol = 5,
+  xp<-tp+bp+ppx+ppxx+pp+plot_layout(ncol = 5,guides='collect',
                                     widths = c(0.5,0.3,maxwidth,maxwidth,maxwidth),
                                     byrow = TRUE)
 
   export_path2<-paste(export_path,"/module preserve",sep = "")
-  export_path1<-paste(export_path,"/cyto_style",sep = "")
   dir.create(export_path2, recursive = TRUE)
-  dir.create(export_path1, recursive = TRUE)
   if (pdf.sel) {
-  ggsave(paste(export_path2,"/module preserve (CMYK).pdf",sep = ""),
-         colormodel="cmyk",
-         width = 3*maxwidth+3,height = totalncol,xp)
   ggsave(paste(export_path2,"/module preserve (RGB).pdf",sep = ""),
          colormodel="srgb",
          width = 3*maxwidth+3,height = totalncol,xp)
   ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),
          width = 3*maxwidth+3,height = totalncol,xp)
-
-  ggsave(paste(export_path1,"/module preserve (CMYK).pdf",sep = ""),colormodel="cmyk",
-         width = 3*maxwidth+3,height = totalncol,xp)
-  ggsave(paste(export_path1,"/module preserve (RGB).pdf",sep = ""),colormodel="srgb",
-         width = 3*maxwidth+3,height = totalncol,xp)
-  ggsave(paste(export_path1,"/module preserve.tiff",sep = ""),
-         width = 3*maxwidth+3,height = totalncol,xp)
   } else {
   ggsave(paste(export_path2,"/module preserve.pdf",sep = ""),xp)
   ggsave(paste(export_path2,"/module preserve.tiff",sep = ""),xp)
-
-  ggsave(paste(export_path1,"/module preserve.pdf",sep = ""),xp)
-  ggsave(paste(export_path1,"/module preserve.tiff",sep = ""),xp)
   }
-
-  cat("\n","Modules preserved between networks have been highlighted and exported to ",export_path1,sep = "","\n")
   cat("\n","Modules preserved between networks have been highlighted and exported to ",export_path2,sep = "","\n")
-
   return(xp)
 }
 
@@ -2898,7 +2902,7 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 }
 
 "calcRMTnetTargetrm" <- function(rmnet_igraph,rmnet_cg,split_otu,
-                                 nperm=100,otu.sel=NULL,
+                                 nperm=100,otu.sel=NULL,parallel=FALSE,parallel.node.num=10,
                                  export_path="cs2/microbial network analysis") {
   export_path<-paste(export_path,"/microbial network analysis",sep = "")
   dir.create(paste(export_path,"/network stability/target removal",sep = ""), recursive = TRUE)
@@ -2942,6 +2946,12 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
     if(length(module.hub)<=1){
       ret3<-node.attrix%>%arrange(desc(degree))
       tem<-round(length(ret3$degree)*0.05,0)
+      module.hub<-ret3$name[1:tem]
+    }
+
+    if (parallel) {
+      ret3<-node.attrix%>%arrange(desc(degree))
+      tem<-parallel.node.num
       module.hub<-ret3$name[1:tem]
     }
 
@@ -3181,6 +3191,256 @@ if (!is.integer(rm.n)) ddaxt<-ddaxt else ddaxt<-ddaxt[-rm.n,]
 
   cat("\nPlots have been exported to ",newfile,"\n",sep = "")
 }
+
+"plotRMTnetStablity" <- function(randrm.data, type="weighted",
+                                 my_comparisons,
+                                 color_group=colorCustom(5,pal = "na3")
+) {
+  if (class(randrm.data)=="list") randrm.datax <- randrm.data[[1]] else randrm.datax <- randrm.data
+  randrm.datax<-randrm.datax[which(randrm.datax$weighted==type),]
+  colnames(randrm.datax)[1]<-"var"
+  if (class(randrm.data)!="list") randrm.datax$var<-randrm.datax$var*100
+  randrm.datax<-subset(randrm.datax,select=c(group,var,2:101))
+  random.num<-randrm.datax[3:102]
+  randrm.datax$mean<-rowSums(random.num)/100
+  randrm.datax<-subset(randrm.datax,select=c(group,var,mean,3:102))
+  #randrm.datax<-randrm.datax[which(randrm.datax$var>=50),]
+  if (class(randrm.data)=="list") randrm.datax<-randrm.datax[which(randrm.datax$var %in% seq(5,100,5)),]
+
+  randrm.datax$fit<-0
+  for (tk in unique(randrm.datax$group)) {
+    sas<-getOnePoly(randrm.datax[which(randrm.datax$group==tk),])
+    randrm.datax[which(randrm.datax$group==tk),]$fit<-sas$a*randrm.datax[which(randrm.datax$group==tk),]$var+sas$b
+  }
+  randrm.datax<-subset(randrm.datax,select=c(group,var,mean,fit,4:103))
+
+  color.use<-color_group
+  names(color.use)<-unique(randrm.datax$group)
+  p<-ggplot(randrm.datax,aes(x=var,y=fit))+
+    geom_line(aes(color=group),formula = y ~ x, method="glm",size=1,
+              lineend = "round")+
+    geom_point(aes(x=var,y=mean,color=group),shape=21,size=2,stroke=2)+
+    scale_fill_manual(values =color.use )+
+    scale_color_manual(values =color.use )+
+    theme(aspect.ratio = 1)
+
+  alphadiv.use<-subset(randrm.datax, select = c(1,3))
+  data_poi<-alphadiv.use
+  colnames(data_poi)[2]<-"value"
+  sig_label_new=NULL
+  sta<-lapply(my_comparisons, function(x){
+    alphadiv.use.selected1<-data_poi[
+      which(data_poi$group==x[1] | data_poi$group==x[2]),]
+    if (length(which(data_poi$group==x[1]))==length(which(data_poi$group==x[2]))) {
+      fit<-wilcox.test(value~group, alphadiv.use.selected1, # t.tes
+                       paired = TRUE, alternative = 'two.sided')
+    } else {
+      fit<-wilcox.test(value~group, alphadiv.use.selected1, # t.tes
+                       paired = FALSE, alternative = 'two.sided')
+    }
+    stats<-data.frame(
+      group1=x[1],
+      group2=x[2],
+      mean1=mean(alphadiv.use.selected1$value[
+        which(alphadiv.use.selected1$group==x[1])]),
+      mean2=mean(alphadiv.use.selected1$value[
+        which(alphadiv.use.selected1$group==x[2])]),
+      max1=max(alphadiv.use.selected1$value[
+        which(alphadiv.use.selected1$group==x[1])]),
+      max2=max(alphadiv.use.selected1$value[
+        which(alphadiv.use.selected1$group==x[2])]),
+      statistics=fit$statistic,
+      p.value=fit$p.value,
+      method=fit$method)
+  })
+
+  data.alpha<-data.frame()
+  for (tt in 1:length(sta)) {
+    data.al<-sta[[tt]]
+    {
+      data.alpha<-rbind(data.alpha,data.al)
+    }
+  }
+  data.alpha$sig<-ifelse(data.alpha$p.value<0.001,"***",
+                         ifelse(data.alpha$p.value<0.01,"**",
+                                ifelse(data.alpha$p.value<0.05,"*","ns")))
+
+  dsd_data<- data.frame()
+  for (tk in unique(randrm.datax$group)) {
+    sas<-getOnePoly(randrm.datax[which(randrm.datax$group==tk),])
+    dd_data<-data.frame(a=sas$a,b=sas$b)
+    dsd_data<-rbind(dsd_data,dd_data)
+  }
+
+  top_pt<-dsd_data[which(dsd_data$a==max(dsd_data$a)),]
+  top_y<-top_pt$a*min(randrm.datax$var)+top_pt$b
+
+  bb_line_a<-mean(c(max(dsd_data$a),min(dsd_data$a)))*(-1)
+  bb_line_b<-max(dsd_data$b)-min(dsd_data$b)
+
+
+  dsd_data$c=bb_line_a*1.6
+  if (class(randrm.data)=="list")   dsd_data$c=bb_line_a*3.2
+  dsd_data$d=0
+  if (class(randrm.data)=="list") dsd_data$d[1]=min(dsd_data$b)  else dsd_data$d[1]=top_y-dsd_data$c[1]*min(randrm.datax$var)
+  for (kk in 2:nrow(dsd_data)) {
+    dsd_data$d[kk]<-dsd_data$d[kk-1]-(min(dsd_data$b)-min(dsd_data$b)/length(my_comparisons))/length(my_comparisons)
+  }
+  dsd_data$group<-unique(randrm.datax$group)
+
+  interpt<-list()
+  for (t in 1:length(my_comparisons)) {
+    selected_compa<-my_comparisons[[t]]
+    selected_data<-dsd_data[match(selected_compa,dsd_data$group),]
+    selected_data$c[1]=dsd_data$c[t]
+    selected_data$d[1]=dsd_data$d[t]
+    selected_data$c[2]=dsd_data$c[t]
+    selected_data$d[2]=dsd_data$d[t]
+    for (i in 1:nrow(selected_data)) {
+      a=selected_data$a[i]
+      b=selected_data$b[i]
+      c=selected_data$c[i]
+      d=selected_data$d[i]
+      selected_data$x[i]<-getIntersection(a,b,c,d)$x
+      selected_data$y[i]<-getIntersection(a,b,c,d)$y
+    }
+    interpt[[t]]<-selected_data
+  }
+
+  for (k in 1:length(interpt)) {
+    p<-p+annotate(geom = "segment",
+                  x = interpt[[k]]$x[1], xend = interpt[[k]]$x[2],
+                  y = interpt[[k]]$y[1], yend = interpt[[k]]$y[2],
+                  size=1,
+                  color = "black")+
+      annotate(geom = "point",
+               x = interpt[[k]]$x[1], y = interpt[[k]]$y[1],
+               size = 2,
+               shape = 19, # 设置形状为圆形
+               fill = "black", # 设置填充颜色为黑色
+               color = "black") +
+      annotate(geom = "point",
+               x = interpt[[k]]$x[2], y = interpt[[k]]$y[2],
+               size = 2,
+               shape = 19, # 设置形状为圆形
+               fill = "black", # 设置填充颜色为黑色
+               color = "black")+
+      annotate(geom="text",fontface = "bold",
+               x = (interpt[[k]]$x[1]+interpt[[k]]$x[2])/2*0.99,
+               y = (interpt[[k]]$y[1]+interpt[[k]]$y[2])/2*1.01,
+               angle=50,size=6,color = "black",
+               label = data.alpha$sig[k])
+  }
+
+  wc<-dsd_data$b
+  names(wc)<-dsd_data$group
+  wc<-wc[order(wc,decreasing = TRUE)]
+  wcc<-c()
+  for (t in 1:length(wc)) {
+    wcc[2*t-1]<-names(wc[t])
+    wcc[2*t]<-">"
+  }
+  wcc<-wcc[1:(length(wcc)-1)]
+  halfpos<-(max(randrm.datax$var)-min(randrm.datax$var))/2
+
+  text_stab<-data.frame(var=wcc,
+                        pos=seq(from=min(randrm.datax$var),
+                                to=min(randrm.datax$var)+halfpos,length.out=length(wcc))
+  )
+  text_stab$color<-color.use[match(text_stab$var,names(color.use))]
+  text_stab$color[which(text_stab$var==">")]<-"black"
+  color.use1<-text_stab$color
+  names(color.use1)<-wcc
+  p<-p+geom_text(data=text_stab,
+                 aes(x=pos,y=0,label=var,color=var),
+                 family="serif",
+                 fontface="bold")+
+    ggnewscale::new_scale_color()+
+    scale_color_manual(values = color.use1)
+
+  if (class(randrm.data)=="list") {
+    p<-p+labs(x="Percentage of target removal",y="Robustness",subtitle  = str_to_title(type))
+  } else {
+    p<-p+labs(x="Percentage of random removal (%)",y="Robustness",subtitle  = str_to_title(type))
+  }
+  p<-p+theme(legend.position =c(0.9,0.8),
+             legend.background = element_blank(),
+             legend.key = element_blank(),
+             text = element_text(family = "serif"),
+             legend.title = element_blank(),
+             title = element_text(family = "serif",size = 14,face = "bold"),
+             panel.background = element_blank(),
+             panel.border = element_rect(size = 2,fill = NA,
+                                         linetype = "solid"),
+             axis.text.x = element_text(angle = 0,hjust = 0.5,size = 12),
+             axis.text.y = element_text(angle = 0,hjust = 0.5,size = 12),
+             axis.text.y.right = element_blank(),
+             axis.ticks = element_line(lineend="round",size = 1),
+             axis.ticks.y.right = element_blank())
+
+  return(p)
+}
+
+"getOnePoly" <- function(randrm.datax) {
+  model <- lm(randrm.datax$mean ~ poly(randrm.datax$var, 1, raw = TRUE), data = randrm.datax)
+  mylr = function(x,y){
+    x_mean = mean(x)
+    y_mean = mean(y)
+
+    a = coef(model)[2]
+    b = coef(model)[1]
+
+    # 构造线性回归方程
+    f <- a * x + b
+
+    ###生成总平方和
+    sst = sum((y-y_mean)^2)
+    ##残差平方和
+    sse = sum((y-f)^2)
+    ##回归平方和
+    ssr = sum((f-y_mean)^2)
+
+    result = c(a,b,sst,sse,ssr)
+    names(result) = c('a','b','sst','sse','ssr')
+    return(result)
+  }
+
+  ##横坐标为时间
+  x = randrm.datax$var
+  ##纵坐标为表达量
+  y = randrm.datax$mean
+  ###代入公式
+  f = mylr(x,y)
+
+  ###计算拟合度，回归平方和除以总平方和
+  R2= f['ssr']/f['sst']
+
+  f = mylr(x,y)
+  a<-f['a']
+  b<-f['b']
+  a;b
+  kp<-list(formula=f,a=a,b=b,r2=R2)
+  return(kp)
+}
+
+"getIntersection" <-function(a,b,c,d) {
+  # 定义函数f(x)和g(x)的方程
+  f <- function(x) {
+    a*x + b
+  }
+
+  g <- function(x) {
+    c*x + d
+  }
+
+  # 求解函数交点
+  intersection <- uniroot(function(x) f(x) - g(x), interval = c(-100, 100))
+  intersection_point <- intersection$root
+
+  return(list(x=intersection_point,y=f(intersection_point)))
+}
+
+
 
 
 "network.efficiency" <- function(graph){

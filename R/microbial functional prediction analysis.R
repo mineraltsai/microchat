@@ -11,7 +11,7 @@
                                      silva_path='/Volumes/BOOTCAMP/SILVA123',
                                      export_path="tax4fun") {
 
-  export_path<-paste(export_path,"/microbial functional prediction analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   library(Tax4Fun)
@@ -523,6 +523,7 @@
                                      silva_path='/Volumes/BOOTCAMP/SILVA123',
                                      export_path="tax4fun"
 ) {
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
   data(KO)
   KO = KO
@@ -899,7 +900,7 @@
                        comparison_sel="ct-xl",
                        silva_path='/Volumes/BOOTCAMP/SILVA123',
                        export_path="tax4fun") {
-  export_path<-paste(export_path,"/microbial functional prediction analysis/data/",comparison_sel,sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis/data/",comparison_sel,sep = "")
   dir.create(export_path, recursive = TRUE)
 
   data(kegg_anno)
@@ -934,7 +935,8 @@
   tt<-str_split_fixed(fp.dat$comparison_sel,'-',2)%>%as.character()
   message("Control selected is ",tt[1])
   message("Treatment selected is ",tt[2])
-  export_path<-paste(export_path,"/microbial functional prediction analysis/Pathway/",tt[1],"-",tt[2],sep = "")
+
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis/Pathway/",tt[1],"-",tt[2],sep = "")
   dir.create(export_path, recursive = TRUE)
 
   funpred <- fp.dat$funpred
@@ -1146,6 +1148,25 @@
 }
 
 
+"NameSplit" <- function(taxaname) {
+  for (k in 1:length(taxaname)) {
+    if (taxaname[k]=="") {
+      taxaname[k]=""
+    } else {
+      taxn_st<-strsplit(taxaname[k]," ")[[1]]
+      if (length(taxn_st)<=2) {
+        taxn_st1<-paste0(taxn_st[1]," ",taxn_st[2])
+      } else {
+        taxn_st1<-paste0(taxn_st[1],"\n",taxn_st[2])
+        for (t in 3:length(taxn_st)) {
+          taxn_st1<-paste0(taxn_st1,"\n",taxn_st[t])
+        }
+      }
+      taxaname[k]<-taxn_st1
+    }
+  }
+  return(taxaname)
+}
 
 
 "plotDiffPathwayExtendbar" <- function(microchatTaxFunDiff,
@@ -1157,8 +1178,8 @@
                                        sig.text.color="black",
                                        ko2.text.size=2,
                                        ko2.text.color="black",
-                                       add.bar.text.size=3,
-                                       add.bar.text.color="white",
+                                       #add.bar.text.size=3,
+                                       ko3.text.color="black",
                                        pdf.width=NULL,
                                        layout.rt=c(1,4,4,4,1.5),
                                        ko1.color=colorCustom(10,pal = "set1"),
@@ -1180,9 +1201,11 @@
   sampledata<-microchatTaxFunDiff$sampledata
   comparison=microchatTaxFunDiff$comparison
   abun<-microchatTaxFunDiff$otu_table
+  #abun.bar1$KO4<-NameSplit(abun.bar1$KO4)
 
+  add.bar.text.color=ko3.text.color
 
-  export_path<-paste(export_path,"/microbial functional prediction analysis",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   tt<-str_split_fixed(comparison,'-',2)%>%as.character()
@@ -1205,33 +1228,33 @@
     xlab("") +
     ylab("Mean proportion (%)") +
     theme(panel.background = element_rect(fill = 'transparent'),
+          plot.background =  element_rect(fill = NA,color = NA),
           panel.grid = element_blank(),
           text = element_text(family = "serif"),
-          axis.ticks.length.y = unit(0,"lines"),
+          axis.ticks.length.y = unit(0.2,"lines"),
           axis.ticks.y  = element_line(size=0),
           axis.line  = element_line(colour = "black"),
-          axis.title.y=element_text(colour='black', size=8,face = "bold"),
-          axis.title.x=element_text(colour='black', size=12,face = "bold"),
-          axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.title.y=element_text(colour='black', size=6,face = "bold"),
+          axis.title.x=element_text(colour='black', size=6,face = "bold"),
+          axis.text=element_text(colour='black',size=4,face = "bold"),
           legend.title=element_blank(),
           legend.background = element_blank(),
-          legend.text=element_text(size=8,face = "bold",colour = "black",
+          legend.text=element_text(size=4,face = "bold",colour = "black",
                                    family = "serif",
                                    margin = margin(r = 20)),
-          legend.position = c(-0.5,-0.025),
+          legend.position = c(-1.2,-0.025),
           legend.direction = "horizontal",
           legend.key = element_rect(colour = "white"),
-          legend.key.width = unit(0.8,"cm"),
-          legend.key.height = unit(0.5,"cm"))
+          legend.key.width = unit(0.4,"cm"),
+          legend.key.height = unit(0.2,"cm"))
 
   for (i in 1:(nrow(diff.mean) - 1)) {
     p1 <- p1 + annotate('rect', xmin = i+0.5, xmax = i+1.5, ymin = -Inf, ymax = Inf,
                         fill = ifelse(i %% 2 == 0, 'white', 'gray95'))
   }
 
-
   p1 <- p1 +
-    geom_bar(stat = "identity",position = "dodge",width = 0.7,colour = "black")
+    geom_bar(stat = "identity",position = "dodge",width = 0.7,colour = "black",linewidth=0.2)
 
   if (length(add.bar.color)<length(unique(abun.bar$KO2))) stop("Please provide more colors for coloring KEGG 2 levels, which is ",length(unique(abun.bar$KO2)),".")
   colorsbar<-add.bar.color[1:length(unique(abun.bar$KO2))]
@@ -1259,124 +1282,79 @@
                size=.2) +
       geom_text(data=abun.bar1, aes(x=variable,
                                     y=2,
-                                    label=variable),size=add.bar.text.size,
+                                    label=variable),size=1.5,
                 color=add.bar.text.color,
                 family="serif",check_overlap = FALSE,
                 hjust = 1)+
       geom_text(data=abun.bar1, aes(x=variable,
                                     y=0,
-                                    label=KO4),size=ko2.text.size,
+                                    label=KO4),size=2,
                 color=ko2.text.color,
                 family="serif",check_overlap = FALSE,
                 hjust = 0)+
       scale_fill_manual(values = colorsbar)+
       labs(title="KO2   KO3")
   } else {
-    colorsbar<-add.bar.color[1:length(unique(abun.bar$KO2))]
-
-    colorss<-list()
-    for (j in 1:length(colorsbar)) {
-         if (!ko2.bar.gradient.rev) {
-           colorss[[j]] <- grDevices::colorRampPalette(c("white",
-                                                         colorsbar[j]))(gradient.num)
-         } else {
-           colorss[[j]] <- grDevices::colorRampPalette(c(colorsbar[j],
-                                                         "white"))(gradient.num)
+    ydens<-cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
+      ggnewscale::new_scale_fill() + scale_x_discrete() +
+      coord_flip() +scale_fill_manual(values = colorsbar)
+    abun.barx<-abun.bar1
+    if (!ko2.bar.gradient.rev) {
+      abun.barx$alpha<-0
+      abun.barx$y<-1
+      abun.bary<-abun.barx
+      for (t in 2:gradient.num) {
+        abun.barx_new<-abun.bary
+        abun.barx_new$alpha<-t/gradient.num
+        abun.barx_new$y<-t
+        abun.barx<-rbind(abun.barx,abun.barx_new)
       }
-
+    } else {
+      abun.barx$alpha<-1
+      abun.barx$y<-1
+      abun.bary<-abun.barx
+      for (t in 2:gradient.num) {
+        abun.barx_new<-abun.bary
+        abun.barx_new$alpha<-1-t/gradient.num
+        abun.barx_new$y<-t
+        abun.barx<-rbind(abun.barx,abun.barx_new)
+      }
     }
 
-    color.sel<-list()
-    for (j in 1:length(colorss[[1]])) {
-      c.sel<-c()
-      for (i in 1:length(colorss)) {
-        c.sel<-c(c.sel,colorss[[i]][j])
-        color.sel[[j]]<-c.sel
-      }
-    }
-
-    nworker<-parallel::detectCores()-2
-    if (nworker<=0) nworker<-parallel::detectCores()
-    if (nworker!=1) {
-      c1 <- try(parallel::makeCluster(nworker, type = "PSOCK"))
-      if (class(c1)[1] == "try-error") {
-        c1 <- try(parallel::makeCluster(nworker, setup_timeout = 0.5))
-      }
-      if (class(c1)[1] == "try-error") {
-        c1 <- try(parallel::makeCluster(nworker, setup_strategy = "sequential"))
-      }
-      message("\n","Now generating gradient color by multi threaded computing. Begin at ",
-              date(), ". Please wait...")
-      clusterExport(c1, "%>%")
-      ydensx = parallel::parLapply(c1, color.sel, gradp,
-                                   abun.bar,p1,abun.bar1,ko2.bar.alpha)
-      parallel::stopCluster(c1)
-    }
-
-    ydensx<-patchwork::wrap_plots(ydensx,nrow = 1,byrow = TRUE)
-
-    ydens2 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
-      ggnewscale::new_scale_fill()+
-      scale_x_discrete()+
-      coord_flip()+
-      geom_col(data=abun.bar1, aes(x=variable,
-                                   y=1), alpha=ko2.bar.alpha, width = 1,
-               fill=NA,
-               size=.2) +
-      geom_text(data=abun.bar1, aes(x=variable,
-                                    y=0,
-                                    label=KO4),size=ko2.text.size,
-                color=ko2.text.color,inherit.aes = TRUE,
-                family="serif",check_overlap = FALSE,
-                hjust = 0)+
-      labs(title="KO2   KO3")
-
-    ydens3 <- cowplot::axis_canvas(p1, axis = "y", coord_flip = TRUE) +
-      ggnewscale::new_scale_fill()+
-      scale_x_discrete()+
-      coord_flip()+
-      geom_col(data=abun.bar1, aes(x=variable,
-                                   y=1),
-               fill=NA,
-               alpha=ko2.bar.alpha, width = 1,
-               size=.2) +
-      geom_text(data=abun.bar1, aes(x=variable,
-                                    y=2,
-                                    label=variable),
-                size=add.bar.text.size,
-                color=add.bar.text.color,inherit.aes = TRUE,
-                family="serif",check_overlap = FALSE,
-                hjust = 1)+
-      labs(title="KO2   KO3")
-
-    ydensxZ<-ydensx+annotation_custom(grob=ggplotGrob(ydens3),
-                                      ymin = -(gradient.num*2)+2, ymax = 2,
-                                      xmin=0.4,
-                                      xmax=0.6+nrow(abun.bar)/2)
-
-    ydens<-ydensxZ+annotation_custom(grob=ggplotGrob(ydens2),
-                                     ymin = -(gradient.num*2)+2, ymax = 2,
-                                     xmin=0.4,
-                                     xmax=0.6+nrow(abun.bar)/2)
-
+    ydens<-  ydens+ geom_tile(data = abun.barx, aes(x = variable,
+                                                    y = y, fill = KO2,alpha=alpha),color = NA,
+                              width = 1, size = 0.2)+
+      scale_alpha_continuous(range = c(max(abun.barx$alpha),0))+
+      ## ko3
+      geom_text(data = abun.bar1,  family="serif",
+                aes(x = variable, y = Inf, label = variable), size = 1.5,
+                color = add.bar.text.color, check_overlap = FALSE,
+                hjust = 1) +
+      ## ko2
+      geom_text(data = abun.bar1, aes(x = variable,  family="serif",
+                                      y = -Inf, label = KO4), size = 2,
+                color = ko2.text.color,
+                check_overlap = FALSE, hjust = 0)  + labs(title = "KO2   KO3")
+  ydens<-ydens+ scale_alpha_continuous(range = c(0,max(abun.barx$alpha)/3))
   }
 
   p2 <- ggplot(diff.mean1,aes(x=var,y=estimate,fill = Group)) +
     scale_x_discrete(limits = levels(abun.bar$variable)) +
     coord_flip() +
     theme(panel.background = element_rect(fill = 'transparent'),
+          plot.background =  element_rect(fill = NA,color = NA),
           panel.grid = element_blank(),
           text = element_text(family = "serif"),
-          axis.ticks.length = unit(0.4,"lines"),
+          axis.ticks.length = unit(0.2,"lines"),
           axis.ticks = element_line(color='black'),
           axis.line = element_line(colour = "black"),
-          axis.title.x=element_text(colour='black', size=12,face = "bold"),
-          axis.text=element_text(colour='black',size=10,face = "bold"),
+          axis.title.x=element_text(colour='black', size=6,face = "bold"),
+          axis.text=element_text(colour='black',size=4,face = "bold"),
           axis.text.y = element_blank(),
           legend.position = "none",
           axis.line.y = element_blank(),
           axis.ticks.y = element_blank(),
-          plot.title = element_text(size = 15,face = "bold",colour = "black",hjust = 0.5)) +
+          plot.title = element_text(size = 7,face = "bold",colour = "black",hjust = 0.5)) +
 
     xlab("") +
     ylab("Difference in mean proportions (%)") +
@@ -1389,8 +1367,8 @@
 
   p2 <- p2 +
     geom_errorbar(aes(ymin = conf.low, ymax = conf.high),show.legend = FALSE,
-                  position = position_dodge(0.8), width = 0.5, size = 0.5) +
-    geom_point(shape = 21,size = 3) +
+                  position = position_dodge(0.8), width = 0.4, size = 0.2) +
+    geom_point(shape = 21,size = 1.5,stroke =0.2) +
     scale_fill_manual(values=cbbPalette) +
     geom_hline(aes(yintercept = 0), linetype = 'dashed', color = 'black')
 
@@ -1402,12 +1380,13 @@
     p3 <- ggplot(diff.mean1,aes(var,estimate,fill = Group)) +
       scale_x_discrete(limits = levels(abun.bar$variable)) +
       geom_text(aes(y = 0,x = var),label = diff.mean1$p.value,family="serif",
-                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = sig.text.size) +
+                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = 1.5) +
       geom_text(aes(x = nrow(diff.mean1)/2 +0.5,y = 0.85),label = "P-value (corrected)",
-                family="serif",srt = 90,fontface = "bold",size = 5) +
+                family="serif",srt = 90,fontface = "bold",size = 2) +
       coord_flip() +
       ylim(c(0,1)) +
       theme(panel.background = element_blank(),
+            plot.background =  element_rect(fill = NA,color = NA),
             text = element_text(family = "serif"),
             panel.grid = element_blank(),
             axis.line = element_blank(),
@@ -1423,12 +1402,13 @@
     p3 <- ggplot(diff.mean1,aes(var,estimate,fill = Group)) +
       scale_x_discrete(limits = levels(abun.bar$variable)) +
       geom_text(aes(y = 0,x = var),label = diff.mean1$sig,family="serif",
-                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = sig.text.size) +
+                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = 1.5) +
       geom_text(aes(x = nrow(diff.mean1)/2 +0.5,y = 0.85),label = "P-value (corrected)",
-                family="serif",srt = 90,fontface = "bold",size = 5) +
+                family="serif",srt = 90,fontface = "bold",size = 2) +
       coord_flip() +
       ylim(c(0,1)) +
       theme(panel.background = element_blank(),
+            plot.background =  element_rect(fill = NA,color = NA),
             text = element_text(family = "serif"),
             panel.grid = element_blank(),
             axis.line = element_blank(),
@@ -1445,13 +1425,14 @@
       scale_x_discrete(limits = levels(abun.bar$variable)) +
       geom_text(aes(y = 0,x = var),label = paste(diff.mean1$p.value,diff.mean1$sig,sep = ""),
                 family="serif",color=sig.text.color,show.legend = FALSE,
-                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = sig.text.size) +
+                hjust = 0,fontface = "bold",inherit.aes = FALSE,size = 1.5) +
       geom_text(aes(x = nrow(diff.mean1)/2 +0.5,y = 0.85),
                 label = "P-value (corrected)",show.legend = FALSE,
-                family="serif",srt = 270,fontface = "bold",size = 5) +
+                family="serif",srt = 270,fontface = "bold",size = 2) +
       coord_flip() +
       ylim(c(0,1)) +
       theme(panel.background = element_blank(),
+            plot.background =  element_rect(fill = NA,color = NA),
             text = element_text(family = "serif"),
             panel.grid = element_blank(),
             axis.line = element_blank(),
@@ -1523,10 +1504,8 @@
                     label = whatsn[i])
   }
 
-  #p4+ydens+plot_layout(widths = c(0.5,0.5),byrow=TRUE)
-  if (is.null(pdf.width)) widthx=15 else widthx= pdf.width
-  heighty=length(unique(abun.bar1$KO3))/4
-  if (heighty<(widthx/2)) heighty<-widthx/2 else  heighty<-heighty
+  if (is.null(pdf.width)) widthx=21/2 else widthx= 21/2
+  heighty=length(unique(abun.bar1$KO3))
 
   p<-p4+ydens+p1 + p2 + p3 + plot_layout(widths = c(layout.rt[1],
                                                     layout.rt[2],
@@ -1534,17 +1513,26 @@
                                                     layout.rt[4],
                                                     layout.rt[5]),byrow=TRUE)
 
-  message("width used for ggsave is ",widthx,", as well as ",heighty," of height")
 
-
-  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (CMYK).pdf",sep = ""),
-         colormodel="cmyk",
-         width = widthx,height = heighty,p)
+  #ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (CMYK).pdf",sep = ""),
+  #       colormodel="cmyk",
+  #       units = "cm",
+  #       width = 21/2,
+  #       height = 21/2*heighty/widthx/4,
+   #      p)
   ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot (RGB).pdf",sep = ""),
          colormodel="srgb",
-         width = widthx,height = heighty,p)
-  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot.tiff",sep = ""),
-         bg="white",width = widthx,height = heighty,p)
+         units = "cm",
+         width = 21/2,
+         height = 21/2*heighty/widthx/4,
+         p)
+  ggsave(paste(export_path,"/(",comparison,") Extended Errorbar plot.png",sep = ""),
+         bg="white",
+         units = "cm",
+         width = 21/2,
+         height = 21/2*heighty/widthx/4,
+         p)
+  cat(heighty)
   cat("\n已输出",
       paste(comparison,"基于","welch's t test","的Extended error bar plot",sep = ""))
   print(p)
@@ -1568,7 +1556,7 @@
   comparison=microchatTaxFunGeneDiff$comparison
   abun<-microchatTaxFunGeneDiff$otu_table
 
-  export_path<-paste(export_path,"/microbial functional prediction analysis/Functional gene/",sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis/Functional gene/",sep = "")
   dir.create(export_path, recursive = TRUE)
 
   tt<-str_split_fixed(comparison,'-',2)%>%as.character()
@@ -1719,7 +1707,7 @@
   tt<-str_split_fixed(fp.dat$comparison_sel,'-',2)%>%as.character()
   message("Control selected is ",tt[1])
   message("Treatment selected is ",tt[2])
-  export_path<-paste(export_path,"/microbial functional prediction analysis/Functional gene/",tt[1],"-",tt[2],sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis/Functional gene/",tt[1],"-",tt[2],sep = "")
   dir.create(export_path, recursive = TRUE)
   qiimeotu<-microchatTaxFun$qiimeotu
   group<-qiimeotu$sampleda
@@ -1810,6 +1798,9 @@
                                                ko1.color=colorCustom(10,pal = "xiena"),
                                                add.bar.color=color_group,
                                                compare.color=color_group,
+                                               ko1.text.color="black",
+                                               ko2.text.color="#16ae94",
+                                               ko3.text.color="black",
                                                ko1.select="Metabolism",
                                                padj=FALSE,
                                                min.fun.abun = 0.3,
@@ -1839,10 +1830,13 @@
                                       xlabname=xlabname,
                                       pdf.width=10,
                                       ko2.text.size=4,
-                                      layout.rt=c(0.4,5,4,4,1.5),
+                                      layout.rt=c(0.8,6,3,3,1.5),
                                       ko1.color=ko1.color,
                                       add.bar.color=add.bar.color,
                                       compare.color=compare.color,
+                                      ko1.text.color=ko1.text.color,
+                                      ko2.text.color=ko2.text.color,
+                                      ko3.text.color=ko3.text.color,
                                       siglabel="sig+label",
                                       export_path=export_path)
 
@@ -1883,7 +1877,7 @@
                            tt[1],sep = "-")
   message("Control selected is ",tt[1])
   message("Treatment selected is ",tt[2])
-  export_path<-paste(export_path,"/microbial functional prediction analysis/Functional gene/",tt[1],"-",tt[2],sep = "")
+  export_path<-paste(export_path,"/data_microbiome/microbial functional prediction analysis/Functional gene/",tt[1],"-",tt[2],sep = "")
   dir.create(export_path, recursive = TRUE)
   group<-group_generate(abun)
   fungene<-fp.dat$fungene
@@ -2528,7 +2522,7 @@
                 hjust = 1)+
       geom_text(data=abun.bar1, aes(x=variable,
                                     y=0,
-                                    label=KO4),size=ko2.text.size,
+                                    label=KO4),size=ko2.text.size,fontface="bold",
                 color=ko2.text.color,
                 family="serif",check_overlap = FALSE,
                 hjust = 0)+
@@ -2567,12 +2561,14 @@
       scale_alpha_continuous(range = c(max(abun.barx$alpha),0))+
       ## ko3
       geom_text(data = abun.bar1,family="serif",
-                aes(x = variable, y = Inf, label = variable), size = add.bar.text.size,
+                aes(x = variable, y = Inf, label = variable),
+                size = add.bar.text.size,
                 color = add.bar.text.color, check_overlap = FALSE,
                 hjust = 1) +
       ## ko2
       geom_text(data = abun.bar1, aes(x = variable,
-                                      y = -Inf, label = KO4), size = ko2.text.size, color = ko2.text.color,
+                                      y = -Inf, label = KO4),fontface="bold",
+                size = ko2.text.size, color = ko2.text.color,
                 check_overlap = FALSE, hjust = 0,family="serif")  + labs(title = "KO2   KO3")
     if (!ko2.bar.gradient)  ydens<-ydens+ scale_alpha_continuous(range = c(max(abun.barx$alpha)/3,0)) else ydens<-ydens+ scale_alpha_continuous(range = c(0,max(abun.barx$alpha)/3))
 

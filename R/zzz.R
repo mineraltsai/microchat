@@ -215,12 +215,13 @@
 }
 
 
-"microchatEGParmHeatmap"<-function(rmnet_param_mult,mes1,
+'microchatEGParmHeatmap'<-function(rmnet_param_mult,mes1,
                                    add.anno=TRUE,
                                    add.anno.range=0,
                                    add.anno.alpha=1,
                                    add.sec.param=TRUE,
                                    mytheme=NULL,
+                                   color_annobar=colorCustom(10,pal = "gygn"),
                                    sig.text.size=2,
                                    axis.x.rev=FALSE,
                                    color_sig=sigcolor,
@@ -285,6 +286,7 @@
     theme(text = element_text(family = "serif"),
           title = element_blank(),
           axis.ticks = element_blank(),
+          axis.text = element_text(size = 12),
           legend.position = "bottom",
           #plot.margin = margin(1, 1, 1, 1, "cm"),
           #panel.background = element_rect(fill = "white",color="white"),
@@ -306,7 +308,7 @@
       data.fx<-data.f%>%t()%>%data.frame()
     }
 
-    color.usex<-rep(color_group,2)
+    color.usex<-rep(color_annobar,2)
     color.usex<-color.usex[1:length(unique(data.fx$X1))]
     names(color.usex)<-unique(data.fx$X1)
     color.use.sel<-color.usex[match(data.fx$X1,names(color.usex))]
@@ -329,7 +331,7 @@
                       xmax = j+0.4 ,
                       ymin = y.baselen+1-0.4,
                       ymax = y.baselen+1+add.anno.range+colanno[j]-0.4,
-                      fill=color_group[j],
+                      fill=color_annobar[j],
                       alpha = add.anno.alpha)
     }
 
@@ -346,21 +348,22 @@
     if (add.sec.param) for (k in 1:nrow(id.sel)) {
 
       p1<-p1+annotate(geom = "text",
-                 family="serif",
-                 x = -3,
-                 y =id.sel$pos[k],
-                 label = "") +
+                      family="serif",
+                      x = -3,
+                      size=5,
+                      y =id.sel$pos[k],
+                      label = "") +
         annotate(geom = "segment",
                  x = -0.85,
                  xend = -2.8,
                  linetype="dashed",
-                 size=0.5,
+                 size=2,
                  y = id.sel$pos[k],
                  yend = id.sel$neg[k],
                  colour = "grey50")+
         annotate(geom = "text",
                  family="serif",
-                 size=2,
+                 size=4,
                  fontface=id.sel$type1[k],
                  x = -0.4,
                  y =id.sel$pos[k],
@@ -368,24 +371,26 @@
 
     }
 
-p1<-p1+annotate(geom = "text",
-                family="serif",
-            x = x.baselen+1+add.anno.range+max(rowanno)+1,
-            y = y.baselen/2,
-            vjust=2,
-            angle=270,
-            label = "Accumulative absolute parametric weight")
+    p1<-p1+annotate(geom = "text",
+                    family="serif",
+                    x = x.baselen+1+add.anno.range+max(rowanno)+1,
+                    y = y.baselen/2,
+                    size=5,
+                    vjust=2,
+                    angle=270,
+                    label = "Accumulative absolute parametric weight")
 
-p1<-p1+annotate(geom = "text",
-                family="serif",
-                vjust=2,
-            x = x.baselen/2,
-            y = y.baselen+1+add.anno.range+max(colanno)+1,
-            label = "Accumulative absolute weight")
+    p1<-p1+annotate(geom = "text",
+                    family="serif",
+                    size=5,
+                    vjust=2,
+                    x = x.baselen/2,
+                    y = y.baselen+1+add.anno.range+max(colanno)+1,
+                    label = "Accumulative absolute weight")
 
-if (add.sec.param)p1<-p1+
+    if (add.sec.param)p1<-p1+
       theme(aspect.ratio = (y.baselen+1+add.anno.range+max(colanno)+1)/(x.baselen+1+add.anno.range+1+max(rowanno)+3))
-#p1$theme$aspect.ratio
+    #p1$theme$aspect.ratio
     if (!add.sec.param) p1<-p1+
       theme(aspect.ratio = (y.baselen+1+add.anno.range+1+max(colanno))/(x.baselen+1+add.anno.range+1+max(rowanno)))
   }
@@ -397,8 +402,8 @@ if (add.sec.param)p1<-p1+
   if (h.sel>18) h.sel<-12
 
   ggsave(paste(export_path,"/microbiota-parameter heatmap (",ncol(mes1)," module eigengene *",length(unique(id.sel$me))," params).pdf",sep = ""),
-        height = h.sel,
-        width =h.sel/hw.rat,
+         height = h.sel,
+         width =h.sel/hw.rat,
          p1)
   ggsave(paste(export_path,"/microbiota-parameter heatmap (",ncol(mes1)," module eigengene *",length(unique(id.sel$me))," params).tiff",sep = ""),
          height = h.sel,
@@ -633,9 +638,15 @@ if (add.sec.param)p1<-p1+
                                           method="t.test",
                                           my_comparisons=my_comparisons,
                                           color_group=color_group,
+                                          panel.border="all",
+                                          color_backgroud=NA,
+                                          axis.x.angle.adjust=TRUE,
+                                          mytheme=NULL,
+                                          ncol = 4,
+                                          spline.params=NULL,
                                           export_path=export_path) {
 
-  export_path<-paste(export_path,"/microbial parameter mining analysis/whole network biomarkers sink/",sep = "")
+  export_path<-paste(export_path,"/biomarkers sink/",sep = "")
   dir.create(export_path, recursive = TRUE)
 
 
@@ -643,17 +654,7 @@ if (add.sec.param)p1<-p1+
   otu.sel<-otu.sel[,sel.otu]
   params<-otu.sel
   mchat1<-setParamchat(NULL,NULL,NULL,params=params)
-  tidymchat1<-tidyMicrochat(mchat1,
-                            group.keep=NULL,  ### c("CT","SS","SA","SF","SC)
-                            group.rm=NULL,    ### ct
-                            sample.keep=NULL, ### c("ct1","ml1")
-                            sample.rm=NULL,   ### c("ct1","ml1")
-                            taxon.keep=NULL,  ### c("p__firm","c__bacter")
-                            taxon.rm=NULL,    ### c("firm","cyan")
-                            filter_pollution=TRUE,
-                            filter_Archaea=TRUE)
-  submchat1<-subsampleMicrochat(tidymchat1,sample.size=NULL,export_path=export_path)
-  microchatParamobj<-calcMicrochatParam(submchat1,
+  microchatParamobj<-calcMicrochatParam(mchat1,
                                         export_path=export_path)
 
   p<-plotMicrochatParamMutiBoxplot(microchatParamobj,
@@ -666,6 +667,12 @@ if (add.sec.param)p1<-p1+
                                    method=method,
                                    comparison=my_comparisons,
                                    color_group=color_group,
+                                   panel.border=panel.border,
+                                   color_backgroud=color_backgroud,
+                                   axis.x.angle.adjust=axis.x.angle.adjust,
+                                   mytheme=mytheme,
+                                   ncol = ncol,
+                                   spline.params=spline.params,
                                    export_path=export_path)
 
   return(p)
@@ -679,9 +686,15 @@ if (add.sec.param)p1<-p1+
                                           method="t.test",
                                           my_comparisons=my_comparisons,
                                           color_group=color_group,
+                                          panel.border="all",
+                                          color_backgroud=NA,
+                                          axis.x.angle.adjust=TRUE,
+                                          mytheme=NULL,
+                                          ncol = 4,
+                                          spline.params=NULL,
                                           export_path=export_path) {
 
-  export_path<-paste(export_path,"/microbial parameter mining analysis/whole network biomarkers sink/",sep = "")
+  export_path<-paste(export_path,"/biomarkers sink/",sep = "")
   dir.create(export_path, recursive = TRUE)
 
 
@@ -689,17 +702,7 @@ if (add.sec.param)p1<-p1+
   otu.sel<-otu.sel[,sel.otu]
   params<-otu.sel
   mchat1<-setParamchat(NULL,NULL,NULL,params=params)
-  tidymchat1<-tidyMicrochat(mchat1,
-                            group.keep=NULL,  ### c("CT","SS","SA","SF","SC)
-                            group.rm=NULL,    ### ct
-                            sample.keep=NULL, ### c("ct1","ml1")
-                            sample.rm=NULL,   ### c("ct1","ml1")
-                            taxon.keep=NULL,  ### c("p__firm","c__bacter")
-                            taxon.rm=NULL,    ### c("firm","cyan")
-                            filter_pollution=TRUE,
-                            filter_Archaea=TRUE)
-  submchat1<-subsampleMicrochat(tidymchat1,sample.size=NULL,export_path=export_path)
-  microchatParamobj<-calcMicrochatParam(submchat1,
+  microchatParamobj<-calcMicrochatParam(mchat1,
                                         export_path=export_path)
 
   p<-plotMicrochatParamMutiBarplot(microchatParamobj,
@@ -710,6 +713,12 @@ if (add.sec.param)p1<-p1+
                                    method=method,
                                    comparison=my_comparisons,
                                    color_group=color_group,
+                                   panel.border=panel.border,
+                                   color_backgroud=color_backgroud,
+                                   axis.x.angle.adjust=axis.x.angle.adjust,
+                                   mytheme=mytheme,
+                                   ncol = ncol,
+                                   spline.params=spline.params,
                                    export_path=export_path)
 
 
